@@ -322,6 +322,17 @@ Recomendações das skills registradas para a próxima fase (não aplicadas agor
 - **Desempenho em celular:** o FPS lido do Studio em segundo plano não vale como medida (o Studio limita a 15 FPS fora de foco). Medir em aparelho Android de entrada por 10 a 15 minutos; o Studio tem ainda o *Performance Simulator* (Test > Device Simulator > Performance), que simula qualidade gráfica e memória, não CPU.
 - **Alcance de desenho no celular:** em qualidade baixa, o Roblox garante ao menos 500 studs. O pad (Z 700) fica a cerca de 380 do portão dos fundos e a menos de 100 da área de observação.
 
+## Revisão de layout: museu na ala leste, LCC no caminho principal
+
+Pedido do usuário: trocar o museu de lugar com a central de controle e colocar o museu ao lado da recepção (à esquerda de quem sai para o VAB = leste). Decisões confirmadas: o LCC ocupa o lugar do museu; o museu continua o planetário atual (o salão da `museuspec.md` fica para uma etapa própria).
+
+- **Fase 12 (LCC):** montado nas coordenadas antigas e transladado por (101, 0, −155) para X −49..6, Z 95..165, sem girar. A porta leste virou parede; entraram uma porta sul automática e uma passagem no fundo do saguão, ligando um corredor de fundo (antes vazio) ao saguão. O visitante atravessa em linha reta pelo eixo X = 0, da porta sul à porta norte; a Firing Room fica ao lado, pelo vão do saguão. Sensores das portas automáticas transladados junto. Marquises leste e norte removidas; placa "LAUNCH CONTROL CENTER" sobre a porta sul; placas internas reescritas.
+- **Fase 12 (caminhos):** sem o LCC ao lado do VAB, a saída de pedestres liga direto ao passeio X −105..−97 até a área de observação (as praças do LCC saíram). Placas de direção atualizadas.
+- **Fase 14 nova — `build/phase14_relocation.luau`:** move o museu por um giro de 90° + translação (centro (0, 130) → (90, 27,5)): `CapeCanaveralMuseum`, `Lighting_Objects.Museum` e a placa da entrada. Os planetas recebem `OrbitCenter` transformado e `OrbitAngle − 90`. Fecha os fundos do museu, abre a parede leste da recepção (vão Z 20,5..34,5, 12 de altura; faixa decorativa interrompida), cria o corredor do museu e as duas ligações do LCC com os corredores. Idempotente: cada peça movida recebe `MovedByPhase14`; peças recriadas pelas Fases 1–6 são movidas na execução seguinte.
+- **Textos:** recepção ("Your mission…", "YOUR ROUTE", placa sobre a saída para o Corredor 1), Corredor 1 ("CONTROL CENTER AHEAD") e VAB (quadro de direções e placa da saída de pedestres).
+
+Validação: reconstrução do zero (Fases 1–14) sem erros; segunda execução da Fase 14 sem mover nada; nada sobrou na área antiga do museu; só encaixes esperados nas sobreposições; planetas na órbita certa em volta de (90, 28) no cliente. Playtest: spawn → museu (ida e volta pela ala leste); recepção → Corredor 1 → porta sul do LCC → corredor de fundo → saguão → porta norte → Corredor 2 → VAB; saguão → Firing Room; saída de pedestres do VAB → área de observação. Console sem erros.
+
 ## Pontos que dependem de você
 
 1. **Salvar o place.** O Place1 ainda não foi salvo; use File → Save to File ou Publish to Roblox.

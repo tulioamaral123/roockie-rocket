@@ -118,9 +118,9 @@ panel(rec, -34.95, -34.75, 7, 13, 7, 23, N.Right, "RECEPTION", "Welcome to the N
 local info = B.group(rec, "Info_Screens")
 B.box(info, "Display_Wall", 22, 22.6, 0, 8, 9, 21, "white", "SmoothPlastic")
 panel(info, 21.85, 22, 2.5, 6.8, 9.5, 14.7, N.Left, "WELCOME, EXPLORER",
-	"Your mission: visit the Space Adventure Museum, then reach the SLS hangar.", { accent = "red" })
+	"Your mission: visit the Space Adventure Museum (east wing), then cross the Launch Control Center to the SLS hangar.", { accent = "red" })
 panel(info, 21.85, 22, 2.5, 6.8, 15.3, 20.5, N.Left, "YOUR ROUTE",
-	"1  Reception\n2  Space Adventure Museum\n3  Industrial corridor\n4  SLS Hangar", { accent = "midBlue" })
+	"1  Reception\n2  Space Adventure Museum (east wing)\n3  Launch Control Center\n4  SLS Hangar", { accent = "midBlue" })
 
 -- Área de espera (15, 0, 35)
 local function sofa(parent, x0, x1, z0, z1, backAtLowZ)
@@ -152,7 +152,7 @@ end
 B.box(rec, "Accent_Stripe_L", -35, -34.9, 2.8, 3.2, 0.5, 54, "red", "SmoothPlastic", DECOR)
 B.box(rec, "Accent_Stripe_R", 34.9, 35, 2.8, 3.2, 0.5, 54, "red", "SmoothPlastic", DECOR)
 B.box(rec, "Floor_Guide", -0.5, 0.5, 0, 0.05, 15.5, 53.8, "nasaBlue", "SmoothPlastic", FLOOR_MARK)
-panel(rec, -7, 7, 13.4, 15.8, 53.6, 53.8, N.Front, "SPACE ADVENTURE MUSEUM", "This way to the exhibition",
+panel(rec, -7, 7, 13.4, 15.8, 53.6, 53.8, N.Front, "LAUNCH CONTROL CENTER", "This way to the SLS hangar",
 	{ bg = "nasaBlue", titleColor = "white", bodyColor = "lightBlue", accent = "red", titleScale = 0.42 })
 
 ---------------------------------------------------------------------------------
@@ -174,7 +174,7 @@ for _, a in arts do
 	artwork(canvas, face, a.title, a.cap, a.color, a.top, a.bottom)
 	local _ = frame
 end
-panel(deco1, -4, 4, 9.3, 11.2, 61.9, 62.1, N.Front, "MUSEUM AHEAD", nil, { bg = "nasaBlue", titleColor = "white" })
+panel(deco1, -4, 4, 9.3, 11.2, 61.9, 62.1, N.Front, "CONTROL CENTER AHEAD", nil, { bg = "nasaBlue", titleColor = "white" })
 
 ---------------------------------------------------------------------------------
 -- 3. CORREDOR 2 — linguagem industrial (spec §6.2)

@@ -2,21 +2,21 @@
 	NASA Space Adventure — Fase 12: Launch Control Center e caminhos de pedestres
 	(spec-v3, Etapa 5 — parte B; §3.5, §8, §10, §11)
 
-	Tudo em X ≤ −85 (fora do hangar e longe da rota do crawler, X −40..40), exceto o
-	encosto no patamar da saída de pedestres do VAB (X −85..−82, Z 295..303).
-
-	1. LaunchControlCenter (X −150..−95, Z 250..320, um pavimento alto, teto em Y 29)
-	   · Architecture: fundação, paredes, faixa de janelas voltada para a plataforma (face Z 320),
-	     saguão (X −107..−95, Z 289..319) com duas portas automáticas — leste (para o VAB) e
-	     norte (para a área de observação) —, marquise, letreiros, degraus e luzes.
+	1. LaunchControlCenter — no caminho principal do visitante, entre o Corredor 1 e o Corredor 2
+	   (no lugar do antigo museu, que foi para o leste da recepção; Fase 14). É montado nas
+	   coordenadas originais (X −150..−95, Z 250..320) e transladado por LCC_SHIFT = (101, 0, −155)
+	   para X −49..6, Z 95..165.
+	   · Architecture: o visitante atravessa em linha reta pelo eixo X = 0: porta sul (automática)
+	     → corredor de fundo → saguão → porta norte (automática) → Corredor 2 → VAB. A Firing Room
+	     fica à esquerda, pelo vão do saguão. Janelas na face norte, letreiros, degraus e luzes.
 	   · Consoles: 4 fileiras em degraus (Y 0, 1, 2, 3) com 8 estações cada, voltadas para +Z,
 	     racks de comunicação no fundo e o Main_Console (FutureInteraction = "StartOperation",
 	     peça Interface_Anchor) no degrau mais alto.
 	   · MainScreens: telão principal e dois telões laterais acima das janelas, mais dois
 	     diagramas nas paredes laterais. Telemetria fictícia e estática (sem scripts).
-	2. Visitor_Paths: passeio do patamar da saída do VAB até o LCC, contorno pela fachada leste,
-	   praça norte, passeio até a área de observação (X −140..−95, Z 640..720) com arquibancada
-	   coberta, guarda-corpos, lunetas e placas voltadas para a plataforma em (0, 0, 700).
+	2. Visitor_Paths (X ≤ −82): do patamar da saída de pedestres do VAB (X −85..−82, Z 295..303)
+	   pelo passeio X −105..−97 até a área de observação (X −140..−95, Z 640..720), com
+	   arquibancada coberta, guarda-corpos, lunetas e placas voltadas para a plataforma.
 
 	Nenhuma sequência de lançamento, contagem, prompt ou script de missão nesta fase.
 	Idempotente: remove tudo o que tem BuildPhase = 12 antes de reconstruir.
@@ -155,8 +155,8 @@ end
 local LX0, LX1, LZ0, LZ1 = -150, -95, 250, 320
 local WALL_TOP, ROOF_Y = 30, 28
 local FX1 = -108 -- face interna da parede entre Firing Room e saguão (parede X −108..−107)
-local DOOR_Z0, DOOR_Z1 = 296, 302 -- porta leste, alinhada com a saída do VAB
-local NDX0, NDX1 = -104, -98 -- porta norte do saguão
+local DOOR_Z0, DOOR_Z1 = 296, 302 -- vão entre o saguão e a Firing Room
+local NDX0, NDX1 = -104, -98 -- portas sul e norte (eixo de passagem do visitante)
 local DH = 10
 
 local LCC = B.group(Map, "LaunchControlCenter")
@@ -172,13 +172,14 @@ B.box(Arch, "Roof_Unit", -124, -114, ROOF_Y + 1, ROOF_Y + 3, 262, 270, "metalGra
 
 local walls = B.group(Arch, "Walls")
 local EXT = "lightGray"
--- sul e oeste (inteiras)
-B.box(walls, "South_Wall", LX0, LX1, 0, WALL_TOP, LZ0, LZ0 + 1, EXT, "Concrete")
+-- sul: porta de entrada (X −104..−98), alinhada com a porta norte. O visitante atravessa o LCC
+-- em linha reta (porta sul → corredor de fundo → saguão → porta norte) a caminho do VAB.
+B.box(walls, "South_Wall", LX0, NDX0, 0, WALL_TOP, LZ0, LZ0 + 1, EXT, "Concrete")
+B.box(walls, "South_Wall", NDX1, LX1, 0, WALL_TOP, LZ0, LZ0 + 1, EXT, "Concrete")
+B.box(walls, "South_Lintel", NDX0, NDX1, DH, WALL_TOP, LZ0, LZ0 + 1, EXT, "Concrete")
+-- oeste e leste (inteiras; a antiga porta leste foi fechada)
 B.box(walls, "West_Wall", LX0, LX0 + 1, 0, WALL_TOP, LZ0 + 1, LZ1 - 1, EXT, "Concrete")
--- leste, com a porta de entrada (Z 296..302)
-B.box(walls, "East_Wall", LX1 - 1, LX1, 0, WALL_TOP, LZ0 + 1, DOOR_Z0, EXT, "Concrete")
-B.box(walls, "East_Wall", LX1 - 1, LX1, 0, WALL_TOP, DOOR_Z1, LZ1 - 1, EXT, "Concrete")
-B.box(walls, "East_Lintel", LX1 - 1, LX1, DH, WALL_TOP, DOOR_Z0, DOOR_Z1, EXT, "Concrete")
+B.box(walls, "East_Wall", LX1 - 1, LX1, 0, WALL_TOP, LZ0 + 1, LZ1 - 1, EXT, "Concrete")
 -- norte: Firing Room com faixa de janelas (Y 4..14) voltada para a plataforma
 B.box(walls, "North_Wall_Low", LX0, FX1 + 1, 0, 4, LZ1 - 1, LZ1, EXT, "Concrete")
 B.box(walls, "North_Wall_High", LX0, FX1 + 1, 14, WALL_TOP, LZ1 - 1, LZ1, EXT, "Concrete")
@@ -200,7 +201,10 @@ local INNER = "#2B313B"
 B.box(walls, "Inner_Wall", FX1, FX1 + 1, 0, ROOF_Y, LZ0 + 1, DOOR_Z0, INNER, "SmoothPlastic")
 B.box(walls, "Inner_Wall", FX1, FX1 + 1, 0, ROOF_Y, DOOR_Z1, LZ1 - 1, INNER, "SmoothPlastic")
 B.box(walls, "Inner_Lintel", FX1, FX1 + 1, DH, ROOF_Y, DOOR_Z0, DOOR_Z1, INNER, "SmoothPlastic")
-B.box(walls, "Lobby_Back_Wall", FX1 + 1, LX1 - 1, 0, ROOF_Y, 288, 289, "paleGray", "SmoothPlastic")
+-- fundo do saguão (Z 288..289) com passagem para o corredor de fundo, que leva à porta sul
+B.box(walls, "Lobby_Back_Wall", FX1 + 1, NDX0, 0, ROOF_Y, 288, 289, "paleGray", "SmoothPlastic")
+B.box(walls, "Lobby_Back_Wall", NDX1, LX1 - 1, 0, ROOF_Y, 288, 289, "paleGray", "SmoothPlastic")
+B.box(walls, "Lobby_Back_Lintel", NDX0, NDX1, DH, ROOF_Y, 288, 289, "paleGray", "SmoothPlastic")
 local frSign = B.box(walls, "Firing_Room_Sign", FX1 + 1, FX1 + 1.1, DH + 0.6, DH + 2.4, DOOR_Z0 - 1, DOOR_Z1 + 1, "space", "SmoothPlastic", DECOR)
 B.sign(frSign, "FIRING ROOM 1", nil, { face = N.Right, titleColor = "lightBlue" })
 
@@ -220,6 +224,7 @@ for _, t in TIERS do
 end
 -- saguão
 B.box(floorG, "Lobby_Floor", FX1 + 1, LX1 - 1, 0, 0.05, 289, LZ1 - 1, "paleGray", "Marble", DECOR)
+B.box(floorG, "Entry_Hall_Floor", FX1 + 1, LX1 - 1, 0, 0.05, LZ0 + 1, 288, "paleGray", "Marble", DECOR)
 
 -- luzes internas (sem sombra): 4 na Firing Room, 1 no saguão
 local lightsG = B.group(Arch, "Lighting")
@@ -230,16 +235,17 @@ end
 do
 	local lp = B.box(lightsG, "Lobby_Light", -104, -98, ROOF_Y - 0.1, ROOF_Y, 300, 308, "white", "Neon", DECOR_NS)
 	B.light(lp, "SurfaceLight", { Face = N.Bottom, Range = 24, Brightness = 1.2, Angle = 120, Shadows = false })
+	local hp = B.box(lightsG, "Entry_Hall_Light", -104, -98, ROOF_Y - 0.1, ROOF_Y, 264, 276, "white", "Neon", DECOR_NS)
+	B.light(hp, "SurfaceLight", { Face = N.Bottom, Range = 28, Brightness = 1.2, Angle = 120, Shadows = false })
 end
 
 -- portas automáticas
 local doorsG = B.group(Arch, "Doors")
-local DZM = (DOOR_Z0 + DOOR_Z1) / 2
-autoDoor(doorsG, "East_AutoDoor", Vector3.new(LX1 - 0.5, 3, DZM), 9, {
-	{ name = "Leaf_L", x0 = LX1 - 0.7, x1 = LX1 - 0.3, z0 = DOOR_Z0, z1 = DZM, offset = Vector3.new(0, 0, -3) },
-	{ name = "Leaf_R", x0 = LX1 - 0.7, x1 = LX1 - 0.3, z0 = DZM, z1 = DOOR_Z1, offset = Vector3.new(0, 0, 3) },
-})
 local NDM = (NDX0 + NDX1) / 2
+autoDoor(doorsG, "South_AutoDoor", Vector3.new(NDM, 3, LZ0 + 0.5), 9, {
+	{ name = "Leaf_L", x0 = NDX0, x1 = NDM, z0 = LZ0 + 0.3, z1 = LZ0 + 0.7, offset = Vector3.new(-3, 0, 0) },
+	{ name = "Leaf_R", x0 = NDM, x1 = NDX1, z0 = LZ0 + 0.3, z1 = LZ0 + 0.7, offset = Vector3.new(3, 0, 0) },
+})
 autoDoor(doorsG, "North_AutoDoor", Vector3.new(NDM, 3, LZ1 - 0.5), 9, {
 	{ name = "Leaf_L", x0 = NDX0, x1 = NDM, z0 = LZ1 - 0.7, z1 = LZ1 - 0.3, offset = Vector3.new(-3, 0, 0) },
 	{ name = "Leaf_R", x0 = NDM, x1 = NDX1, z0 = LZ1 - 0.7, z1 = LZ1 - 0.3, offset = Vector3.new(3, 0, 0) },
@@ -247,27 +253,20 @@ autoDoor(doorsG, "North_AutoDoor", Vector3.new(NDM, 3, LZ1 - 0.5), 9, {
 
 -- marquise e letreiros externos
 local ext = B.group(Arch, "Exterior")
-B.box(ext, "Entrance_Canopy", LX1, -89, DH + 1, DH + 1.6, 291, 307, "white", "SmoothPlastic")
-for _, z in { 291.5, 306.5 } do
-	B.box(ext, "Canopy_Post", -89.9, -89.3, 0, DH + 1, z - 0.3, z + 0.3, "darkGray", "Metal")
-end
-do
-	local cl = B.box(ext, "Canopy_Light", -94, -91, DH + 0.95, DH + 1, 296, 302, "white", "Neon", DECOR_NS)
-	B.light(cl, "SurfaceLight", { Face = N.Bottom, Range = 14, Brightness = 0.8, Angle = 120, Shadows = false })
-end
+local southSign = B.box(ext, "LCC_Sign_South", NDX0 - 1.5, NDX1 + 1.5, DH + 0.2, DH + 1.8, LZ0 - 0.15, LZ0 - 0.05, "nasaBlue", "SmoothPlastic", DECOR)
+B.sign(southSign, "LAUNCH CONTROL CENTER", nil, { face = N.Front, bg = "nasaBlue", titleColor = "white", ppu = 40 })
 local eastSign = B.box(ext, "LCC_Sign_East", LX1, LX1 + 0.1, 14, 20, 284, 314, "nasaBlue", "SmoothPlastic", DECOR)
 B.sign(eastSign, "LAUNCH CONTROL CENTER", nil, { face = N.Right, bg = "nasaBlue", titleColor = "white", ppu = 20 })
 local northSign = B.box(ext, "LCC_Sign_North", -120, -96, 15, 20, LZ1, LZ1 + 0.1, "nasaBlue", "SmoothPlastic", DECOR)
 B.sign(northSign, "LAUNCH CONTROL CENTER", nil, { face = N.Back, bg = "nasaBlue", titleColor = "white", ppu = 20 })
-B.box(ext, "North_Canopy", NDX0 - 2, NDX1 + 2, DH + 1, DH + 1.6, LZ1, LZ1 + 5, "white", "SmoothPlastic")
 
 -- placa do saguão (parede de fundo, voltada para +Z)
-local lobbyInfo = B.box(walls, "Lobby_Info", -105, -97, 3, 8, 289, 289.1, "space", "SmoothPlastic", DECOR)
+local lobbyInfo = B.box(walls, "Lobby_Info", -96.1, -96, 3, 8, 262, 272, "space", "SmoothPlastic", DECOR)
 B.sign(lobbyInfo, "LAUNCH CONTROL CENTER",
-	"Launch teams in the Firing Rooms monitor the rocket, the pad and the weather before every launch. The windows face Launch Complex 39B.",
-	{ face = N.Back, accent = "nasaBlue", titleScale = 0.22, maxBody = 30 })
+	"Launch teams in the Firing Rooms monitor the rocket, the pad and the weather before every launch. Firing Room 1 is on your left.",
+	{ face = N.Left, accent = "nasaBlue", titleScale = 0.22, maxBody = 30 })
 local lobbyDir = B.box(walls, "Lobby_Directions", -96.1, -96, 6, 8.5, 312, 318, "space", "SmoothPlastic", DECOR)
-B.sign(lobbyDir, "PAD OBSERVATION  →", "North exit · follow the visitor path", { face = N.Left, accent = "safety", titleScale = 0.4 })
+B.sign(lobbyDir, "SLS HANGAR (VAB)  ↑", "North exit · industrial corridor", { face = N.Left, accent = "safety", titleScale = 0.4 })
 
 ---------------------------------------------------------------------------------
 -- 1b. Consoles (4 fileiras × 8 estações, voltadas para +Z)
@@ -455,6 +454,16 @@ do
 	rect(g, 0.44, 0.9, 0.12, 0.04, "#555B60") label(g, 0.58, 0.88, 0.38, 0.06, "RS-25 ENGINES", "white")
 end
 
+-- O LCC é montado nas coordenadas originais acima e transladado para o lugar do antigo museu,
+-- entre o Corredor 1 e o Corredor 2: X −49..6, Z 95..165, portas sul e norte no eixo X = 0.
+local LCC_SHIFT = Vector3.new(101, 0, -155)
+LCC:PivotTo(LCC:GetPivot() + LCC_SHIFT)
+for _, d in LCC:GetDescendants() do
+	if d:GetAttribute("AutoDoor") then
+		d:SetAttribute("SensorCenter", d:GetAttribute("SensorCenter") + LCC_SHIFT)
+	end
+end
+
 ---------------------------------------------------------------------------------
 -- 2. Caminhos de pedestres (Visitor_Paths)
 ---------------------------------------------------------------------------------
@@ -462,18 +471,13 @@ local VP = B.group(Map, "Visitor_Paths")
 local WALK = "#C9C4B8"
 local CURB = "#8F949A"
 
--- 2a. Patamar da saída do VAB → praça da entrada leste do LCC
-local p1 = B.group(VP, "VAB_to_LCC")
+-- 2a. Patamar da saída do VAB → início do passeio (o LCC agora fica no caminho principal)
+local p1 = B.group(VP, "VAB_Exit_Link")
 B.box(p1, "Walkway_Connector", -85, -82, -1, 0, 295, 303, WALK, "Concrete") -- encosta no patamar (X −82)
-B.box(p1, "Entrance_Plaza", LX1, -85, -1, 0, 288, 310, WALK, "Concrete")
-B.box(p1, "Plaza_Inlay", -93, -87, 0, 0.03, 296, 302, "nasaBlue", "SmoothPlastic", DECOR_NS)
--- 2b. Contorno pela fachada leste até a praça norte
-local p2 = B.group(VP, "East_Walk")
-B.box(p2, "Walkway", LX1, -88, -1, 0, 310, LZ1, WALK, "Concrete")
-B.box(p2, "North_Plaza", -108, -88, -1, 0, LZ1, 332, WALK, "Concrete")
--- 2c. Praça norte → área de observação (passeio X −105..−97)
-local p3 = B.group(VP, "LCC_to_Observation")
-local PX0, PX1, PZ0, PZ1 = -105, -97, 332, 640
+B.box(p1, "Link", -97, -85, -1, 0, 295, 303, WALK, "Concrete")
+-- 2b. Passeio até a área de observação (X −105..−97)
+local p3 = B.group(VP, "Walk_to_Observation")
+local PX0, PX1, PZ0, PZ1 = -105, -97, 295, 640
 B.box(p3, "Walkway", PX0, PX1, -1, 0, PZ0, PZ1, WALK, "Concrete")
 B.box(p3, "Curb", PX0 - 0.5, PX0, -1, 0.25, PZ0, PZ1, CURB, "Concrete", DECOR)
 B.box(p3, "Curb", PX1, PX1 + 0.5, -1, 0.25, PZ0, PZ1, CURB, "Concrete", DECOR)
@@ -519,18 +523,12 @@ local function signPost(name, x, z, axis, panels, base)
 	end
 end
 local GREEN = "#2E7D4F"
--- ao sair do VAB (olhando para −X): LCC em frente; observação ao norte (+Z), à esquerda de quem olha
+-- ao sair do VAB (olhando para −X): passeio da observação à frente, virando ao norte (+Z)
 signPost("Sign_VAB_Exit", -86.5, 307, "X", {
-	{ y = 6.6, a = { "↑  LAUNCH CONTROL CENTER" } },
-	{ y = 4.8, a = { "↖  PAD OBSERVATION", GREEN } },
-})
--- praça norte: face Front para quem segue para +Z, face Back para quem volta
-signPost("Sign_North_Plaza", -95.5, 331, "Z", {
-	{ y = 6.6, a = { "PAD OBSERVATION  ↑", GREEN }, b = { "LAUNCH CONTROL CENTER  ↑" } },
-	{ y = 4.8, b = { "VEHICLE ASSEMBLY BUILDING  ↗" } },
+	{ y = 6.6, a = { "↖  PAD OBSERVATION", GREEN } },
 })
 signPost("Sign_Midway", -95.5, 490, "Z", {
-	{ y = 6.6, a = { "PAD OBSERVATION  ↑", GREEN }, b = { "LAUNCH CONTROL CENTER  ↑" } },
+	{ y = 6.6, a = { "PAD OBSERVATION  ↑", GREEN }, b = { "VEHICLE ASSEMBLY BUILDING  ↑" } },
 }, -1)
 -- aviso da zona de exclusão (voltado para o leste, visto de quem anda pelo passeio)
 for _, z in { 400, 560 } do

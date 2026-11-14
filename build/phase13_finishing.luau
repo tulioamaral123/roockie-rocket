@@ -82,9 +82,9 @@ local DX0, DX1 = -24, -4
 local dir = B.group(Sig, "Entrance_Directory")
 local board = B.box(dir, "Board", DX0, DX1, 10.5, 16.5, 221.8, 222.2, "space", "SmoothPlastic", DECOR_NS)
 B.sign(board, "VEHICLE ASSEMBLY BUILDING",
-	"CREW SUIT-UP ROOM  →\nSERVICE ELEVATOR · LEVEL 60  →\nPEDESTRIAN EXIT · LAUNCH CONTROL CENTER  →\nOBSERVATION ROOM  ←",
+	"CREW SUIT-UP ROOM  →\nSERVICE ELEVATOR · LEVEL 60  →\nPEDESTRIAN EXIT · PAD OBSERVATION  →\nOBSERVATION ROOM  ←",
 	{ face = N.Front, accent = "nasaBlue", titleColor = "lightBlue", titleScale = 0.22, maxBody = 60 })
-B.sign(board, "VEHICLE ASSEMBLY BUILDING", "EXIT TO MUSEUM  ↓", { face = N.Back, accent = "nasaBlue", titleScale = 0.3 })
+B.sign(board, "VEHICLE ASSEMBLY BUILDING", "EXIT TO CONTROL CENTER  ↓", { face = N.Back, accent = "nasaBlue", titleScale = 0.3 })
 B.box(dir, "Frame_Top", DX0 - 0.2, DX1 + 0.2, 16.5, 16.8, 221.7, 222.3, "metalGray", "Metal", DECOR_NS)
 B.box(dir, "Frame_Bottom", DX0 - 0.2, DX1 + 0.2, 10.2, 10.5, 221.7, 222.3, "metalGray", "Metal", DECOR_NS)
 for _, x in { DX0 + 2, DX1 - 2 } do
@@ -109,7 +109,7 @@ B.sign(svc, "SERVICE ELEVATOR", "Level 60 · doors on the far side of the tower"
 -- 2d. Saída de pedestres: placa na parede esquerda (X −70), entre os pilares Z 267..287.
 --     Quem olha para −X tem +Z (a porta, Z 296..302) à esquerda.
 local ped = B.box(Sig, "Pedestrian_Exit_Sign", -70, -69.8, 5.5, 10, 274, 286, "#2E9E4F", "SmoothPlastic", DECOR_NS)
-B.sign(ped, "←  PEDESTRIAN EXIT", "Launch Control Center · Pad Observation", {
+B.sign(ped, "←  PEDESTRIAN EXIT", "Pad Observation · visitor path", {
 	face = N.Right, bg = "#2E9E4F", titleColor = "white", bodyColor = "white", titleScale = 0.4, maxBody = 60,
 })
 

@@ -1,6 +1,6 @@
 # NASA Space Adventure — instruções do projeto
 
-Mapa no Roblox Studio inspirado no Kennedy Space Center: recepção, museu (planetário), VAB com SLS + Mobile Launcher + crawler, rota do crawler, plataforma 39B, Launch Control Center e área de observação.
+Mapa no Roblox Studio inspirado no Kennedy Space Center. Percurso: recepção (museu/planetário na ala leste) → Corredor 1 → Launch Control Center → Corredor 2 → VAB com SLS + Mobile Launcher + crawler → saída de pedestres → área de observação da plataforma 39B (rota do crawler ao lado).
 
 ## Referências
 
@@ -23,12 +23,13 @@ O place (`Place1.rbxl`) é gerado por scripts Luau em `build/`. Não editar peç
 | 11 | `phase11_launch_pad.luau` | Crawlerway, plataforma 39B, estacionamento, pontos da rota |
 | 12 | `phase12_control_center.luau` | Launch Control Center e caminhos de pedestres |
 | 13 | `phase13_finishing.luau` | SafetyZones, sinalização, passe de otimização |
+| 14 | `phase14_relocation.luau` | Museu na ala leste da recepção (giro + translação) e ligações do LCC |
 
 Reconstruir:
 
 1. Servir `build/` em segundo plano: `python3 -m http.server 8765 --bind 127.0.0.1` (parar ao terminar).
 2. Fases 1 e 2 (autônomas): carregar e executar no Edit (`loadstring(HttpService:GetAsync(...))()`).
-3. `build/run_in_studio.luau`: executa as Fases 3–6 e 8–13 em ordem, passando `lib.luau`.
+3. `build/run_in_studio.luau`: executa as Fases 3–6 e 8–14 em ordem, passando `lib.luau`.
 
 Regras dos geradores:
 
@@ -44,7 +45,7 @@ Regras dos geradores:
 - **Envelope do conjunto:** X −34..34, Y 0..133 no VAB; portão dos fundos 80 × 140 (folga vertical 7, lateral ≥ 6).
 - **Varredura do trajeto** (peça a peça, caixas transladadas): chegada do conjunto de Z 265 a Z 700, recuo do crawler de 700 a 620 e lateral até (90, 0, 620) — 0 interseções, exceto as folhas do portão dos fundos.
 - **Visão do SLS** a partir do portão frontal (olho em (0, 4,5, 211)): nada fixo entre o visitante e o foguete.
-- Playtest do percurso: recepção → museu → VAB → vestiário → escada → elevador → Orion → saída de pedestres → LCC → área de observação. Console sem erros.
+- Playtest do percurso: recepção → museu (ala leste) → Corredor 1 → LCC → Corredor 2 → VAB → vestiário → escada → elevador → Orion → saída de pedestres → área de observação. Console sem erros.
 
 ## Studio via MCP
 

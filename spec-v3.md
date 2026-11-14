@@ -28,6 +28,18 @@ A versão 3.0 foi conferida contra a geometria dos geradores em `build/`. As cor
 
 ---
 
+## 0.1 Revisão de layout (pedido do usuário, depois da Etapa 6)
+
+O museu e o Launch Control Center trocaram de papel no percurso:
+
+| Ambiente | Antes | Agora |
+|---|---|---|
+| Museu (planetário Space Adventure) | Entre o Corredor 1 e o Corredor 2 (X −45..45, Z 90..170), no caminho para o VAB | Ala leste da recepção (X 50..130, Z −17,5..72,5), girado 90°, com a entrada voltada para a recepção. Corredor próprio de 14 × 12 (X 36..50,5, Z 20,5..34,5) a partir de uma abertura na parede leste da recepção. Os fundos foram fechados |
+| Launch Control Center | À esquerda do VAB (X −150..−95, Z 250..320), alcançado pela saída de pedestres | No lugar do museu (X −49..6, Z 95..165). O visitante o atravessa em linha reta pelo eixo X = 0: porta sul → corredor de fundo → saguão → porta norte → Corredor 2 → VAB. A Firing Room fica ao lado, pelo vão do saguão |
+| Caminho de pedestres | Saída do VAB → LCC → área de observação | Saída do VAB → passeio X −105..−97 → área de observação |
+
+Percurso do visitante: recepção → (museu, ida e volta pela ala leste) → Corredor 1 → LCC → Corredor 2 → VAB → saída de pedestres → área de observação. O resto desta spec continua valendo; as coordenadas do museu no `spec.md` passam a ser as de antes da transformação (a Fase 14 aplica o giro e a translação).
+
 ## 1. Objetivo desta versão
 
 Esta versão define exclusivamente a construção do complexo espacial.
