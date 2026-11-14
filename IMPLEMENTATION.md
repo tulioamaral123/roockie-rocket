@@ -285,7 +285,7 @@ Comparação medida em três pontos (VAB, museu, área externa), mesma câmera, 
 Efeito medido (claridade perceptual): no VAB a área estourada caiu de 5,5% para 1,3% e a mediana subiu de 0,21 para 0,23; museu e área externa ficaram praticamente iguais. Aplicado na Fase 5 e reconstruído (Fases 3–13).
 
 - **Correção de interiores:** a comparação inicial não incluiu interiores claros. Com `Realistic` e o `Ambient` antigo (58, 60, 70), a recepção caiu de claridade média 0,53 para 0,30 (cinzenta), porque o Realistic tira o preenchimento difuso do Soft. A Fase 5 agora usa `Ambient = (105, 108, 118)`: a recepção volta a 0,54 e o VAB mantém a área estourada em 1,2%. Medido com a iluminação assentada (15 s após cada mudança, como recomenda a `roblox-pitfalls`). O LCC continua escuro por projeto (paredes #2B313B e luz controlada).
-- **Materiais:** prévia feita (reboco nas paredes e tetos claros, metal nos tanques; 38 peças), mas ainda não aplicada nem comparada com a iluminação assentada.
+- **Materiais (aplicado):** comparação medida em `docs/materials/compare.html` (5 pontos, luz assentada). O reboco escureceu e manchou a recepção (claridade 0,44 → 0,38) e não mudou museu nem LCC, então ficou só onde houve ganho: **reboco (`Plaster`) nas paredes e no teto do vestiário** (área estourada 46% → 36%, Fase 8) e **metal nas esferas de LH2 e LOX e no reservatório da torre de água** (estouro 3,5% → 1,7%, Fase 11). Recepção, corredores, museu e LCC continuam lisos.
 
 ### Teste por dispositivo (skill `rbx-device-simulator-lua`)
 

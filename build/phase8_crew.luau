@@ -61,15 +61,17 @@ end
 --    porta da face +X (Z 248,5..253,5) dá para a escada do lançador. Armários na parede do fundo.
 ---------------------------------------------------------------------------------
 local room = B.group(Hangar, "CrewSuitUpRoom") -- sala fixa do VAB (spec-v3 §11)
+-- Paredes e teto em reboco (Plaster): reduz o branco estourado de 46% para 36% da imagem
+-- (comparação medida em docs/materials).
 local RX0, RX1, RZ0, RZ1, RH = -60, -36.5, 244, 258, 13
 local EX0, EX1 = -44, -38          -- vão de entrada (face −Z)
 local DZ0, DZ1 = 248.5, 253.5      -- porta para o lançador (face +X)
 B.box(room, "Floor_Mat", RX0, RX1, 0, 0.1, RZ0, RZ1, "lightGray", "SmoothPlastic")
-B.box(room, "Wall_Back", RX0 - 0.4, RX0, 0, RH, RZ0 - 0.4, RZ1 + 0.4, "white", "SmoothPlastic")
-B.box(room, "Wall_Entrance", RX0, EX0, 0, RH, RZ0 - 0.4, RZ0, "white", "SmoothPlastic")
-B.box(room, "Wall_Entrance", EX1, RX1, 0, RH, RZ0 - 0.4, RZ0, "white", "SmoothPlastic")
+B.box(room, "Wall_Back", RX0 - 0.4, RX0, 0, RH, RZ0 - 0.4, RZ1 + 0.4, "white", "Plaster")
+B.box(room, "Wall_Entrance", RX0, EX0, 0, RH, RZ0 - 0.4, RZ0, "white", "Plaster")
+B.box(room, "Wall_Entrance", EX1, RX1, 0, RH, RZ0 - 0.4, RZ0, "white", "Plaster")
 B.box(room, "Lintel", EX0, EX1, 11, RH, RZ0 - 0.4, RZ0, "white", "SmoothPlastic")
-B.box(room, "Wall_End", RX0, RX1, 0, RH, RZ1, RZ1 + 0.4, "white", "SmoothPlastic")
+B.box(room, "Wall_End", RX0, RX1, 0, RH, RZ1, RZ1 + 0.4, "white", "Plaster")
 -- frente (X −36,5): mureta + vidro, com a porta para o lançador
 for _, zz in { { RZ0 - 0.4, DZ0 }, { DZ1, RZ1 + 0.4 } } do
 	B.box(room, "Front_Base", RX1, RX1 + 0.4, 0, 3.6, zz[1], zz[2], "white", "SmoothPlastic")
@@ -77,7 +79,7 @@ for _, zz in { { RZ0 - 0.4, DZ0 }, { DZ1, RZ1 + 0.4 } } do
 end
 B.box(room, "Lintel", RX1, RX1 + 0.4, 11, RH, DZ0, DZ1, "white", "SmoothPlastic")
 B.box(room, "Accent_Stripe", RX1 - 0.05, RX1 + 0.45, 3.2, 3.6, RZ0 - 0.4, RZ1 + 0.4, "nasaBlue", "SmoothPlastic", DECOR)
-B.box(room, "Roof", RX0 - 0.6, RX1 + 0.6, RH, RH + 0.4, RZ0 - 0.6, RZ1 + 0.6, "white", "SmoothPlastic")
+B.box(room, "Roof", RX0 - 0.6, RX1 + 0.6, RH, RH + 0.4, RZ0 - 0.6, RZ1 + 0.6, "white", "Plaster")
 for _, lx in { { -55, -50 }, { -46, -41 } } do
 	local panel = B.box(room, "Ceiling_Light", lx[1], lx[2], RH - 0.1, RH, 248, 254, "white", "Neon", DECOR_NS)
 	B.light(panel, "SurfaceLight", { Face = Enum.NormalId.Bottom, Brightness = 1.5, Range = 16, Angle = 120, Shadows = false })

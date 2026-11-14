@@ -176,7 +176,7 @@ local function sphereTank(name, c, dia, color, legR)
 		local a = i * math.pi / 4
 		B.cyl(m, "Leg", c.X + legR * math.cos(a), c.Z + legR * math.sin(a), 0.6, cy, 1.4, "metalGray", "Metal")
 	end
-	B.ball(m, "Sphere", V(c.X, cy, c.Z), dia, color, "SmoothPlastic")
+	B.ball(m, "Sphere", V(c.X, cy, c.Z), dia, color, "Metal") -- metal: tanque pintado (docs/materials)
 	B.cyl(m, "Equator_Band", c.X, c.Z, cy - 0.4, cy + 0.4, dia + 0.3, "paleGray", "Metal", DECOR)
 	B.cyl(m, "Vent_Stack", c.X, c.Z, cy + dia / 2 - 1, cy + dia / 2 + 6, 1, "metalGray", "Metal")
 	return m, cy
@@ -225,7 +225,7 @@ for _, t in { 0.25, 0.5, 0.75 } do -- anéis de travamento
 end
 B.cyl(wt, "Riser", WT.X, WT.Z, 0.8, WT_LEG_TOP + 2, 3, "metalGray", "Metal")
 B.cyl(wt, "Tank_Skirt", WT.X, WT.Z, WT_LEG_TOP - 1, WT_LEG_TOP + 1, 14, "paleGray", "Metal")
-local wtBall = B.ball(wt, "Tank", V(WT.X, 105 - WT_DIA / 2, WT.Z), WT_DIA, "white", "SmoothPlastic")
+local wtBall = B.ball(wt, "Tank", V(WT.X, 105 - WT_DIA / 2, WT.Z), WT_DIA, "white", "Metal")
 B.cyl(wt, "Tank_Band", WT.X, WT.Z, 93.6, 94.4, WT_DIA + 0.3, "nasaBlue", "Metal", DECOR)
 -- Adutora até a parede da trincheira (+X)
 pipeRun("Water_Main", { V(WT.X - 6, 1.4, WT.Z - 4), V(19.5, 1.4, 790) }, 2.4, "metalGray")
