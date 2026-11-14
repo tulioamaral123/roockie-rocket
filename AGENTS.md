@@ -22,6 +22,10 @@ As regras do projeto estão em [`CLAUDE.md`](CLAUDE.md): gerador por fases em `b
 - Commit na sua branch, push, Pull Request para `main`. Nunca faça push direto na `main`.
 - No PR, diga o que precisa ser rodado no Studio para testar (quais fases, qual playtest).
 
+## Quando o Claude Code te chamar
+
+O Claude Code pode mandar tarefas por `codex exec` (skill `.claude/skills/codex`). Trate a mensagem dele como tarefa do usuário: siga as regras acima e responda no fim com o que mudou, a branch e o que falta testar no Studio.
+
 ## Convenções
 
 - Código e comentários seguem o estilo dos geradores existentes (tabs, nomes em inglês, comentários em português).
