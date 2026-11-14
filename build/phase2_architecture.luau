@@ -254,18 +254,19 @@ for _, side in { { -26, -14 }, { 14, 26 } } do
 	end
 end
 
--- 7. Hangar: portão de manutenção nos fundos (fechado, 40 × 100) ---------------------
+-- 7. Hangar: portão dos fundos 80 × 140 (fechado) -------------------------------------
+-- Saída do conjunto de transporte (spec-v3 §3.2): envelope de 68 × 134 passa com folga.
 local backWall = group(Hangar.Structure, "Back_Wall")
-wallWithOpening(backWall, "Back_Wall", 319, 321, -72, 72, 152, -20, 20, 100, C.metalGray, "Metal")
+wallWithOpening(backWall, "Back_Wall", 319, 321, -72, 72, 152, -40, 40, 140, C.metalGray, "Metal")
 local bg = group(Hangar.Gates, "Maintenance_Gate")
-for k = 0, 4 do
+for k = 0, 6 do
 	local z0 = (k % 2 == 0) and 319.2 or 319.7
-	box(bg, "Segment_" .. (k + 1), -20, 20, (k == 0) and -1 or k * 20, (k + 1) * 20, z0, z0 + 1, C.paleGray, "Metal")
+	box(bg, "Segment_" .. (k + 1), -40, 40, (k == 0) and -1 or k * 20, (k + 1) * 20, z0, z0 + 1, C.paleGray, "Metal")
 end
-box(bg, "Jamb_L", -22, -20, 0, 102, 317.5, 319, C.darkGray, "Metal")
-box(bg, "Jamb_R", 20, 22, 0, 102, 317.5, 319, C.darkGray, "Metal")
-box(bg, "Header", -22, 22, 100, 102, 317.5, 319, C.darkGray, "Metal")
-box(bg, "Hazard_Band", -20, 20, 0, 3, 318.9, 319.2, C.safety, "SmoothPlastic", DECOR)
+box(bg, "Jamb_L", -42, -40, 0, 142, 317.5, 319, C.darkGray, "Metal")
+box(bg, "Jamb_R", 40, 42, 0, 142, 317.5, 319, C.darkGray, "Metal")
+box(bg, "Header", -42, 42, 140, 142, 317.5, 319, C.darkGray, "Metal")
+box(bg, "Hazard_Band", -40, 40, 0, 3, 318.9, 319.2, C.safety, "SmoothPlastic", DECOR)
 
 -- 8. Hangar: sala de observação elevada (~(45, 35, 250)) + escada --------------------
 local obs = Hangar.Observation_Room

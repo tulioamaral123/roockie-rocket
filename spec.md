@@ -518,13 +518,17 @@ acesso → White Room → escotilha → cabine da Orion.
 
 Elementos:
 
--   **Vestiário:** quatro armários com o traje laranja OCSS (Orion Crew
-    Survival System), placas e banco. O jogador veste ou tira o traje
-    pelo prompt do armário.
-    -   O traje cobre o corpo em laranja, com luvas, botas, capacete de
-        vidro e patch azul.
-    -   Acessórios como cabelo e chapéus ficam ocultos enquanto o traje
-        está vestido.
+-   **Vestiário:** quatro armários com o traje espacial branco da NASA,
+    placas e banco. O jogador veste ou tira o traje pelo prompt do
+    armário.
+    -   O traje é uma camisa e uma calça clássicas (criadas no ForgeGUI:
+        Shirt `rbxassetid://106949180814943`, Pants
+        `rbxassetid://82940626824190`), com patch da NASA, bandeira dos
+        EUA e painel no peito, mais capacete de vidro e anel do pescoço.
+    -   A roupa original do jogador é guardada e volta quando ele tira o
+        traje.
+    -   Acessórios como cabelo, chapéus e roupas 3D ficam ocultos
+        enquanto o traje está vestido.
     -   O traje é opcional e some quando o personagem renasce.
     -   O texto do prompt muda conforme o estado: *Put on suit* ou
         *Take off suit*.

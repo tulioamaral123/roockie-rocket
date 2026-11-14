@@ -216,9 +216,11 @@ for _, sx in { -1, 1 } do
 	B.box(crane, "Runway", sx * 68.6, sx * 66, 138, 140, 212, 318, "darkGray", "Metal")
 end
 B.box(crane, "Bridge_Girder", -66, 66, 136, 139, 283, 287, "safety", "Metal")
-B.box(crane, "Trolley", -4, 4, 133, 136, 282, 288, "darkGray", "Metal")
-B.cyl(crane, "Cable", 0, 285, 131.5, 133, 0.3, "black", "Metal", DECOR)
-B.box(crane, "Hook_Block", -1.2, 1.2, 128.5, 131.5, 284, 286, "safety", "Metal", DECOR)
+-- trolley e gancho estacionados em X = 54, fora do envelope de transporte (spec-v3 §3.4)
+local PARK_X = 54
+B.box(crane, "Trolley", PARK_X - 4, PARK_X + 4, 133, 136, 282, 288, "darkGray", "Metal")
+B.cyl(crane, "Cable", PARK_X, 285, 131.5, 133, 0.3, "black", "Metal", DECOR)
+B.box(crane, "Hook_Block", PARK_X - 1.2, PARK_X + 1.2, 128.5, 131.5, 284, 286, "safety", "Metal", DECOR)
 
 -- marcações de piso
 local marks = B.group(Hangar.Floor, "Floor_Markings")
@@ -230,8 +232,8 @@ for _, x in { -12.6, 12 } do
 	B.box(marks, "Walkway_Line", x, x + 0.6, 0, 0.05, 213.5, 239.4, "white", "SmoothPlastic", FLOOR_MARK)
 end
 
--- faixa "SPACE LAUNCH SYSTEM" na parede dos fundos
-panel(hs, -30, 30, 106, 122, 318.7, 318.9, N.Front, "SPACE LAUNCH SYSTEM", nil,
+-- faixa "SPACE LAUNCH SYSTEM" na parede dos fundos, acima do portão de 140 (spec-v3 §3.2)
+panel(hs, -30, 30, 142, 151, 318.7, 318.9, N.Front, "SPACE LAUNCH SYSTEM", nil,
 	{ bg = "darkGray", titleColor = "white", accent = "safety", ppu = 8 })
 
 -- veículos de manutenção

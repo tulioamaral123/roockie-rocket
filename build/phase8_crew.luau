@@ -1,7 +1,14 @@
 --[[
 	NASA Space Adventure — Fase 8: acesso da tripulação (pedido do usuário, após as 7 fases da spec)
-	Percurso: escada do lançador → vestiário (trajes OCSS) → elevador da torre esquerda
-	          → braço de acesso + White Room → escotilha → cabine da Orion (4 assentos).
+	Percurso: vestiário fixo no piso do VAB (trajes espaciais brancos) → escada do lançador
+	          → elevador da torre esquerda → braço de acesso + White Room → escotilha
+	          → cabine da Orion (4 assentos).
+
+	Tudo o que acompanha o lançador é relativo (spec-v3 §5.4 e §12): as zonas do elevador ficam
+	no atributo ZoneOffset de cada cabine (relativo ao piso, PrimaryPart), as portas abrem em
+	relação à cabine e as escotilhas apontam para peças de referência (ObjectValue TargetRef →
+	Exit_Point na White Room, Entry_Point na cabine). Assim o acesso continua funcionando
+	quando o conjunto de transporte se move (Fase 9).
 
 	A cabine da Orion em escala de foguete tem só 3,5 studs de altura, pequena demais para um
 	personagem. Por isso o interior é um modelo em escala humana colocado sob o hangar (Y ≈ −60):
@@ -47,9 +54,12 @@ local function prompt(part, action, object, actionText, o)
 end
 
 ---------------------------------------------------------------------------------
--- 1. Vestiário (sobre o lançador, entre a escada de acesso e a torre esquerda)
---    X −24..−14.5, Z 246..256, Y 10.1..19.4
+-- 1. Vestiário (sala fixa no piso do VAB, à esquerda do lançador; spec-v3 §6.2)
+--    Montado nas coordenadas originais do deck (X −24..−14.5, Z 246..256, Y 10.1..19.4)
+--    e depois transladado por SUIT_OFFSET para X −46..−36.5, Y 0..9,3, fora do envelope.
+--    Entrada pela face −Z (lado do portão frontal); porta da face +X dá para a escada do lançador.
 ---------------------------------------------------------------------------------
+local SUIT_OFFSET = Vector3.new(-22, -DECK, 0)
 local room = B.group(root, "Suit_Room")
 local RY1 = 19
 B.box(room, "Floor_Mat", -23.8, -14.7, DECK, DECK + 0.1, 246.2, 255.8, "lightGray", "SmoothPlastic")
@@ -58,10 +68,8 @@ B.box(room, "Wall_Back", -24, -23.6, DECK, RY1, 246, 256, "white", "SmoothPlasti
 B.box(room, "Wall_Stairs", -24, -22, DECK, RY1, 246, 246.4, "white", "SmoothPlastic")
 B.box(room, "Wall_Stairs", -16, -14.5, DECK, RY1, 246, 246.4, "white", "SmoothPlastic")
 B.box(room, "Lintel", -22, -16, 17.5, RY1, 246, 246.4, "white", "SmoothPlastic")
--- parede do elevador (Z 256): vão X −22..−18 = porta da cabine
-B.box(room, "Wall_Elevator", -24, -22, DECK, RY1, 255.6, 256, "white", "SmoothPlastic")
-B.box(room, "Wall_Elevator", -18, -14.5, DECK, RY1, 255.6, 256, "white", "SmoothPlastic")
-local elevLintel = B.box(room, "Lintel", -22, -18, 17.5, RY1, 255.6, 256, "white", "SmoothPlastic")
+-- parede dos fundos (Z 256): fechada (o elevador fica no lançador)
+B.box(room, "Wall_End", -24, -14.5, DECK, RY1, 255.6, 256, "white", "SmoothPlastic")
 -- frente (X −14.5): mureta + vidro, com porta Z 249..253 para o deck
 for _, zz in { { 246.4, 249 }, { 253, 255.6 } } do
 	B.box(room, "Front_Base", -14.9, -14.5, DECK, 13, zz[1], zz[2], "white", "SmoothPlastic")
@@ -77,11 +85,11 @@ B.light(panel, "SurfaceLight", { Face = Enum.NormalId.Bottom, Brightness = 1.6, 
 local s1 = B.box(room, "Sign_Entrance", -22, -16, 17.6, 18.9, 245.8, 246, "space", "SmoothPlastic", DECOR)
 B.sign(s1, "CREW SUIT-UP ROOM", nil, { face = Enum.NormalId.Front, titleColor = "white", accent = "orange" })
 local s2 = B.box(room, "Sign_Suits", -23.6, -23.5, 17.2, 18.9, 246.6, 255.4, "space", "SmoothPlastic", DECOR)
-B.sign(s2, "ORION CREW SURVIVAL SYSTEM",
-	"Artemis crews wear the orange OCSS suit for launch and return. Suit up, then take the elevator to the crew access arm.",
+B.sign(s2, "NASA CREW SPACESUITS",
+	"Every crew member suits up here before launch. Put on your NASA spacesuit, then climb the mobile launcher stairs and take the crew elevator.",
 	{ face = Enum.NormalId.Right, accent = "orange", titleScale = 0.32 })
-local s3 = B.box(room, "Sign_Elevator", -22, -18, 17.7, 18.8, 255.45, 255.6, "space", "SmoothPlastic", DECOR)
-B.sign(s3, "CREW ELEVATOR", nil, { face = Enum.NormalId.Front, titleColor = "safety" })
+local s3 = B.box(room, "Sign_Launcher", -14.45, -14.35, 17.6, 18.9, 249, 253, "space", "SmoothPlastic", DECOR)
+B.sign(s3, "TO MOBILE LAUNCHER", nil, { face = Enum.NormalId.Right, titleColor = "safety" })
 
 -- 4 armários com trajes
 for i, cz in { 247.5, 249.8, 252.1, 254.4 } do
@@ -92,11 +100,11 @@ for i, cz in { 247.5, 249.8, 252.1, 254.4 } do
 	B.box(lk, "Base", -23.6, -21.6, DECK, 10.8, cz - 1.0, cz + 1.0, "darkGray", "Metal")
 	B.box(lk, "Back", -23.6, -23.45, 10.8, 16.9, cz - 1.0, cz + 1.0, "midGray", "Metal", DECOR)
 	-- traje pendurado (decorativo)
-	B.box(lk, "Suit_Torso", -22.9, -22.3, 13.6, 15.6, cz - 0.7, cz + 0.7, "orange", "Fabric", DECOR)
-	B.box(lk, "Suit_Leg", -22.85, -22.35, 11.2, 13.6, cz - 0.65, cz - 0.08, "orange", "Fabric", DECOR)
-	B.box(lk, "Suit_Leg", -22.85, -22.35, 11.2, 13.6, cz + 0.08, cz + 0.65, "orange", "Fabric", DECOR)
-	B.box(lk, "Suit_Arm", -22.85, -22.4, 13.3, 15.5, cz - 0.95, cz - 0.72, "orange", "Fabric", DECOR)
-	B.box(lk, "Suit_Arm", -22.85, -22.4, 13.3, 15.5, cz + 0.72, cz + 0.95, "orange", "Fabric", DECOR)
+	B.box(lk, "Suit_Torso", -22.9, -22.3, 13.6, 15.6, cz - 0.7, cz + 0.7, "lightGray", "Fabric", DECOR)
+	B.box(lk, "Suit_Leg", -22.85, -22.35, 11.2, 13.6, cz - 0.65, cz - 0.08, "lightGray", "Fabric", DECOR)
+	B.box(lk, "Suit_Leg", -22.85, -22.35, 11.2, 13.6, cz + 0.08, cz + 0.65, "lightGray", "Fabric", DECOR)
+	B.box(lk, "Suit_Arm", -22.85, -22.4, 13.3, 15.5, cz - 0.95, cz - 0.72, "lightGray", "Fabric", DECOR)
+	B.box(lk, "Suit_Arm", -22.85, -22.4, 13.3, 15.5, cz + 0.72, cz + 0.95, "lightGray", "Fabric", DECOR)
 	B.box(lk, "Suit_Patch", -22.31, -22.27, 14.8, 15.2, cz - 0.5, cz - 0.1, "nasaBlue", "SmoothPlastic", DECOR)
 	B.box(lk, "Boot", -22.9, -22.2, 10.8, 11.2, cz - 0.65, cz + 0.65, "black", "SmoothPlastic", DECOR)
 	B.ball(lk, "Helmet", Vector3.new(-22.7, 16.25, cz), 1.25, "white", "SmoothPlastic", DECOR)
@@ -104,9 +112,10 @@ for i, cz in { 247.5, 249.8, 252.1, 254.4 } do
 	local tag = B.box(lk, "Name_Tag", -21.65, -21.55, 16.95, 17.45, cz - 0.9, cz + 0.9, "space", "SmoothPlastic", DECOR)
 	B.sign(tag, "CREW " .. i, nil, { face = Enum.NormalId.Right, titleColor = "white", ppu = 80 })
 	local pp = B.box(lk, "Prompt_Point", -21.7, -21.6, 12, 15, cz - 0.9, cz + 0.9, "white", "SmoothPlastic", HIDDEN)
-	prompt(pp, "Suit", "OCSS suit", "Put on / take off", { hold = 0.4, dist = 6 })
+	prompt(pp, "Suit", "NASA spacesuit", "Put on / take off", { hold = 0.4, dist = 6 })
 end
 B.box(room, "Bench", -17.8, -15.3, DECK, 11.7, 254.2, 255.5, "metalGray", "Metal")
+room:PivotTo(room:GetPivot() + SUIT_OFFSET)
 
 ---------------------------------------------------------------------------------
 -- 2. Elevador da tripulação (frente da torre esquerda, X −22.6..−17.4, Z 255.6..262)
@@ -121,7 +130,11 @@ local ZONE = Vector3.new(4.4, 7.4, ZC1 - ZC0 + 0.6)
 local function cab(name, floorY, doorAtLowZ)
 	local c = B.group(elev, name)
 	local y1 = floorY + 7.4
-	B.box(c, "Floor", -22.6, -17.4, floorY - 0.5, floorY + 0.15, ZC0 - 0.4, ZC1 + 0.4, "darkGray", "DiamondPlate")
+	local floor = B.box(c, "Floor", -22.6, -17.4, floorY - 0.5, floorY + 0.15, ZC0 - 0.4, ZC1 + 0.4, "darkGray", "DiamondPlate")
+	-- referência da cabine: zona de passageiros relativa ao piso (acompanha o lançador)
+	c.PrimaryPart = floor
+	c:SetAttribute("ZoneOffset", floor.CFrame:PointToObjectSpace(zoneCenter(floorY)))
+	c:SetAttribute("ZoneSize", ZONE)
 	B.box(c, "Wall_Side", -22.6, -22, floorY, y1, ZC0 - 0.4, ZC1 + 0.4, "metalGray", "Metal")
 	B.box(c, "Wall_Side", -18, -17.4, floorY, y1, ZC0 - 0.4, ZC1 + 0.4, "metalGray", "Metal")
 	if doorAtLowZ then
@@ -147,15 +160,10 @@ local function cab(name, floorY, doorAtLowZ)
 end
 local _, panelLow = cab("Cab_Lower", DECK, true)
 local _, panelTop = cab("Cab_Upper", TOP, false)
+-- cada painel leva quem está na própria cabine até a outra cabine do mesmo elevador
 local pl = prompt(panelLow, "Elevator", "Crew elevator", "Go up to the access arm", { dist = 5 })
-pl:SetAttribute("ZoneCenter", zoneCenter(DECK))
-pl:SetAttribute("ZoneSize", ZONE)
-pl:SetAttribute("Target", zoneCenter(TOP))
 pl:SetAttribute("FadeText", "Going up to the crew access arm…")
 local pt = prompt(panelTop, "Elevator", "Crew elevator", "Go down to the launcher", { dist = 5 })
-pt:SetAttribute("ZoneCenter", zoneCenter(TOP))
-pt:SetAttribute("ZoneSize", ZONE)
-pt:SetAttribute("Target", zoneCenter(DECK))
 pt:SetAttribute("FadeText", "Going down to the mobile launcher…")
 local tag = B.box(elev, "Sign_Cab_Upper", -21.5, -18.5, TOP + 5.6, TOP + 6.6, ZC0 + 0.01, ZC0 + 0.1, "space", "SmoothPlastic", DECOR)
 B.sign(tag, "CREW ACCESS ARM", nil, { face = Enum.NormalId.Back, titleColor = "safety" })
@@ -399,11 +407,21 @@ end
 -- teleportes da escotilha
 local ENTRY = CFrame.lookAt(Vector3.new(-10.5, Y(3), RZ), Vector3.new(0, Y(3), RZ))
 local EXIT = CFrame.lookAt(Vector3.new(-5, TOP + 3, RZ), Vector3.new(-17, TOP + 3, RZ))
+-- destinos como peças de referência: a saída fica na White Room e acompanha o lançador
+local entryPoint = B.part(cabin, "Entry_Point", ENTRY, Vector3.one, "white", "SmoothPlastic", HIDDEN)
+local exitPoint = B.part(wr, "Exit_Point", EXIT, Vector3.one, "white", "SmoothPlastic", HIDDEN)
+local function targetRef(p, part)
+	local v = Instance.new("ObjectValue")
+	v.Name = "TargetRef"
+	v.Value = part
+	v:SetAttribute("BuildPhase", 8)
+	v.Parent = p
+end
 local hp = prompt(hatch, "Teleport", "Orion", "Board", { dist = 8 })
-hp:SetAttribute("Target", ENTRY)
+targetRef(hp, entryPoint)
 hp:SetAttribute("FadeText", "Boarding Orion…")
 local ip = prompt(ihatch, "Teleport", "Orion hatch", "Exit to the access arm", { dist = 9 })
-ip:SetAttribute("Target", EXIT)
+targetRef(ip, exitPoint)
 ip:SetAttribute("FadeText", "Leaving Orion…")
 
 ---------------------------------------------------------------------------------
@@ -432,21 +450,20 @@ end
 putScript("Script", systems, "CrewAccess", [==[
 -- Acesso da tripulação (NASA Space Adventure, Fase 8)
 -- Trata os ProximityPrompts do Map com o atributo CrewAction:
---   "Suit"     → veste/tira o traje OCSS (peças soldadas ao personagem)
---   "Elevator" → leva quem está na zona ZoneCenter/ZoneSize até Target (mesma posição relativa)
---   "Teleport" → leva quem acionou até o CFrame do atributo Target (escotilha da Orion)
+--   "Suit"     → veste/tira o traje (Shirt/Pants do ForgeGUI + capacete soldado à cabeça)
+--   "Elevator" → leva quem está na zona da própria cabine até a outra cabine (mesma posição relativa).
+--                A zona é o atributo ZoneOffset/ZoneSize da cabine, relativo ao piso (PrimaryPart).
+--   "Teleport" → leva quem acionou até a peça apontada pelo ObjectValue TargetRef do prompt
+--                (escotilhas da Orion). Tudo é relativo: funciona com o lançador em qualquer posição.
 --   "Sit"      → senta quem acionou no Seat que contém o prompt (cabine da Orion)
 -- Elevador e escotilha escurecem a tela do jogador pelo RemoteEvent ReplicatedStorage.CrewFade.
 local Players = game:GetService("Players")
 local PPS = game:GetService("ProximityPromptService")
 local map = workspace:WaitForChild("Map")
 
-local SUIT = Color3.fromHex("#E2702A")
-local GLOVE = Color3.fromHex("#EDEDED")
-local BOOT = Color3.fromHex("#1B1D20")
-local PATCH = Color3.fromHex("#244B70")
-local SCALE = Vector3.new(1.12, 1.04, 1.12)
-local SKIP = { HumanoidRootPart = true, Head = true }
+-- Traje espacial branco da NASA (camisa e calça clássicas criadas no ForgeGUI)
+local SUIT_SHIRT = "rbxassetid://106949180814943"
+local SUIT_PANTS = "rbxassetid://82940626824190"
 
 local function weldTo(p, target, parent)
 	p.Anchored = false
@@ -473,24 +490,27 @@ local function newPart(shape, size, cf, color, material)
 	return p
 end
 
+-- A roupa original vai para a pasta Stored dentro do traje (fora do personagem ela não aparece)
+local CLOTHES = { Shirt = true, Pants = true, ShirtGraphic = true }
+
 local function putOnSuit(char)
 	local suit = Instance.new("Model")
 	suit.Name = "SpaceSuit"
-	suit.Parent = char
-	for _, limb in char:GetChildren() do
-		if limb:IsA("BasePart") and not SKIP[limb.Name] then
-			local p = limb:Clone()
-			p:ClearAllChildren()
-			p.Name = "Suit_" .. limb.Name:gsub(" ", "")
-			p.Size = limb.Size * SCALE
-			p.CFrame = limb.CFrame
-			p.Transparency = 0
-			p.Material = Enum.Material.Fabric
-			p.Color = limb.Name:find("Hand") and GLOVE or (limb.Name:find("Foot") and BOOT) or SUIT
-			if p:IsA("MeshPart") then pcall(function() p.TextureID = "" end) end
-			weldTo(p, limb, suit)
-		end
+	local stored = Instance.new("Folder")
+	stored.Name = "Stored"
+	stored.Parent = suit
+	for _, c in char:GetChildren() do
+		if CLOTHES[c.ClassName] then c.Parent = stored end
 	end
+	suit.Parent = char
+	local shirt = Instance.new("Shirt")
+	shirt.Name = "SpaceSuit_Shirt"
+	shirt.ShirtTemplate = SUIT_SHIRT
+	shirt.Parent = char
+	local pants = Instance.new("Pants")
+	pants.Name = "SpaceSuit_Pants"
+	pants.PantsTemplate = SUIT_PANTS
+	pants.Parent = char
 	local head = char:FindFirstChild("Head")
 	if head then
 		local d = math.max(head.Size.Y, head.Size.Z) * 1.9
@@ -499,35 +519,41 @@ local function putOnSuit(char)
 		bubble.Transparency = 0.72
 		weldTo(bubble, head, suit)
 		local ring = newPart(Enum.PartType.Cylinder, Vector3.new(0.3, d * 0.8, d * 0.8),
-			head.CFrame * CFrame.new(0, -head.Size.Y * 0.6, 0) * CFrame.Angles(0, 0, math.pi / 2), Color3.new(1, 1, 1), Enum.Material.SmoothPlastic)
+			head.CFrame * CFrame.new(0, -head.Size.Y * 0.6, 0) * CFrame.Angles(0, 0, math.pi / 2), Color3.fromHex("#EDEDED"), Enum.Material.SmoothPlastic)
 		ring.Name = "Neck_Ring"
 		weldTo(ring, head, suit)
 	end
-	local torso = char:FindFirstChild("UpperTorso") or char:FindFirstChild("Torso")
-	if torso then
-		local s = torso.Size * SCALE
-		local patch = newPart(Enum.PartType.Block, Vector3.new(0.45, 0.45, 0.05),
-			torso.CFrame * CFrame.new(-s.X * 0.22, s.Y * 0.2, -s.Z / 2 - 0.03), PATCH, Enum.Material.SmoothPlastic)
-		patch.Name = "NASA_Patch"
-		weldTo(patch, torso, suit)
-	end
-	-- esconde acessórios (cabelo, chapéus) que atravessariam o capacete
+	-- esconde acessórios (cabelo, chapéus, roupas 3D) que atravessariam o capacete ou cobririam o traje
 	for _, a in char:GetChildren() do
-		local h = a:IsA("Accessory") and a:FindFirstChild("Handle")
-		if h and h:IsA("BasePart") then
-			h:SetAttribute("SuitHidden", h.Transparency)
-			h.Transparency = 1
+		if a:IsA("Accessory") then
+			for _, h in a:GetDescendants() do
+				if h:IsA("BasePart") then
+					h:SetAttribute("SuitHidden", h.Transparency)
+					h.Transparency = 1
+				end
+			end
 		end
 	end
 end
 
 local function takeOffSuit(char, suit)
+	for _, n in { "SpaceSuit_Shirt", "SpaceSuit_Pants" } do
+		local c = char:FindFirstChild(n)
+		if c then c:Destroy() end
+	end
+	local stored = suit:FindFirstChild("Stored")
+	if stored then
+		for _, c in stored:GetChildren() do c.Parent = char end
+	end
 	suit:Destroy()
 	for _, a in char:GetChildren() do
-		local h = a:IsA("Accessory") and a:FindFirstChild("Handle")
-		if h and h:GetAttribute("SuitHidden") then
-			h.Transparency = h:GetAttribute("SuitHidden")
-			h:SetAttribute("SuitHidden", nil)
+		if a:IsA("Accessory") then
+			for _, h in a:GetDescendants() do
+				if h:IsA("BasePart") and h:GetAttribute("SuitHidden") then
+					h.Transparency = h:GetAttribute("SuitHidden")
+					h:SetAttribute("SuitHidden", nil)
+				end
+			end
 		end
 	end
 end
@@ -551,11 +577,13 @@ local function move(player, char, cf)
 	char:PivotTo(cf)
 end
 
--- portas do elevador: cada folha (Door_L/Door_R) tem OpenOffset; peças com FollowDoor acompanham
+-- portas do elevador: cada folha (Door_L/Door_R) tem OpenOffset; peças com FollowDoor acompanham.
+-- As posições ficam guardadas relativas ao piso da cabine, para seguir o lançador quando ele se move.
 local doorSets = {}
 local function doorsOf(cab)
 	if doorSets[cab] then return doorSets[cab] end
 	local set = {}
+	local ref = cab.PrimaryPart.CFrame
 	for _, leaf in cab:GetChildren() do
 		local off = leaf:IsA("BasePart") and leaf:GetAttribute("OpenOffset")
 		if off then
@@ -564,7 +592,8 @@ local function doorsOf(cab)
 				if p:GetAttribute("FollowDoor") == leaf.Name then table.insert(parts, p) end
 			end
 			for _, p in parts do
-				table.insert(set, { part = p, closed = p.CFrame, open = p.CFrame + off })
+				local closed = ref:ToObjectSpace(p.CFrame)
+				table.insert(set, { part = p, closed = closed, open = CFrame.new(off) * closed })
 			end
 		end
 	end
@@ -572,9 +601,13 @@ local function doorsOf(cab)
 	return set
 end
 local function setDoors(cab, open)
+	local ref = cab.PrimaryPart.CFrame
 	for _, d in doorsOf(cab) do
-		TweenService:Create(d.part, DOOR_INFO, { CFrame = open and d.open or d.closed }):Play()
+		TweenService:Create(d.part, DOOR_INFO, { CFrame = ref * (open and d.open or d.closed) }):Play()
 	end
+end
+local function zoneCF(cab)
+	return cab.PrimaryPart.CFrame * CFrame.new(cab:GetAttribute("ZoneOffset"))
 end
 local function cabsOf(prompt)
 	local cab = prompt.Parent and prompt.Parent.Parent
@@ -607,14 +640,16 @@ local function ride(prompt)
 		setDoors(cab, false)
 	end
 	task.wait(DOOR_INFO.Time)
-	local c, s = prompt:GetAttribute("ZoneCenter"), prompt:GetAttribute("ZoneSize")
-	local delta = prompt:GetAttribute("Target") - c
+	local own = prompt.Parent.Parent
+	local other
+	for _, cab in cabs do if cab ~= own then other = cab end end
+	local s = own:GetAttribute("ZoneSize")
 	local riders = {}
 	for _, player in Players:GetPlayers() do
 		local char = player.Character
 		local root = char and char:FindFirstChild("HumanoidRootPart")
-		if root then
-			local d = root.Position - c
+		if root and other then
+			local d = zoneCF(own):PointToObjectSpace(root.Position)
 			if math.abs(d.X) <= s.X / 2 and math.abs(d.Y) <= s.Y / 2 and math.abs(d.Z) <= s.Z / 2 then
 				table.insert(riders, player)
 				fade:FireClient(player, "out", prompt:GetAttribute("FadeText"))
@@ -626,7 +661,8 @@ local function ride(prompt)
 		local char = player.Character
 		if char then
 			unseat(char:FindFirstChildOfClass("Humanoid"))
-			move(player, char, char:GetPivot() + delta)
+			-- posição atual das duas cabines, lida agora (o lançador pode ter se movido)
+			move(player, char, zoneCF(other) * zoneCF(own):ToObjectSpace(char:GetPivot()))
 		end
 	end
 	task.wait(0.2)
@@ -669,14 +705,15 @@ PPS.PromptTriggered:Connect(function(prompt, player)
 	elseif action == "Elevator" then
 		task.spawn(ride, prompt)
 	elseif action == "Teleport" then
-		local target = prompt:GetAttribute("Target")
-		if typeof(target) == "CFrame" and not teleporting[player] then
+		local ref = prompt:FindFirstChild("TargetRef")
+		local point = ref and ref:IsA("ObjectValue") and ref.Value
+		if point and point:IsA("BasePart") and not teleporting[player] then
 			teleporting[player] = true
 			fade:FireClient(player, "out", prompt:GetAttribute("FadeText"))
 			task.wait(FADE_TIME + 0.4)
 			if player.Parent and char.Parent then
 				unseat(char:FindFirstChildOfClass("Humanoid"))
-				move(player, char, target)
+				move(player, char, point.CFrame) -- posição atual da referência
 			end
 			task.wait(0.2)
 			fade:FireClient(player, "in")
@@ -764,31 +801,33 @@ player.CharacterAdded:Connect(watch)
 
 -- dentro da cabine do elevador só vale o painel do elevador: os armários ao lado da porta
 -- usam a mesma tecla (E) e roubariam o prompt
-local zones, suitPrompts = {}, {}
+-- as zonas são as cabines (atributos ZoneOffset/ZoneSize), lidas na posição atual de cada uma
+local cabs, suitPrompts = {}, {}
 local function track(d)
-	if not d:IsA("ProximityPrompt") then return end
-	local action = d:GetAttribute("CrewAction")
-	if action == "Elevator" then
-		table.insert(zones, { c = d:GetAttribute("ZoneCenter"), s = d:GetAttribute("ZoneSize") })
-	elseif action == "Suit" then
+	if d:IsA("Model") and d:GetAttribute("ZoneOffset") then
+		cabs[d] = true
+	elseif d:IsA("ProximityPrompt") and d:GetAttribute("CrewAction") == "Suit" then
 		suitPrompts[d] = true
 	end
 end
 local map = workspace:WaitForChild("Map")
 for _, d in map:GetDescendants() do track(d) end
 map.DescendantAdded:Connect(track)
-map.DescendantRemoving:Connect(function(d) suitPrompts[d] = nil end)
+map.DescendantRemoving:Connect(function(d) suitPrompts[d] = nil; cabs[d] = nil end)
 local wasInside = false
 while true do
 	local char = player.Character
 	local root = char and char:FindFirstChild("HumanoidRootPart")
 	local inside = false
 	if root then
-		for _, z in zones do
-			local d = root.Position - z.c
-			if math.abs(d.X) <= z.s.X / 2 and math.abs(d.Y) <= z.s.Y / 2 and math.abs(d.Z) <= z.s.Z / 2 then
-				inside = true
-				break
+		for cab in cabs do
+			local floor, s = cab.PrimaryPart, cab:GetAttribute("ZoneSize")
+			if floor and s then -- com StreamingEnabled o piso pode não estar carregado
+				local d = (floor.CFrame * CFrame.new(cab:GetAttribute("ZoneOffset"))):PointToObjectSpace(root.Position)
+				if math.abs(d.X) <= s.X / 2 and math.abs(d.Y) <= s.Y / 2 and math.abs(d.Z) <= s.Z / 2 then
+					inside = true
+					break
+				end
 			end
 		end
 	end
