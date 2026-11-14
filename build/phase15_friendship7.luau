@@ -22,6 +22,7 @@
 	- ServerScriptService.MissionSystem.Friendship7MissionService (+ Task1/2/3 como módulos).
 	- StarterPlayerScripts.MissionClient.MissionController (+ controladores como módulos).
 
+	Com o Rojo (default.project.json) conectado, os scripts vêm dele e esta fase só cria as peças.
 	Executar depois da Fase 8 (o run_in_studio.luau já inclui esta fase).
 ]]
 
@@ -180,36 +181,42 @@ local function fresh(parent, name)
 end
 
 local RS = game:GetService("ReplicatedStorage")
-local ms = fresh(RS, "MissionSystem")
-local remotes = folder(ms, "Remotes")
-for _, n in { "StartMission", "MissionUpdate", "MissionAction", "SubmitCode", "SubmitChoice" } do
-	local r = Instance.new("RemoteEvent")
-	r.Name = n
-	r.Parent = remotes
-end
-put("ModuleScript", folder(ms, "Config"), "Friendship7Config", "Friendship7Config.luau")
+-- Com o Rojo conectado (default.project.json), os scripts e remotes vêm do Rojo, que marca
+-- ReplicatedStorage.MissionSystem com o atributo RojoManaged: aí esta fase não os reinstala.
+local existing = RS:FindFirstChild("MissionSystem")
+local rojo = existing ~= nil and existing:GetAttribute("RojoManaged") == true
+if not rojo then
+	local ms = fresh(RS, "MissionSystem")
+	local remotes = folder(ms, "Remotes")
+	for _, n in { "StartMission", "MissionUpdate", "MissionAction", "SubmitCode", "SubmitChoice" } do
+		local r = Instance.new("RemoteEvent")
+		r.Name = n
+		r.Parent = remotes
+	end
+	put("ModuleScript", folder(ms, "Config"), "Friendship7Config", "Friendship7Config.luau")
 
-local server = fresh(game:GetService("ServerScriptService"), "MissionSystem")
-local svc = Instance.new("Script")
-svc.Name = "Friendship7MissionService"
-svc.Source = src("Friendship7MissionService.server.luau")
-for _, n in { "Task1ControlService", "Task2CommunicationService", "Task3ReentryService" } do
-	put("ModuleScript", svc, n, n .. ".luau")
-end
-svc.Parent = server
+	local server = fresh(game:GetService("ServerScriptService"), "MissionSystem")
+	local svc = Instance.new("Script")
+	svc.Name = "Friendship7MissionService"
+	svc.Source = src("Friendship7MissionService.server.luau")
+	for _, n in { "Task1ControlService", "Task2CommunicationService", "Task3ReentryService" } do
+		put("ModuleScript", svc, n, n .. ".luau")
+	end
+	svc.Parent = server
 
-local sps = game:GetService("StarterPlayer"):WaitForChild("StarterPlayerScripts")
-local client = fresh(sps, "MissionClient")
-local ctrl = Instance.new("LocalScript")
-ctrl.Name = "MissionController"
-ctrl.Source = src("MissionController.client.luau")
-for _, n in { "FirstPersonController", "CameraShakeController", "GazeInteractionController", "PanelInteractionController", "AudioController", "PanelDisplays" } do
-	put("ModuleScript", ctrl, n, n .. ".luau")
-end
-ctrl.Parent = client
+	local sps = game:GetService("StarterPlayer"):WaitForChild("StarterPlayerScripts")
+	local client = fresh(sps, "MissionClient")
+	local ctrl = Instance.new("LocalScript")
+	ctrl.Name = "MissionController"
+	ctrl.Source = src("MissionController.client.luau")
+	for _, n in { "FirstPersonController", "CameraShakeController", "GazeInteractionController", "PanelInteractionController", "AudioController", "PanelDisplays" } do
+		put("ModuleScript", ctrl, n, n .. ".luau")
+	end
+	ctrl.Parent = client
 
+end
 local n = 0
 for _, d in root:GetDescendants() do
 	if d:IsA("BasePart") then n += 1 end
 end
-return string.format("Fase 15: missão Friendship 7 — %d peças no console + scripts (servidor, 3 tarefas, cliente com 6 módulos)", n)
+return string.format("Fase 15: missão Friendship 7 — %d peças no console; scripts: %s", n, rojo and "gerenciados pelo Rojo (não reinstalados)" or "instalados de build/mission/")

@@ -41,6 +41,15 @@ Regras dos geradores:
 - Textos de placas e prompts em inglês; fontes por `FontFace` (Montserrat; `Code` na telemetria). Não usar `Enum.Font.Gotham*` (removida).
 - Tudo que se move fica em `TransportSystem.TransportAssembly`; o que acompanha o conjunto usa referências relativas (`ZoneOffset`, `TargetRef`), nunca coordenadas absolutas.
 
+## Rojo, VS Code e GitHub
+
+- **Rojo** (fixado em `rokit.toml`) sincroniza só os scripts da missão (`build/mission/`), conforme `default.project.json`.
+- Com o Rojo conectado, `ReplicatedStorage.MissionSystem` tem o atributo `RojoManaged`, e a Fase 15 não reinstala os scripts.
+- Mapa e scripts embutidos nos geradores continuam pelo servidor HTTP.
+- Não usar `rojo build` (o mapa não está no projeto).
+- Guia de instalação e uso: `ROJO.md`.
+- Remote: `git@github.com:tulioamaral123/roockie-rocket.git`.
+
 ## Validações que devem continuar passando
 
 - **Envelope do conjunto:** X −34..34, Y 0..133 no VAB; portão dos fundos 80 × 140 (folga vertical 7, lateral ≥ 6).

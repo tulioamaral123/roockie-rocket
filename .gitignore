@@ -1,1 +1,6 @@
+# Studio
+*.rbxl.lock
+*.rbxlx.lock
+# gerado pelo luau-lsp / rojo sourcemap
+sourcemap.json
 .DS_Store
