@@ -50,6 +50,13 @@ Regras dos geradores:
 - Guia de instalação e uso: `ROJO.md`.
 - Remote: `git@github.com:tulioamaral123/roockie-rocket.git`.
 
+## Trabalho em paralelo (Linux + Mac)
+
+- Código é escrito no Linux (Claude Code e Codex), cada agente em seu worktree e branch; o Mac roda o Studio e o `rojo serve`. Ver `docs/colaboracao.md`.
+- Pegar a tarefa em `TASKS.md` e listar os arquivos antes de começar; Codex segue `AGENTS.md`.
+- `Place1.rbxl` só é commitado pelo Mac.
+- Pelo MCP remoto (`Roblox_Studio_Mac`), sincronizar o Mac com `ssh roockie-mac sync <branch>` antes de rodar geradores.
+
 ## Validações que devem continuar passando
 
 - **Envelope do conjunto:** X −34..34, Y 0..133 no VAB; portão dos fundos 80 × 140 (folga vertical 7, lateral ≥ 6).

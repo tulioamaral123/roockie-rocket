@@ -21,6 +21,7 @@
       }
     },
     "ServerScriptService": {
+      "IntegracaoLinux": { "$path": "build/tests/IntegracaoLinux.server.luau" },
       "MissionSystem": {
         "$className": "Folder",
         "Friendship7MissionService": {
