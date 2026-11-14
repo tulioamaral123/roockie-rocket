@@ -31,9 +31,9 @@
 local lib = ...
 local B = lib.builder(9)
 
-local Map = workspace:FindFirstChild("Map")
+local Map = workspace:FindFirstChild("NASAComplex")
 assert(Map, "Execute as Fases 1–8 antes")
-local Hangar = Map.Rocket_Hangar
+local Hangar = Map.VABHangar
 
 local oldML = Hangar.Launch_Platform:FindFirstChild("Mobile_Launcher")
 if not oldML then
@@ -105,16 +105,28 @@ for _, d in base:GetChildren() do
 		raise(d)
 	end
 end
--- escada de acesso ao deck (frente, lado esquerdo), do piso até a chapa (Y 15,6)
+-- escada de acesso ao deck: na lateral −X da base (X −30..−24), fora da faixa das esteiras
+-- do crawler (X ±19,1), para o crawler poder recuar por baixo do ML na plataforma.
+-- Sobe no sentido +Z (Z 234..249) até um patamar (Z 249..252) que encosta no deck em X −24.
 local stairs = B.group(base, "Access_Stairs")
 local STEPS, PLATE_TOP = 15, DECK_TOP + 0.1
+local SX0, SX1, SZ0 = -30, -24, 234
 for i = 1, STEPS do
-	B.box(stairs, "Step", -22, -16, 0, i * PLATE_TOP / STEPS, 245 - (STEPS + 1 - i), 245 - (STEPS - i), "darkGray", "DiamondPlate")
+	B.box(stairs, "Step", SX0, SX1, 0, i * PLATE_TOP / STEPS, SZ0 + i - 1, SZ0 + i, "darkGray", "DiamondPlate")
 end
-local z0s = 245 - STEPS
-for _, x in { -22.15, -15.85 } do
-	B.beam(stairs, "Rail", Vector3.new(x, PLATE_TOP / STEPS + 3, z0s + 0.5), Vector3.new(x, PLATE_TOP + 3, 245), 0.25, 0.25, "safety", "Metal", DECOR)
-end
+local SZ1 = SZ0 + STEPS
+B.box(stairs, "Landing", SX0, SX1, 0, PLATE_TOP, SZ1, SZ1 + 3, "darkGray", "DiamondPlate")
+B.beam(stairs, "Rail", Vector3.new(SX0 + 0.15, PLATE_TOP / STEPS + 3, SZ0 + 0.5), Vector3.new(SX0 + 0.15, PLATE_TOP + 3, SZ1), 0.25, 0.25, "safety", "Metal", DECOR)
+B.beam(stairs, "Rail", Vector3.new(SX1 - 0.15, PLATE_TOP / STEPS + 3, SZ0 + 0.5), Vector3.new(SX1 - 0.15, 11.4 + 3, 245), 0.25, 0.25, "safety", "Metal", DECOR)
+B.box(stairs, "Rail", SX0, SX0 + 0.3, PLATE_TOP, PLATE_TOP + 3.3, SZ1, SZ1 + 3, "safety", "Metal")
+B.box(stairs, "Rail", SX0, SX1, PLATE_TOP + 3, PLATE_TOP + 3.3, SZ1 + 2.85, SZ1 + 3, "safety", "Metal")
+-- faixa de piso do patamar até a porta da cabine inferior do elevador da tripulação:
+-- leva o visitante até o eixo da porta (X −20) antes de virar, longe da quina da folha aberta
+local guide = B.group(base, "Crew_Walkway_Guide")
+local GY = PLATE_TOP
+B.box(guide, "Stripe", SX1, -19.4, GY, GY + 0.05, SZ1 + 1, SZ1 + 2, "lightBlue", "SmoothPlastic", DECOR)
+B.box(guide, "Stripe", -20.6, -19.4, GY, GY + 0.05, SZ1 + 2, 255.4, "lightBlue", "SmoothPlastic", DECOR)
+B.box(guide, "Arrow", -20.9, -19.1, GY, GY + 0.06, 254.2, 254.8, "lightBlue", "SmoothPlastic", DECOR)
 -- luzes do deck (Fase 5)
 local lights = workspace:FindFirstChild("Lighting_Objects")
 local hangarLights = lights and lights:FindFirstChild("Hangar")
@@ -185,7 +197,7 @@ local wr = move(crewArm.White_Room, ML, "WhiteRoom")
 local CREW_TOP = 111.5 + RISE
 setPivot(crewArm, CFrame.new(-17.4, CREW_TOP, ROCKET_Z))
 
--- O vestiário (Crew_Access.Suit_Room) é fixo no piso do VAB e não entra no conjunto.
+-- O vestiário (VABHangar.CrewSuitUpRoom) é fixo no piso do VAB e não entra no conjunto.
 -- Elevador e escotilhas usam referências relativas (Fase 8), então acompanham o conjunto sozinhos.
 
 setPivot(ML, CFrame.new(0, CRAWLER_TOP, ROCKET_Z))
@@ -228,7 +240,8 @@ for _, c in { { x0 = -18.5, x1 = -13, z0 = Z1, z1 = Z1 + 4, face = 1 }, { x0 = 1
 	local zf = (c.face > 0) and c.z1 or c.z0
 	B.box(cab, "Window", c.x0 + 0.5, c.x1 - 0.5, 4, 5.8, zf, zf + c.face * 0.1, "glass", "Glass", { transparency = 0.3, collide = false })
 	B.box(cab, "Roof_Trim", c.x0, c.x1, 6.5, 6.8, c.z0, c.z1, "safety", "SmoothPlastic")
-	B.cyl(cab, "Beacon", (c.x0 + c.x1) / 2, (c.z0 + c.z1) / 2, 6.8, 7.4, 0.8, "safety", "Neon", DECOR)
+	-- sinalizador preso na face externa da cabine, abaixo de Y 7: o crawler passa sob a base do ML
+	B.cyl(cab, "Beacon", (c.x0 + c.x1) / 2, zf + c.face * 0.45, 5.95, 6.45, 0.7, "safety", "Neon", DECOR)
 end
 
 TA.PrimaryPart = nil

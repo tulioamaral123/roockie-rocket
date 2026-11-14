@@ -4,13 +4,15 @@
 	- Museu: mais escuro, azul indireto, céu estrelado na cúpula, focos nas exposições.
 	- Corredor 2: luminárias industriais + luzes de emergência.
 	- Hangar: luminárias de grande altura, focos no SLS, luz de serviço nas paredes.
-	Poucas luzes com sombra (spec §11). Lighting.Technology = Future deve ser ajustado à mão.
+	Poucas luzes com sombra (spec §11). LightingStyle = Realistic e bloom suave (opção B,
+	escolhida por comparação medida; skill roblox-feel-audio-vfx §4). A antiga propriedade
+	Lighting.Technology não existe mais: o LightingStyle a substituiu e é gravável por script.
 ]]
 
 local lib = ...
 local B = lib.builder(5)
 local C = lib.C
-local Map = workspace:FindFirstChild("Map")
+local Map = workspace:FindFirstChild("NASAComplex")
 assert(Map, "Execute as Fases 1–4 antes")
 B.clear(Map)
 local LO = workspace:FindFirstChild("Lighting_Objects")
@@ -18,7 +20,7 @@ B.clear(LO)
 local AO = workspace:FindFirstChild("Atmosphere_Objects")
 B.clear(AO)
 
-local Museum, Hangar = Map.Space_Adventure, Map.Rocket_Hangar
+local Museum, Hangar = Map.CapeCanaveralMuseum, Map.VABHangar
 local FIX = { collide = false, shadow = false }
 local HIDDEN = { collide = false, shadow = false, transparency = 1 }
 local N = Enum.NormalId
@@ -26,13 +28,16 @@ local function rgb(hex) return Color3.fromHex(C[hex] or hex) end
 
 -- Serviço Lighting ------------------------------------------------------------------
 local L = game:GetService("Lighting")
-L.Ambient = Color3.fromRGB(58, 60, 70)
+-- Realistic tira o preenchimento difuso do Soft: sem Ambient mais alto a recepção caía de
+-- claridade média 0,53 para 0,30. Com (105, 108, 118) ela volta a 0,54 (medido).
+L.Ambient = Color3.fromRGB(105, 108, 118)
 L.OutdoorAmbient = Color3.fromRGB(120, 122, 130)
 L.Brightness = 2
 L.ClockTime = 13
 L.EnvironmentDiffuseScale = 0.4
 L.EnvironmentSpecularScale = 0.5
 L.GlobalShadows = true
+pcall(function() L.LightingStyle = Enum.LightingStyle.Realistic end)
 local atm = L:FindFirstChildOfClass("Atmosphere") or Instance.new("Atmosphere", L)
 atm.Density = 0.04
 atm.Offset = 0
@@ -41,9 +46,9 @@ atm.Glare = 0
 local dof = L:FindFirstChildOfClass("DepthOfFieldEffect")
 if dof then dof.Enabled = false end
 local bloom = L:FindFirstChildOfClass("BloomEffect") or Instance.new("BloomEffect", L)
-bloom.Intensity = 0.6
-bloom.Size = 24
-bloom.Threshold = 1.6
+bloom.Intensity = 0.25
+bloom.Size = 10
+bloom.Threshold = 2
 local cc = L:FindFirstChild("MapColorCorrection") or Instance.new("ColorCorrectionEffect")
 cc.Name = "MapColorCorrection"
 cc.Contrast = 0.06

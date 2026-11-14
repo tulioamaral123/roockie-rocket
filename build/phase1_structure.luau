@@ -50,8 +50,11 @@ local function wallWithOpening(parent, name, z0, z1, x0, x1, top, ox0, ox1, otop
 end
 
 -- Limpeza ----------------------------------------------------------------
-local old = workspace:FindFirstChild("Map")
-if old then old:Destroy() end
+-- remove a raiz atual e a antiga (antes da Etapa 6 ela se chamava "Map")
+for _, rootName in { "NASAComplex", "Map" } do
+	local old = workspace:FindFirstChild(rootName)
+	if old then old:Destroy() end
+end
 local defaultSpawn = workspace:FindFirstChild("SpawnLocation")
 if defaultSpawn then defaultSpawn:Destroy() end
 local baseplate = workspace:FindFirstChild("Baseplate")
@@ -60,23 +63,24 @@ if baseplate then
 	baseplate.Position = Vector3.new(0, -1 - baseplate.Size.Y / 2, 0)
 end
 
--- Hierarquia (spec §9) -----------------------------------------------------
-local Map = folder(workspace, "Map", "Model")
+-- Hierarquia (spec-v3 §11; a variável continua chamada Map nos geradores) ----
+local Map = folder(workspace, "NASAComplex", "Model")
 
-local Base = folder(Map, "NASA_Base", "Model")
-for _, n in { "Floor", "Walls", "Reception", "Furniture" } do folder(Base, n) end
+local Base = folder(Map, "Reception", "Model")
+for _, n in { "Floor", "Walls", "Front_Desk", "Furniture" } do folder(Base, n) end
 
-local C1 = folder(Map, "Corridor_01", "Model")
+local Corridors = folder(Map, "Corridors")
+local C1 = folder(Corridors, "Corridor_01", "Model")
 for _, n in { "Floor", "Walls", "Doors", "Decorations" } do folder(C1, n) end
 
-local Museum = folder(Map, "Space_Adventure", "Model")
+local Museum = folder(Map, "CapeCanaveralMuseum", "Model")
 for _, n in { "Floor", "Walls", "Dome", "Solar_System", "Astronaut_Exhibition", "Rocket_Exhibition",
 	"Mars_Exhibition", "Science_Exhibition", "Screens" } do folder(Museum, n) end
 
-local C2 = folder(Map, "Corridor_02", "Model")
+local C2 = folder(Corridors, "Corridor_02", "Model")
 for _, n in { "Floor", "Industrial_Structure", "Pipes", "Doors", "Windows" } do folder(C2, n) end
 
-local Hangar = folder(Map, "Rocket_Hangar", "Model")
+local Hangar = folder(Map, "VABHangar", "Model")
 for _, n in { "Floor", "Structure", "Gates", "SLS_Rocket", "Launch_Platform", "Gantry",
 	"Maintenance_Vehicles", "Observation_Room" } do folder(Hangar, n) end
 
@@ -148,12 +152,20 @@ box(Hangar.Structure, "Roof", -70, 70, 150, 152, 211, 319, C.darkGray, "Metal")
 
 -- Workspace / Lighting (base; iluminação final na Fase 5) -------------------
 workspace.StreamingEnabled = true
--- Lighting.Technology não é gravável por script: ajustar para "Future" manualmente
--- em Lighting > Technology no painel Properties.
+-- Configuração de streaming recomendada para 2026 (skill roblox-engine-2026, §3).
+-- pcall: propriedades que não existirem nesta versão do Studio são ignoradas.
+for prop, value in {
+	ModelStreamingBehavior = Enum.ModelStreamingBehavior.Improved,
+	StreamingIntegrityMode = Enum.StreamingIntegrityMode.PauseOutsideLoadedArea,
+	StreamOutBehavior = Enum.StreamOutBehavior.Opportunistic,
+} do
+	pcall(function() workspace[prop] = value end)
+end
+-- Estilo de iluminação (LightingStyle = Realistic) e bloom: Fase 5.
 Lighting.Ambient = Color3.fromRGB(70, 72, 80)
 
 local count = 0
 for _, d in Map:GetDescendants() do
 	if d:IsA("BasePart") then count += 1 end
 end
-return ("Fase 1 construída: %d peças em Workspace.Map"):format(count)
+return ("Fase 1 construída: %d peças em Workspace.NASAComplex"):format(count)

@@ -25,11 +25,11 @@
 
 local lib = ...
 local B = lib.builder(8)
-local Map = workspace:FindFirstChild("Map")
+local Map = workspace:FindFirstChild("NASAComplex")
 assert(Map, "Execute as Fases 1–6 antes")
 B.clear(Map)
 
-local Hangar = Map.Rocket_Hangar
+local Hangar = Map.VABHangar
 local DECOR = { collide = false }
 local DECOR_NS = { collide = false, shadow = false }
 local HIDDEN = { collide = false, shadow = false, transparency = 1 }
@@ -55,67 +55,69 @@ end
 
 ---------------------------------------------------------------------------------
 -- 1. Vestiário (sala fixa no piso do VAB, à esquerda do lançador; spec-v3 §6.2)
---    Montado nas coordenadas originais do deck (X −24..−14.5, Z 246..256, Y 10.1..19.4)
---    e depois transladado por SUIT_OFFSET para X −46..−36.5, Y 0..9,3, fora do envelope.
---    Entrada pela face −Z (lado do portão frontal); porta da face +X dá para a escada do lançador.
+--    Interior X −60..−36,5, Z 244..258, Y 0..13, fora do envelope (X ≥ −34) e da torre
+--    de plataformas (Z ≥ 262). Ampliado para a câmera em terceira pessoa caber no celular
+--    (antes 10 × 10 × 9,3). Entrada pela face −Z (lado do portão frontal, vão X −44..−38);
+--    porta da face +X (Z 248,5..253,5) dá para a escada do lançador. Armários na parede do fundo.
 ---------------------------------------------------------------------------------
-local SUIT_OFFSET = Vector3.new(-22, -DECK, 0)
-local room = B.group(root, "Suit_Room")
-local RY1 = 19
-B.box(room, "Floor_Mat", -23.8, -14.7, DECK, DECK + 0.1, 246.2, 255.8, "lightGray", "SmoothPlastic")
-B.box(room, "Wall_Back", -24, -23.6, DECK, RY1, 246, 256, "white", "SmoothPlastic")
--- parede da escada (Z 246): vão X −22..−16 por onde se chega pelo lançador
-B.box(room, "Wall_Stairs", -24, -22, DECK, RY1, 246, 246.4, "white", "SmoothPlastic")
-B.box(room, "Wall_Stairs", -16, -14.5, DECK, RY1, 246, 246.4, "white", "SmoothPlastic")
-B.box(room, "Lintel", -22, -16, 17.5, RY1, 246, 246.4, "white", "SmoothPlastic")
--- parede dos fundos (Z 256): fechada (o elevador fica no lançador)
-B.box(room, "Wall_End", -24, -14.5, DECK, RY1, 255.6, 256, "white", "SmoothPlastic")
--- frente (X −14.5): mureta + vidro, com porta Z 249..253 para o deck
-for _, zz in { { 246.4, 249 }, { 253, 255.6 } } do
-	B.box(room, "Front_Base", -14.9, -14.5, DECK, 13, zz[1], zz[2], "white", "SmoothPlastic")
-	B.box(room, "Front_Glass", -14.8, -14.6, 13, RY1, zz[1], zz[2], "glass", "Glass", { transparency = 0.5 })
+local room = B.group(Hangar, "CrewSuitUpRoom") -- sala fixa do VAB (spec-v3 §11)
+local RX0, RX1, RZ0, RZ1, RH = -60, -36.5, 244, 258, 13
+local EX0, EX1 = -44, -38          -- vão de entrada (face −Z)
+local DZ0, DZ1 = 248.5, 253.5      -- porta para o lançador (face +X)
+B.box(room, "Floor_Mat", RX0, RX1, 0, 0.1, RZ0, RZ1, "lightGray", "SmoothPlastic")
+B.box(room, "Wall_Back", RX0 - 0.4, RX0, 0, RH, RZ0 - 0.4, RZ1 + 0.4, "white", "SmoothPlastic")
+B.box(room, "Wall_Entrance", RX0, EX0, 0, RH, RZ0 - 0.4, RZ0, "white", "SmoothPlastic")
+B.box(room, "Wall_Entrance", EX1, RX1, 0, RH, RZ0 - 0.4, RZ0, "white", "SmoothPlastic")
+B.box(room, "Lintel", EX0, EX1, 11, RH, RZ0 - 0.4, RZ0, "white", "SmoothPlastic")
+B.box(room, "Wall_End", RX0, RX1, 0, RH, RZ1, RZ1 + 0.4, "white", "SmoothPlastic")
+-- frente (X −36,5): mureta + vidro, com a porta para o lançador
+for _, zz in { { RZ0 - 0.4, DZ0 }, { DZ1, RZ1 + 0.4 } } do
+	B.box(room, "Front_Base", RX1, RX1 + 0.4, 0, 3.6, zz[1], zz[2], "white", "SmoothPlastic")
+	B.box(room, "Front_Glass", RX1 + 0.1, RX1 + 0.3, 3.6, RH, zz[1], zz[2], "glass", "Glass", { transparency = 0.5 })
 end
-B.box(room, "Lintel", -14.9, -14.5, 17.5, RY1, 249, 253, "white", "SmoothPlastic")
-B.box(room, "Accent_Stripe", -14.95, -14.45, 12.6, 13, 246.4, 255.6, "nasaBlue", "SmoothPlastic", DECOR)
-B.box(room, "Roof", -24.2, -14.3, RY1, RY1 + 0.4, 245.8, 256.2, "white", "SmoothPlastic")
-local panel = B.box(room, "Ceiling_Light", -21, -17.5, RY1 - 0.1, RY1, 248, 254, "white", "Neon", DECOR_NS)
-B.light(panel, "SurfaceLight", { Face = Enum.NormalId.Bottom, Brightness = 1.6, Range = 14, Angle = 120, Shadows = false })
+B.box(room, "Lintel", RX1, RX1 + 0.4, 11, RH, DZ0, DZ1, "white", "SmoothPlastic")
+B.box(room, "Accent_Stripe", RX1 - 0.05, RX1 + 0.45, 3.2, 3.6, RZ0 - 0.4, RZ1 + 0.4, "nasaBlue", "SmoothPlastic", DECOR)
+B.box(room, "Roof", RX0 - 0.6, RX1 + 0.6, RH, RH + 0.4, RZ0 - 0.6, RZ1 + 0.6, "white", "SmoothPlastic")
+for _, lx in { { -55, -50 }, { -46, -41 } } do
+	local panel = B.box(room, "Ceiling_Light", lx[1], lx[2], RH - 0.1, RH, 248, 254, "white", "Neon", DECOR_NS)
+	B.light(panel, "SurfaceLight", { Face = Enum.NormalId.Bottom, Brightness = 1.5, Range = 16, Angle = 120, Shadows = false })
+end
 
 -- placas
-local s1 = B.box(room, "Sign_Entrance", -22, -16, 17.6, 18.9, 245.8, 246, "space", "SmoothPlastic", DECOR)
+local s1 = B.box(room, "Sign_Entrance", EX0, EX1, 11.4, 12.8, RZ0 - 0.6, RZ0 - 0.4, "space", "SmoothPlastic", DECOR)
 B.sign(s1, "CREW SUIT-UP ROOM", nil, { face = Enum.NormalId.Front, titleColor = "white", accent = "orange" })
-local s2 = B.box(room, "Sign_Suits", -23.6, -23.5, 17.2, 18.9, 246.6, 255.4, "space", "SmoothPlastic", DECOR)
+local s2 = B.box(room, "Sign_Suits", RX0, RX0 + 0.1, 8.4, 11.6, RZ0 + 1, RZ1 - 1, "space", "SmoothPlastic", DECOR)
 B.sign(s2, "NASA CREW SPACESUITS",
 	"Every crew member suits up here before launch. Put on your NASA spacesuit, then climb the mobile launcher stairs and take the crew elevator.",
 	{ face = Enum.NormalId.Right, accent = "orange", titleScale = 0.32 })
-local s3 = B.box(room, "Sign_Launcher", -14.45, -14.35, 17.6, 18.9, 249, 253, "space", "SmoothPlastic", DECOR)
+local s3 = B.box(room, "Sign_Launcher", RX1 + 0.45, RX1 + 0.55, 11.4, 12.8, DZ0, DZ1, "space", "SmoothPlastic", DECOR)
 B.sign(s3, "TO MOBILE LAUNCHER", nil, { face = Enum.NormalId.Right, titleColor = "safety" })
 
--- 4 armários com trajes
-for i, cz in { 247.5, 249.8, 252.1, 254.4 } do
+-- 4 armários com trajes, na parede do fundo (frente voltada para +X)
+local LX0, LX1 = RX0 + 0.4, RX0 + 2.4   -- −59,6..−57,6
+for i, cz in { 247, 249.9, 252.8, 255.7 } do
 	local lk = B.group(room, "Suit_Locker_" .. i)
-	B.box(lk, "Side", -23.6, -21.6, DECK, 17, cz - 1.1, cz - 1.0, "nasaBlue", "Metal")
-	B.box(lk, "Side", -23.6, -21.6, DECK, 17, cz + 1.0, cz + 1.1, "nasaBlue", "Metal")
-	B.box(lk, "Top", -23.6, -21.6, 16.9, 17.1, cz - 1.1, cz + 1.1, "nasaBlue", "Metal")
-	B.box(lk, "Base", -23.6, -21.6, DECK, 10.8, cz - 1.0, cz + 1.0, "darkGray", "Metal")
-	B.box(lk, "Back", -23.6, -23.45, 10.8, 16.9, cz - 1.0, cz + 1.0, "midGray", "Metal", DECOR)
+	B.box(lk, "Side", LX0, LX1, 0, 6.9, cz - 1.1, cz - 1.0, "nasaBlue", "Metal")
+	B.box(lk, "Side", LX0, LX1, 0, 6.9, cz + 1.0, cz + 1.1, "nasaBlue", "Metal")
+	B.box(lk, "Top", LX0, LX1, 6.8, 7.0, cz - 1.1, cz + 1.1, "nasaBlue", "Metal")
+	B.box(lk, "Base", LX0, LX1, 0, 0.7, cz - 1.0, cz + 1.0, "darkGray", "Metal")
+	B.box(lk, "Back", LX0, LX0 + 0.15, 0.7, 6.8, cz - 1.0, cz + 1.0, "midGray", "Metal", DECOR)
 	-- traje pendurado (decorativo)
-	B.box(lk, "Suit_Torso", -22.9, -22.3, 13.6, 15.6, cz - 0.7, cz + 0.7, "lightGray", "Fabric", DECOR)
-	B.box(lk, "Suit_Leg", -22.85, -22.35, 11.2, 13.6, cz - 0.65, cz - 0.08, "lightGray", "Fabric", DECOR)
-	B.box(lk, "Suit_Leg", -22.85, -22.35, 11.2, 13.6, cz + 0.08, cz + 0.65, "lightGray", "Fabric", DECOR)
-	B.box(lk, "Suit_Arm", -22.85, -22.4, 13.3, 15.5, cz - 0.95, cz - 0.72, "lightGray", "Fabric", DECOR)
-	B.box(lk, "Suit_Arm", -22.85, -22.4, 13.3, 15.5, cz + 0.72, cz + 0.95, "lightGray", "Fabric", DECOR)
-	B.box(lk, "Suit_Patch", -22.31, -22.27, 14.8, 15.2, cz - 0.5, cz - 0.1, "nasaBlue", "SmoothPlastic", DECOR)
-	B.box(lk, "Boot", -22.9, -22.2, 10.8, 11.2, cz - 0.65, cz + 0.65, "black", "SmoothPlastic", DECOR)
-	B.ball(lk, "Helmet", Vector3.new(-22.7, 16.25, cz), 1.25, "white", "SmoothPlastic", DECOR)
-	B.ball(lk, "Helmet_Visor", Vector3.new(-22.45, 16.2, cz), 1.0, "black", "Glass", { collide = false, reflectance = 0.4 })
-	local tag = B.box(lk, "Name_Tag", -21.65, -21.55, 16.95, 17.45, cz - 0.9, cz + 0.9, "space", "SmoothPlastic", DECOR)
+	B.box(lk, "Suit_Torso", LX0 + 0.7, LX0 + 1.3, 3.5, 5.5, cz - 0.7, cz + 0.7, "lightGray", "Fabric", DECOR)
+	B.box(lk, "Suit_Leg", LX0 + 0.75, LX0 + 1.25, 1.1, 3.5, cz - 0.65, cz - 0.08, "lightGray", "Fabric", DECOR)
+	B.box(lk, "Suit_Leg", LX0 + 0.75, LX0 + 1.25, 1.1, 3.5, cz + 0.08, cz + 0.65, "lightGray", "Fabric", DECOR)
+	B.box(lk, "Suit_Arm", LX0 + 0.75, LX0 + 1.2, 3.2, 5.4, cz - 0.95, cz - 0.72, "lightGray", "Fabric", DECOR)
+	B.box(lk, "Suit_Arm", LX0 + 0.75, LX0 + 1.2, 3.2, 5.4, cz + 0.72, cz + 0.95, "lightGray", "Fabric", DECOR)
+	B.box(lk, "Suit_Patch", LX0 + 1.29, LX0 + 1.33, 4.7, 5.1, cz - 0.5, cz - 0.1, "nasaBlue", "SmoothPlastic", DECOR)
+	B.box(lk, "Boot", LX0 + 0.7, LX0 + 1.4, 0.7, 1.1, cz - 0.65, cz + 0.65, "black", "SmoothPlastic", DECOR)
+	B.ball(lk, "Helmet", Vector3.new(LX0 + 0.9, 6.15, cz), 1.25, "white", "SmoothPlastic", DECOR)
+	B.ball(lk, "Helmet_Visor", Vector3.new(LX0 + 1.15, 6.1, cz), 1.0, "black", "Glass", { collide = false, reflectance = 0.4 })
+	local tag = B.box(lk, "Name_Tag", LX1 - 0.05, LX1 + 0.05, 6.85, 7.35, cz - 0.9, cz + 0.9, "space", "SmoothPlastic", DECOR)
 	B.sign(tag, "CREW " .. i, nil, { face = Enum.NormalId.Right, titleColor = "white", ppu = 80 })
-	local pp = B.box(lk, "Prompt_Point", -21.7, -21.6, 12, 15, cz - 0.9, cz + 0.9, "white", "SmoothPlastic", HIDDEN)
+	local pp = B.box(lk, "Prompt_Point", LX1 - 0.1, LX1, 1.9, 4.9, cz - 0.9, cz + 0.9, "white", "SmoothPlastic", HIDDEN)
 	prompt(pp, "Suit", "NASA spacesuit", "Put on / take off", { hold = 0.4, dist = 6 })
 end
-B.box(room, "Bench", -17.8, -15.3, DECK, 11.7, 254.2, 255.5, "metalGray", "Metal")
-room:PivotTo(room:GetPivot() + SUIT_OFFSET)
+B.box(room, "Bench", -44, -38, 0, 1.6, RZ1 - 1.6, RZ1 - 0.3, "metalGray", "Metal")
 
 ---------------------------------------------------------------------------------
 -- 2. Elevador da tripulação (frente da torre esquerda, X −22.6..−17.4, Z 255.6..262)
@@ -229,7 +231,7 @@ B.box(arm, "Hatch_Window", -2.92, -2.86, TOP + 1.3, TOP + 2.0, RZ - 0.3, RZ + 0.
 --    Cabine de 16 lados: Ø 32 no piso, Ø 19 no teto, 15 de altura.
 --    +X = console/janelas (frente); −X = escotilha; ±Z = laterais.
 ---------------------------------------------------------------------------------
-local cabin = B.group(root, "Orion_Cabin")
+local cabin = B.group(Map, "OrionInterior") -- interior em escala humana (spec-v3 §11)
 local CO = Vector3.new(0, -60, RZ)
 local N, R0, R1, H = 16, 16, 9.5, 15
 local ap0, ap1 = R0 * math.cos(math.pi / N), R1 * math.cos(math.pi / N)
@@ -459,7 +461,7 @@ putScript("Script", systems, "CrewAccess", [==[
 -- Elevador e escotilha escurecem a tela do jogador pelo RemoteEvent ReplicatedStorage.CrewFade.
 local Players = game:GetService("Players")
 local PPS = game:GetService("ProximityPromptService")
-local map = workspace:WaitForChild("Map")
+local map = workspace:WaitForChild("NASAComplex")
 
 -- Traje espacial branco da NASA (camisa e calça clássicas criadas no ForgeGUI)
 local SUIT_SHIRT = "rbxassetid://106949180814943"
@@ -749,7 +751,7 @@ label.AnchorPoint = Vector2.new(0.5, 0.5)
 label.Position = UDim2.fromScale(0.5, 0.5)
 label.Size = UDim2.fromScale(0.6, 0.08)
 label.BackgroundTransparency = 1
-label.Font = Enum.Font.GothamBold
+label.FontFace = Font.new("rbxasset://fonts/families/Montserrat.json", Enum.FontWeight.Bold)
 label.TextScaled = true
 label.TextColor3 = Color3.fromHex("#8ECDFB")
 label.TextTransparency = 1
@@ -810,7 +812,7 @@ local function track(d)
 		suitPrompts[d] = true
 	end
 end
-local map = workspace:WaitForChild("Map")
+local map = workspace:WaitForChild("NASAComplex")
 for _, d in map:GetDescendants() do track(d) end
 map.DescendantAdded:Connect(track)
 map.DescendantRemoving:Connect(function(d) suitPrompts[d] = nil; cabs[d] = nil end)

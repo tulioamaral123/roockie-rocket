@@ -47,7 +47,7 @@ Não há scripts em objetos individuais (spec §11).
    ```bash
    cd ~/Documents/nasa/build && python3 -m http.server 8765 --bind 127.0.0.1
    ```
-3. Cole `build/run_in_studio.luau` no Command Bar. Ele executa as Fases 3–6, 8 e 9 em ordem.
+3. Cole `build/run_in_studio.luau` no Command Bar. Ele executa as Fases 3–6 e 8–13 em ordem.
 
 A Fase 9 move peças das Fases 3, 5 e 8 para o conjunto de transporte. Para refazer qualquer uma dessas fases, rode o runner inteiro (a partir da Fase 3), e não a fase isolada.
 
@@ -109,7 +109,7 @@ Map.TransportSystem
 ├── TransportAssembly            pivô (0, 0, 265)
 │   ├── CrawlerTransporter       pivô (0, 0, 265)
 │   ├── MobileLauncher           pivô (0, 7, 265)
-│   │   ├── Base                 deck Y 7–15,5, chapa, holddown posts, escada de 15 degraus, 4 luzes do deck
+│   │   ├── Base                 deck Y 7–15,5, chapa, holddown posts, escada lateral (X −30..−24), 4 luzes do deck
 │   │   ├── ServiceTower         antiga torre esquerda + elevador da tripulação + luz da torre
 │   │   ├── Umbilicals           Umbilical_40 e Umbilical_60, pivô na articulação (X −17)
 │   │   ├── AccessArms           Crew_Access_Arm (pivô X −17,4, Y 117) + Service_Arm_100
@@ -153,10 +153,179 @@ Validação (reconstrução das Fases 3–9 pelo runner e playtest):
 - Console sem erros.
 - Observação de teste: prompts com tempo de segurar (os armários usam 0,4 s) não disparam com `InputHoldBegin` simulado; no teste o tempo foi zerado só no cliente da sessão de Play.
 
+## spec-v3 — Etapa 4 (VAB)
+
+Gerador novo: `build/phase10_vab.luau` (Fase 10, idempotente, incluído no runner). Tudo fica fora do envelope de transporte.
+
+- **Saída de pedestres** na parede esquerda (X = −70, Z 296..302, 6 × 10), com porta automática de duas folhas (sistema `AutomaticDoors`, sensor de 9 studs), placa verde *EXIT — LAUNCH COMPLEX* e patamar externo de concreto no nível do piso do hangar (Y 0; a Baseplate está em −1). A parede esquerda inteira da Fase 1 foi trocada por três trechos com o vão.
+- **Torres de plataformas** (`Rocket_Hangar.Work_Platforms`), uma de cada lado: X ±36..±46, Z 262..290, até Y 112. Seis níveis (Y 30, 45, 60, 75, 90, 105), cada um com deck, guarda-corpo dos dois lados e nas pontas, e uma **plataforma retrátil recolhida** (`Work_Platform`, atributos `WorkPlatform = true` e `ExtendOffset` = ∓22 em X, que leva a borda a 14 studs do eixo) para o futuro `WorkPlatformController`. Na torre esquerda, os níveis 30 e 45 deixam livre o poço do elevador. Placas *WORK PLATFORMS* voltadas para o foguete.
+- **Elevador de serviço** na torre esquerda (`Platform_Tower_L.Service_Elevator`): piso do hangar ↔ nível 60. Usa o sistema do `CrewAccess` sem mudar o script: cabines `Cab_Floor` e `Cab_Level60` com `ZoneOffset`/`ZoneSize`, painel com prompt `CrewAction = "Elevator"`, portas com `OpenOffset`.
+- **Segunda ponte rolante** (`Structure.Bridge_Crane_2`, Z 240), com trolley e gancho estacionados em X = −54.
+- **Equipamentos industriais** (`Rocket_Hangar.Industrial_Equipment`): três linhas de tubulação em cada parede (Y 20–25; a da direita para antes da escada da sala de observação), descidas de tubo, 4 painéis elétricos com indicadores, 2 bancadas com ferramentas, dutos de ventilação junto ao teto (Y 118–122), 4 câmeras nos pilares, 2 pilhas de caixas técnicas e barreira em frente ao pé da torre direita.
+- **Iluminação:** 3 faixas com SurfaceLight sob os níveis 30, 60 e 90 de cada torre, e luz em cada cabine do elevador de serviço (sem sombras).
+- **Plataforma tesoura** (Fase 4) deslocada para X 52..58, liberando o pé da torre direita.
+
+Validação:
+
+- Varredura do envelope (X −34..34, Y 0..133, Z 230..370): continua só com as folhas do portão dos fundos.
+- Sobreposições entre peças colidíveis da Fase 10 e de outras fases: só o piso da cabine `Cab_Floor` encostado no piso do hangar (esperado).
+- Visão a partir do portão frontal: as torres ficam nas laterais e o SLS segue visível de imediato.
+- Playtest: a porta de pedestres abriu ao aproximar (folha L recolheu 2,5 studs), o personagem saiu ao patamar externo e voltou; o elevador de serviço subiu do piso ao nível 60 (Y 3 → 63) e desceu; no nível 60 o guarda-corpo do lado do foguete segurou o personagem em X ≈ −37,3. Console sem erros.
+- Contagem depois da Etapa 4: 770 peças no hangar, 326 no conjunto de transporte, 1645 no `Map`; 59 luzes no workspace.
+
+## spec-v3 — Etapa 5 (área externa)
+
+Feita por dois agentes em paralelo, cada um com um gerador e uma faixa do mapa (fronteira em X = −85), e integrada depois.
+
+**Fase 11 — `build/phase11_launch_pad.luau`** (`Map.LaunchComplex`, 602 peças, 9 luzes):
+
+- **Crawlerway** reto em X = 0, de Z 321 a 660, 90 de largura, piso em Y 0 (lajes −1..0) com faixas de cascalho sob as esteiras e canteiro central. A zona de exclusão (X ±40) só tem marcações sem colisão. Uma soleira (`Crawlerway.Threshold`, Z 320,2..321) fecha a fresta entre o portão dos fundos e a rota.
+- **Plataforma 39B:** hardstand X −80..92, Z 660..724. Destino do pivô do conjunto em (0, 0, 700). Seis pedestais com topo em Y 7 (X ±22,3..±24, Z 685/700/715), fora da faixa do crawler, com atributo `SupportsMobileLauncher`. Trincheira de chamas e defletor no sentido +Z (Z 724..820), acima do chão. Sem torre de serviço fixa.
+- **Estruturas:** esferas de LH2 (70, 738) e LOX (−60, 748) com tubulação até umbilicais de solo em X ±35..39; torre de água em (48, 812), até Y 105; três torres de para-raios até Y 200 com catenária sem colisão (ponto mais baixo Y ≈ 177); cercas na rota, na plataforma e no estacionamento.
+- **Estacionamento do crawler:** laje X 62..122, Z 586..660, vaga centrada em (90, 620), ligada à rota por um ramal.
+- **Pontos da rota** em `TransportSystem.CrawlerRoute`: Point_01..06 (Z 321..665, atributos `Order` e `Leg`), `Destination_LaunchPad` (0, 0, 700) e `Parking_Crawler` (90, 0, 620). A ida ao estacionamento é: recuar até Point_05 (Z 620) e andar de lado em +X.
+
+**Fase 12 — `build/phase12_control_center.luau`** (`Map.Launch_Control_Center` e `Map.Visitor_Paths`, 501 peças, 14 luzes):
+
+- **Launch Control Center** em X −150..−95, Z 250..320, com portas automáticas a leste (alinhada com a saída de pedestres do VAB) e ao norte. **Firing Room** com quatro fileiras de 8 estações em degraus (Y 0–3), telão principal (T− 00:00:00 HOLD) e telas laterais estáticas, diagramas, racks de comunicação e janelas voltadas para a plataforma.
+- **Console principal** (`Consoles.Main_Console`, atributo `FutureInteraction = "StartOperation"`, peça `Interface_Anchor`). As estações têm `FutureInteraction = "Station"`. Nada funcional ainda; as cadeiras são Parts, não Seats.
+- **Caminhos de pedestres:** do patamar da saída do VAB até o LCC e um passeio em X −105..−97 até a **área de observação** (X −140..−95, Z 640..720) com arquibancada coberta, lunetas e painéis. Tudo em X ≤ −82, sem cruzar a rota; placas "CRAWLERWAY — NO ENTRY" junto ao passeio.
+
+**Integração:**
+
+- **Escada da base do ML movida** para a lateral −X (X −30..−24, sobe em +Z de Z 234 a 249, patamar até Z 252). Antes ela ficava na faixa das esteiras do crawler e impedia o recuo na plataforma. Fica mais perto do vestiário e dentro do envelope (largura do conjunto agora X −30..24,1 = 54).
+- **Sinalizadores das cabines do crawler** passaram para a face externa da cabine, abaixo de Y 7, porque passariam sob o deck do ML no recuo.
+- Runner com as Fases 11 e 12; reconstrução completa das Fases 3–12 sem erros nem duplicatas.
+
+Validação conjunta (por varredura de caixas, peça a peça):
+
+- **Chegada** do conjunto inteiro de Z 265 a Z 700: só o portão dos fundos, que precisa abrir.
+- **Recuo do crawler** de Z 700 a 620 com o ML e o SLS na plataforma: 0 interseções. **Lateral** até o estacionamento (X 0 → 90 em Z 620): 0 interseções.
+- Na plataforma, só os pedestais tocam a base do ML (em Y 7).
+- Agente B: playtest do patamar do VAB até a Firing Room (porta leste), subida dos degraus, saída pela porta norte, passeio até a arquibancada da área de observação. Console sem erros.
+
+## spec-v3 — Etapa 6 (migração e acabamento)
+
+### Migração da hierarquia
+
+A raiz agora é `Workspace.NASAComplex` (tabela de nomes antigos e novos no §11.1 da `spec-v3.md`). Os geradores continuam usando a variável local `Map`, mas procuram `NASAComplex`; os quatro scripts (`AutomaticDoors`, `CrewAccess`, `CrewClient`, `PlanetOrbits`) também. A Fase 1 apaga tanto `NASAComplex` quanto um `Map` antigo antes de recriar.
+
+As seções anteriores deste documento mantêm os nomes da época em que foram escritas (`Map`, `Rocket_Hangar`, `Space_Adventure`, `Suit_Room`, `Orion_Cabin`).
+
+Validação: o mapa foi reconstruído do zero (Fases 1, 2 e runner 3–12) sem erros, com 2751 peças no `NASAComplex`. As varreduras do conjunto (chegada à plataforma, recuo do crawler e ida ao estacionamento) continuaram com 0 interseções fora do portão dos fundos.
+
+### Acabamento — `build/phase13_finishing.luau` (Fase 13)
+
+Feito em paralelo com o teste de circulação, por dois agentes, e integrado depois.
+
+- **`NASAComplex.SafetyZones`** (Parts invisíveis, sem colisão, atributos `SafetyZone`, `ZoneType`, `Purpose`, `Min`, `Max`) para o futuro `PlayerSafetyController`: `VABObservationZone` (sala de observação), `VABEnvelopeZone` (X −34..34, Y 0..133, Z 230..320), `RouteExclusionZone` (X −40..40, Z 320..722), `CrawlerParkingZone` (centro 90, 0, 620) e `LaunchPadObservationZone` (área de observação).
+- **Sinalização no VAB** (`VABHangar.Wayfinding_VAB`, decorativa): quadro de direções suspenso na treliça da entrada, em X −24..−4 (fora do cone de visão do SLS), linha de piso até o vestiário com etiqueta, placa do elevador de serviço, placa da saída de pedestres e o painel *ONE ROCKET, ONE JOURNEY* sobre o conjunto de transporte.
+- **Otimização** (todo o `NASAComplex` menos o conjunto de transporte, 2450 peças): `CastShadow = false` em 1027 peças pequenas ou decorativas e `CanTouch = false` em 1253 peças ancoradas (nenhum script usa `Touched`). `CanCollide` e `CanQuery` não mudaram. Reaplicar não muda nada.
+
+### Correções da integração
+
+- **Cercas da rota fechadas** (Fase 11): `Crawlerway_Fence_W` e `_E` agora começam em Z 321,5, encostadas na parede dos fundos do VAB (antes havia uma passagem de Z 321 a 331,75 por onde o visitante entrava na rota a partir do passeio do LCC). Dois trechos novos (`Parking_Fence_Link_W` e `_S`) fecham a brecha entre a cerca leste e a do estacionamento, fora do caminho do crawler.
+- **Quadro de direções da entrada** saiu do eixo do portão: no centro ele tapava o estágio central entre Y 45 e 60 para quem entra. Depois da mudança, 35 raios do olho do visitante no portão até o SLS só são interrompidos pelos braços de acesso do próprio lançador.
+
+### Teste de circulação (Play)
+
+| Trecho | Resultado |
+|---|---|
+| Recepção → Corredor 1 → museu → Corredor 2 → portão do VAB → frente do foguete | ok (portas automáticas abriram) |
+| Vestiário: vestir o traje | ok |
+| Escada lateral → deck → elevador → braço → Orion → sentar → sair na White Room → descer | ok |
+| Elevador de serviço: piso ↔ nível 60 | ok |
+| Saída de pedestres → LCC (porta leste) → Firing Room → porta norte → passeio → arquibancada | ok |
+| Entrar na rota a partir do passeio | entrava pela brecha das cercas; corrigido depois |
+
+- **SLS visível ao entrar:** sim (raios do portão acertam core stage, LAS e Orion; a base fica atrás do deck do lançador, como esperado).
+- **Console:** nenhum erro dos scripts do mapa.
+- **Contagens** (antes da Fase 13): VAB 644 peças (orçamento 2500), conjunto de transporte 337 (1500), museu 407 (2000), demais áreas 1363 (2000); 2793 no workspace (~8000). 82 luzes, 3 com sombra (por projeto, Fase 5), 1 ParticleEmitter.
+- **Desempenho no Studio** (referência, não é teste de celular): física a 60 FPS no servidor e no cliente.
+
+### Pendências
+
+- **Teste em celular** (spec §13): não feito. Usar o emulador de dispositivos do Studio ou um aparelho real e registrar o modelo.
+- **Porta da cabine inferior do elevador da tripulação:** quem chega na diagonal pelo patamar podia esbarrar na quina da folha aberta (X −24..−22, Z 255,8). Corrigido no gerador (Fase 9): faixa de piso azul-clara `Crew_Walkway_Guide` do patamar até o eixo da porta (X −20), com seta.
+- **Elevador da tripulação disparou sem o painel** uma vez no playtest automatizado. O script só aciona a viagem pelo prompt do painel; provavelmente foi uma tecla E na janela do Studio. Vale observar num teste manual.
+- **Passagem entre o trator de reboque e as caixas** a caminho da saída de pedestres tinha cerca de 3 studs. Corrigido no gerador (Fase 4): o trator foi recuado 10 studs (Z 282..287).
+- **Acabamento de materiais e cores** não foi feito além do que cada fase já define.
+- **Sistemas futuros** (fora do escopo da spec-v3 §15): abrir o portão dos fundos, mover o conjunto, estender plataformas e braços, sequência de lançamento, persistência e emblemas.
+
+
+## spec-v3 §16 — conferência da preparação
+
+O §16 (o que fica para depois) foi anexado à spec-v3. Conferência do que ele pede "nesta fase", contra o mapa atual:
+
+| Item | Situação |
+|---|---|
+| §16.2 Critérios de conclusão do mapa | Atendidos: conjunto cabe no VAB, passa pelo portão com 7 de folga vertical e 13 de cada lado, SLS único, ML com o foguete, estruturas fixas e móveis separadas, plataforma comporta o conjunto, rota livre (varreduras com 0 interseções), pivôs definidos |
+| §16.3 Referências de posição | `CrawlerRoute.Start_VAB`, `Destination_LaunchPad`, `Parking_Crawler`; pivôs do `TransportAssembly`, `CrawlerTransporter`, `MobileLauncher` e `SLSRocket` |
+| §16.4 Objetos móveis separados dos fixos | Tudo que se move está em `TransportSystem.TransportAssembly`; o interior da Orion e o vestiário são fixos e usam referências relativas |
+| §16.5 Espaço reservado | `SafetyZones` (envelope no VAB, rota, estacionamento, áreas de observação); cercas fechando a rota |
+| §16.6 Sala de controle cenográfica | 32 estações identificadas na tela (POWER, LOX TANK, GUIDANCE, RANGE…), console principal reservado, sem botões funcionais |
+| §16.7 Espaço vertical acima da plataforma | Coluna acima do SLS na plataforma (X ±12, Y 133..800) livre; a catenária dos para-raios passa a 13,4 studs do eixo do foguete. Ainda não há efeitos de lançamento; o único efeito do mapa (poeira do hangar) está em `Atmosphere_Objects` |
+| §16.8 / §16.9 Persistência e emblemas | Nada implementado, como pedido |
+
+## Skills roblox-skills (JoCoding) — ajustes de qualidade
+
+O plugin `roblox-skills@roblox-skills` (v1.11.0, github.com/JoCoding-Inc/roblox-skills) foi instalado no Claude Code (escopo do usuário). Ele só contém skills, sem hooks nem servidores. Ajustes feitos a partir delas, dentro do escopo do §16.10 (qualidade, sem sistemas novos):
+
+- **Fontes explícitas** (`roblox-ui-typography`, `roblox-engine-2026` §2): Gotham foi removida do Roblox e era trocada silenciosamente por Montserrat. Todas as placas e textos agora usam `FontFace` com Montserrat explícita, no mesmo peso de antes (Black → Heavy, Bold → Bold, Medium → Medium); os textos de telemetria seguem em `Code`. O visual não muda. Arquivos: `lib.luau`, Fases 2, 4, 8 (CrewClient) e 12.
+- **Streaming** (`roblox-engine-2026` §3): a Fase 1 aplica `StreamingIntegrityMode = PauseOutsideLoadedArea` e `StreamOutBehavior = Opportunistic`. `ModelStreamingBehavior` também está na lista, em `pcall`, mas a propriedade não existe nesta versão do Studio e foi ignorada.
+- **Aplicado e conferido:** reconstrução do zero (Fases 1–13) sem erros; 326 textos, 0 em Gotham (243 Montserrat, 83 Inconsolata = `Code`); trajeto do conjunto com 0 interseções.
+
+### Iluminação (skill `roblox-feel-audio-vfx` §4) — opção B aplicada
+
+Comparação medida em três pontos (VAB, museu, área externa), mesma câmera, com a página `docs/lighting/compare.html` (imagens e números). Escolhida a opção B:
+
+- `Lighting.LightingStyle = Realistic` (antes `Soft`). Substitui a antiga instrução de ajustar `Technology = Future` à mão: essa propriedade não existe mais.
+- Bloom 0,25 / 10 / 2 (antes 0,6 / 24 / 1,6).
+
+Efeito medido (claridade perceptual): no VAB a área estourada caiu de 5,5% para 1,3% e a mediana subiu de 0,21 para 0,23; museu e área externa ficaram praticamente iguais. Aplicado na Fase 5 e reconstruído (Fases 3–13).
+
+- **Correção de interiores:** a comparação inicial não incluiu interiores claros. Com `Realistic` e o `Ambient` antigo (58, 60, 70), a recepção caiu de claridade média 0,53 para 0,30 (cinzenta), porque o Realistic tira o preenchimento difuso do Soft. A Fase 5 agora usa `Ambient = (105, 108, 118)`: a recepção volta a 0,54 e o VAB mantém a área estourada em 1,2%. Medido com a iluminação assentada (15 s após cada mudança, como recomenda a `roblox-pitfalls`). O LCC continua escuro por projeto (paredes #2B313B e luz controlada).
+- **Materiais:** prévia feita (reboco nas paredes e tetos claros, metal nos tanques; 38 peças), mas ainda não aplicada nem comparada com a iluminação assentada.
+
+### Teste por dispositivo (skill `rbx-device-simulator-lua`)
+
+`StarterGui.ScreenOrientation = Sensor` (retrato e paisagem). A UI do jogo é criada em runtime; não há ScreenGui em `StarterGui`. Vista do visitante logo depois do portão frontal, olhando o SLS:
+
+| Aparelho | Viewport | Resultado |
+|---|---|---|
+| Samsung Galaxy A06 (Android de entrada) | 705 × 338 | SLS inteiro visível; quadro de direções legível |
+| iPhone 17 Pro | 750 × 381 | Igual ao A06, com mais margem |
+| iPhone 17 Pro, retrato | 401 × 778 | Foguete preenche a tela; placas laterais saem do quadro |
+| iPad Pro M5 (13 pol.) | 1375 × 1032 | Foguete com folga; o quadro de direções corta na lateral nesse enquadramento (a câmera segue o jogador) |
+| Xbox One | 1919 × 1079 | Tudo legível |
+
+Play no Galaxy A06: joystick e botão de pulo nos cantos sem cobrir nada importante; console sem erros. Achado: no vestiário (10 studs de largura, teto a 9,3) a câmera em terceira pessoa fica colada no personagem, e o prompt do armário mais próximo pode ficar fora do quadro estreito do celular, embora esteja ativo.
+
+### Medição da cena (skill `rbx-scene-analysis`, Play, sem sombras)
+
+| Ponto de vista | Triângulos | Draw calls |
+|---|---|---|
+| Entrada do VAB, olhando o SLS | 32.188 | 114 |
+| VAB, vista ampla com as torres | 29.420 | 126 |
+| Museu (planetário) | 31.044 | 215 |
+| Área de observação → plataforma | 26.578 | 26 |
+| Saída dos fundos → rota e plataforma | 30.480 | 44 |
+
+Referência da skill: cerca de 800 mil triângulos e 600 draw calls para 60 FPS na maioria dos aparelhos. A geometria opaca fica em 18 a 30 draw calls; o resto são as telas de texto (SurfaceGui: 183 no museu, 89 a 101 no VAB). Os números refletem o que o cliente tinha carregado pelo streaming; o FPS real em celular continua dependendo de um aparelho.
+
+- **Orientação:** o jogo aceita retrato (`Sensor`). Em retrato a visão lateral fica estreita para um mapa de exploração; `LandscapeSensor` é uma opção, a decidir.
+- **Vestiário ampliado (feito):** a sala passou de 10 × 10,4 × 9,3 para 23,5 × 14 × 13 studs (X −60..−36,5, Z 244..258, Y 0..13), construída direto no piso (sem a translação antiga). Armários na parede do fundo, voltados para +X; entrada na face −Z (X −44..−38) e porta para o lançador na face +X (Z 248,5..253,5); duas luzes de teto. A placa do elevador de serviço (Fase 13) subiu para Y 14..17, acima do teto novo, e a faixa de piso termina na entrada. Conferido: 0 sobreposições da sala, trajeto do conjunto com 0 interseções e Play no Galaxy A06 com a câmera atrás do personagem e os 4 armários e a placa visíveis. O prompt do armário fica ativo e marcado como mostrado no cliente; o `screen_capture` não registra o painel do prompt, então a checagem visual dele fica para um teste à mão.
+
+Recomendações das skills registradas para a próxima fase (não aplicadas agora, para não reconstruir sistemas sem necessidade, §16.10 regra 2):
+
+- **Animar portas no cliente:** `AutomaticDoors` e `CrewAccess` fazem tween das folhas no servidor; a skill recomenda tween no cliente. Combina com a sincronização visual do §16.4.
+- **Desempenho em celular:** o FPS lido do Studio em segundo plano não vale como medida (o Studio limita a 15 FPS fora de foco). Medir em aparelho Android de entrada por 10 a 15 minutos; o Studio tem ainda o *Performance Simulator* (Test > Device Simulator > Performance), que simula qualidade gráfica e memória, não CPU.
+- **Alcance de desenho no celular:** em qualidade baixa, o Roblox garante ao menos 500 studs. O pad (Z 700) fica a cerca de 380 do portão dos fundos e a menos de 100 da área de observação.
+
 ## Pontos que dependem de você
 
 1. **Salvar o place.** O Place1 ainda não foi salvo; use File → Save to File ou Publish to Roblox.
-2. **`Lighting.Technology = Future`.** Ajuste manualmente em Properties, porque o Studio não permite alterar isso por script. Sem Future, as SurfaceLights e as sombras dos focos ficam mais pobres.
+2. **~~`Lighting.Technology = Future`~~** Resolvido: a propriedade foi substituída por `Lighting.LightingStyle`, que a Fase 5 define como `Realistic`.
 3. **Visão do foguete ao entrar.** Pelo portão, o jogador vê imediatamente a base, os propulsores e o estágio central. O topo (Orion e torre de escape, a 127 studs) exige olhar para cima, por causa da distância de 55 studs entre o portão e o foguete definida na spec.
 4. **MeshParts (spec §11).** O SLS e os planetas usam peças primitivas, leves e editáveis. Se quiser, dá para trocar por MeshParts numa etapa futura.
 

@@ -6,12 +6,12 @@
 
 local lib = ...
 local B = lib.builder(4)
-local Map = workspace:FindFirstChild("Map")
+local Map = workspace:FindFirstChild("NASAComplex")
 assert(Map, "Execute as Fases 1–3 antes")
 B.clear(Map)
 
 local Base, C1, Museum, C2, Hangar =
-	Map.NASA_Base, Map.Corridor_01, Map.Space_Adventure, Map.Corridor_02, Map.Rocket_Hangar
+	Map.Reception, Map.Corridors.Corridor_01, Map.CapeCanaveralMuseum, Map.Corridors.Corridor_02, Map.VABHangar
 local DECOR = { collide = false }
 local FLOOR_MARK = { collide = false, shadow = false }
 local N = Enum.NormalId
@@ -74,7 +74,7 @@ local function artwork(part, face, title, caption, planetColor, top, bottom)
 		t.Size = UDim2.fromScale(0.88, i == 1 and 0.13 or 0.08)
 		t.Text = txt
 		t.TextScaled = true
-		t.Font = i == 1 and Enum.Font.GothamBlack or Enum.Font.GothamMedium
+		t.FontFace = i == 1 and Font.new("rbxasset://fonts/families/Montserrat.json", Enum.FontWeight.Heavy) or Font.new("rbxasset://fonts/families/Montserrat.json", Enum.FontWeight.Medium)
 		t.TextXAlignment = Enum.TextXAlignment.Left
 		t.TextColor3 = Color3.new(1, 1, 1)
 		t.Parent = bg
@@ -84,7 +84,7 @@ end
 ---------------------------------------------------------------------------------
 -- 1. BASE NASA — recepção (spec §3.2–3.4)
 ---------------------------------------------------------------------------------
-local rec, furn = Base.Reception, Base.Furniture
+local rec, furn = Base.Front_Desk, Base.Furniture
 
 -- Painel institucional suspenso (0, 8, 3), voltado para o spawn
 local inst = B.box(rec, "Institutional_Panel", -12, 12, 4.5, 11.5, 2.7, 3.3, "nasaBlue", "SmoothPlastic")
@@ -265,6 +265,8 @@ do -- plataforma elevatória (tesoura)
 	B.box(s, "Rail", 42, 48, 10.5, 11.6, 287.9, 288.1, "safety", "Metal")
 	B.box(s, "Rail", 41.9, 42.1, 10.5, 11.6, 282, 288, "safety", "Metal")
 	B.box(s, "Rail", 47.9, 48.1, 10.5, 11.6, 282, 288, "safety", "Metal")
+	-- deslocada para X 52..58, liberando o pé da torre de plataformas direita (Fase 10)
+	s:PivotTo(s:GetPivot() + Vector3.new(10, 0, 0))
 end
 do -- trator de reboque
 	local t = B.group(veh, "Tow_Tractor")
@@ -278,6 +280,9 @@ do -- trator de reboque
 		wheel(t, -53.3, 0.8, z, 1.6, 0.6)
 		wheel(t, -47.7, 0.8, z, 1.6, 0.6)
 	end
+	-- recuado 10 studs (Z 282..287): libera o acesso à saída de pedestres (Fase 10, Z 296..302),
+	-- que ficava com só 3 studs entre o trator e as caixas de equipamento (Z 300..306)
+	t:PivotTo(t:GetPivot() + Vector3.new(0, 0, -10))
 end
 do -- caixas de equipamento
 	local c = B.group(veh, "Equipment_Crates")

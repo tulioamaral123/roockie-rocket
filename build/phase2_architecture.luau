@@ -15,10 +15,10 @@ local C = {
 local GLASS = { transparency = 0.55, shadow = false }
 local DECOR = { collide = false }
 
-local Map = workspace:FindFirstChild("Map")
+local Map = workspace:FindFirstChild("NASAComplex")
 assert(Map, "Execute phase1_structure.luau antes")
 local Base, C1, Museum, C2, Hangar =
-	Map.NASA_Base, Map.Corridor_01, Map.Space_Adventure, Map.Corridor_02, Map.Rocket_Hangar
+	Map.Reception, Map.Corridors.Corridor_01, Map.CapeCanaveralMuseum, Map.Corridors.Corridor_02, Map.VABHangar
 
 -- Idempotência ---------------------------------------------------------------
 local old = {}
@@ -139,12 +139,12 @@ local function label(text, y, h, font, color)
 	t.Size = UDim2.fromScale(0.94, h)
 	t.Text = text
 	t.TextScaled = true
-	t.Font = font
+	t.FontFace = font
 	t.TextColor3 = Color3.fromHex(color)
 	t.Parent = gui
 end
-label("SPACE ADVENTURE", 0.06, 0.56, Enum.Font.GothamBlack, C.lightBlue)
-label("EXPLORE THE UNIVERSE", 0.66, 0.26, Enum.Font.GothamMedium, C.white)
+label("SPACE ADVENTURE", 0.06, 0.56, Font.new("rbxasset://fonts/families/Montserrat.json", Enum.FontWeight.Heavy), C.lightBlue)
+label("EXPLORE THE UNIVERSE", 0.66, 0.26, Font.new("rbxasset://fonts/families/Montserrat.json", Enum.FontWeight.Medium), C.white)
 
 -- Moldura industrial na saída do museu (transição para o Corredor 2)
 local exitM = group(Museum.Walls, "Exit_Frame")

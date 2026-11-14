@@ -540,15 +540,27 @@ Workspace
     └── SafetyZones
 ```
 
-### 11.1 Migração da hierarquia atual
+### 11.1 Migração da hierarquia (feita na Etapa 6)
 
-Hoje o mapa está em `Workspace.Map`, com o hangar em `Map.Rocket_Hangar` (`Launch_Platform`, `Gantry`, `SLS_Rocket`, `Gates` etc.).
+A raiz `Workspace.Map` passou a se chamar `Workspace.NASAComplex`, e as pastas de primeiro nível seguem esta árvore. A troca foi feita nos geradores (`build/`), nos scripts `AutomaticDoors`, `CrewAccess`, `CrewClient` e `PlanetOrbits`, e o mapa foi reconstruído do zero.
 
-- Os scripts `AutomaticDoors` e `CrewAccess` procuram atributos (`AutoDoor`, `CrewAction`) dentro do `Map`. Renomear para `NASAComplex` exige ajustar esses scripts no mesmo passo.
-- Os geradores em `build/` também referenciam `Map` e os nomes atuais. Atualizar os geradores junto, para que continuem idempotentes.
-- O atributo `BuildPhase` continua valendo para identificar o que cada gerador criou.
+| Antes | Agora |
+|---|---|
+| `Map` | `NASAComplex` |
+| `NASA_Base` | `Reception` (a subpasta `Reception` virou `Front_Desk`) |
+| `Corridor_01`, `Corridor_02` | `Corridors.Corridor_01`, `Corridors.Corridor_02` |
+| `Space_Adventure` | `CapeCanaveralMuseum` |
+| `Rocket_Hangar` | `VABHangar` |
+| `Rocket_Hangar.Crew_Access.Suit_Room` | `VABHangar.CrewSuitUpRoom` |
+| `Rocket_Hangar.Crew_Access.Orion_Cabin` | `OrionInterior` |
+| `Launch_Control_Center` | `LaunchControlCenter` |
 
----
+Diferenças em relação à árvore sugerida, mantidas de propósito:
+
+- **Subpastas do VAB** continuam com os nomes dos geradores: `Structure` (arquitetura, pontes rolantes, saída de pedestres), `Gates` (`Front_Gate`, `Maintenance_Gate` = portão dos fundos), `Work_Platforms` (plataformas fixas e elevador de serviço), `Industrial_Equipment`, `Observation_Room`. Renomeá-las exigiria reescrever as Fases 2–10 sem ganho funcional.
+- **Área externa** fica em `LaunchComplex` (`Crawlerway`, `CrawlerParking`, `LaunchPad`, cercas, sinalização), e os caminhos de pedestres em `Visitor_Paths`. A rota em si (pontos) está em `TransportSystem.CrawlerRoute`.
+- **Scripts** continuam em `ServerScriptService.Map_Systems`.
+- O atributo `BuildPhase` continua identificando o que cada gerador criou.
 
 ## 12. Preparação para movimentação futura
 
@@ -689,3 +701,326 @@ Não desenvolver ainda:
 A prioridade é terminar a arquitetura física e garantir que o conjunto caiba e possa percorrer o caminho planejado.
 
 **Resultado esperado:** um complexo espacial visualmente completo, com VAB, SLS, Mobile Launcher, museu, sala de controle e plataforma, preparado para receber sistemas de transporte e lançamento em uma versão posterior.
+
+---
+
+## 16. O que fica para depois
+
+Esta seção define os sistemas que não fazem parte da prioridade atual de construção do mapa.
+
+O objetivo é evitar que o desenvolvimento avance prematuramente para sistemas funcionais antes de a arquitetura física estar concluída e validada.
+
+Os elementos desta seção deverão ser considerados no planejamento futuro, mas não deverão ser implementados nesta fase, exceto quando houver necessidade de preparar fisicamente o mapa para recebê-los.
+
+### 16.1 Resumo de prioridades
+
+| Sistema | Situação | Orientação |
+|---|---|---|
+| Construção do mapa | **Prioridade atual** | Finalizar arquitetura e estruturas físicas |
+| Transporte do Crawler | Planejado para próxima fase | Preparar modelos, pivôs e rota |
+| Sincronização visual dos clientes | Próxima fase | Preparar estrutura para movimento sincronizado |
+| Zona de exclusão dinâmica | Próxima fase | Reservar espaço físico e pontos de referência |
+| Sala de controle funcional | Próxima fase | Construir consoles físicos, sem implementar operação |
+| Decolagem e reset | Próxima fase | Preservar espaço e organização do SLS |
+| DataStore e session locking | Adiado | Não implementar nesta etapa |
+| Emblemas | Adiado | Não implementar nesta etapa |
+
+---
+
+### 16.2 Construção do mapa
+
+**Situação: PRIORIDADE ATUAL**
+
+A prioridade do projeto é concluir o complexo espacial e validar a arquitetura física.
+
+Devem ser finalizados:
+
+- Museu Cape Canaveral.
+- VAB Hangar.
+- Estrutura do SLS.
+- Mobile Launcher.
+- Crawler-Transporter.
+- Acesso à cápsula Orion.
+- Sala de controle como ambiente físico.
+- Pátio externo.
+- Rota do crawler.
+- Plataforma de lançamento.
+- Equipamentos e estruturas de apoio.
+
+#### Critérios de conclusão
+
+- O conjunto completo deve caber dentro do VAB.
+- O conjunto deve possuir folga suficiente para atravessar o portão.
+- O SLS deverá ser único.
+- O Mobile Launcher deverá acompanhar o foguete.
+- As estruturas fixas do VAB não poderão ser confundidas com estruturas móveis.
+- A plataforma deverá comportar o conjunto.
+- A rota deverá estar livre de obstáculos.
+- Os modelos deverão possuir pivôs e organização adequados para movimentação futura.
+
+**Não iniciar o desenvolvimento dos sistemas funcionais de transporte e lançamento antes de validar esses requisitos.**
+
+---
+
+### 16.3 Transporte do Crawler
+
+**Situação: PLANEJADO PARA A PRÓXIMA FASE**
+
+O transporte funcional do conjunto será implementado posteriormente.
+
+Nesta fase, construir e organizar fisicamente:
+
+- Crawler-Transporter.
+- Base do Mobile Launcher.
+- Torre móvel.
+- SLS.
+- Pontos de referência de posição inicial e final.
+- Rota entre VAB e plataforma.
+- Área de estacionamento do crawler.
+
+#### Preparação obrigatória nesta fase
+
+Organizar o conjunto em um Model principal, preservando a separação lógica dos componentes.
+
+Criar referências para:
+
+- Posição inicial dentro do VAB.
+- Posição final na plataforma.
+- Pivô do conjunto.
+- Pivô do crawler.
+- Pivô do Mobile Launcher.
+- Posição de estacionamento.
+
+#### Implementação futura
+
+Na próxima fase, desenvolver um sistema que:
+
+1. Receba uma solicitação de transporte.
+2. Verifique se o conjunto pode ser movimentado.
+3. Inicie o deslocamento.
+4. Movimente o conjunto ao longo da rota.
+5. Posicione o Mobile Launcher na plataforma.
+6. Libere o crawler para estacionamento.
+7. Permita futuramente o retorno ao VAB.
+
+Não implementar animação de transporte funcional nesta etapa.
+
+---
+
+### 16.4 Sincronização visual dos clientes
+
+**Situação: PRÓXIMA FASE**
+
+A sincronização dos movimentos entre jogadores será implementada quando o transporte do crawler estiver funcional.
+
+Como o conjunto poderá possuir muitas peças, não será desejável depender de atualizações individuais de posição para cada peça em intervalos muito curtos.
+
+#### Preparação nesta fase
+
+- Manter o conjunto organizado em Models.
+- Definir pivôs consistentes.
+- Evitar dependências desnecessárias entre peças.
+- Separar objetos móveis de estruturas fixas.
+- Identificar os pontos de início e fim do deslocamento.
+
+#### Implementação futura
+
+A arquitetura deverá seguir este princípio:
+
+1. O servidor determina o estado real do conjunto.
+2. O servidor publica a posição inicial, destino e horário de início.
+3. Os clientes realizam a interpolação visual do movimento.
+4. O servidor permanece responsável pela autoridade e validação.
+5. Ao finalizar, todos os clientes recebem o estado final oficial.
+
+A interpolação visual deverá manter o movimento fluido e consistente para todos os jogadores.
+
+**Restrição:** o cliente não poderá decidir sozinho o destino, iniciar o transporte ou alterar o estado oficial do conjunto.
+
+---
+
+### 16.5 Zona de exclusão dinâmica
+
+**Situação: PRÓXIMA FASE**
+
+A zona de exclusão funcional será implementada junto com o transporte do crawler.
+
+Nesta fase, deverá existir apenas a preparação física do espaço.
+
+#### Preparação nesta fase
+
+Reservar uma área livre ao redor de:
+
+- Conjunto de transporte.
+- Entrada e saída do VAB.
+- Rota do crawler.
+- Área de manobra.
+- Plataforma de lançamento.
+- Área de estacionamento.
+
+Evitar estruturas que possam bloquear a futura movimentação.
+
+#### Implementação futura
+
+Durante o transporte:
+
+- Jogadores não poderão permanecer na rota.
+- Jogadores deverão ser retirados da área de movimentação.
+- Objetos móveis não poderão atravessar a zona de segurança.
+- A zona deverá acompanhar o deslocamento do conjunto quando necessário.
+- O acesso será liberado após o término da operação.
+
+A zona de exclusão deverá ser controlada pelo servidor.
+
+Não implementar detecção dinâmica, bloqueio de jogadores ou teletransporte de segurança nesta fase.
+
+---
+
+### 16.6 Sala de controle funcional
+
+**Situação: PRÓXIMA FASE**
+
+A sala de controle deverá ser construída nesta fase, mas permanecerá cenográfica.
+
+#### O que construir agora
+
+- Consoles físicos.
+- Cadeiras.
+- Monitores.
+- Telão principal.
+- Painéis de informações.
+- Iluminação.
+- Elementos decorativos.
+- Identificação dos postos de operação.
+
+Reservar um console principal para futuras interações.
+
+#### O que será implementado depois
+
+- Solicitação de transporte do crawler.
+- Verificação do estado do conjunto.
+- Controle de operações.
+- Monitoramento da plataforma.
+- Autorização de procedimentos.
+- Comunicação com os sistemas de missão.
+
+Não criar botões funcionais que iniciem operações nesta fase.
+
+A sala deverá estar visualmente completa e preparada para receber esses sistemas.
+
+---
+
+### 16.7 Decolagem e reset
+
+**Situação: PRÓXIMA FASE**
+
+A sequência de decolagem será desenvolvida somente depois da conclusão do mapa e do sistema de transporte.
+
+#### Preparação nesta fase
+
+- Manter o SLS organizado em um único Model.
+- Definir o pivô principal do foguete.
+- Reservar espaço vertical livre acima da plataforma.
+- Manter a plataforma e a trincheira de chamas preparadas.
+- Organizar os efeitos visuais em pastas próprias.
+- Evitar dependências entre o foguete e estruturas fixas.
+
+#### Implementação futura
+
+O sistema deverá contemplar:
+
+1. Preparação da plataforma.
+2. Sequência de autorização.
+3. Contagem regressiva.
+4. Efeitos de ignição.
+5. Separação do foguete da estrutura de apoio.
+6. Animação de decolagem.
+7. Encerramento da demonstração.
+8. Retorno do conjunto à posição inicial por meio de um procedimento de reset.
+
+A decolagem será uma demonstração cinematográfica dentro do Roblox, sem necessidade de simulação orbital completa.
+
+O reset deverá restaurar a posição, orientação e estado visual do SLS sem criar uma segunda cópia do foguete.
+
+Não implementar decolagem ou reset nesta etapa.
+
+---
+
+### 16.8 DataStore e session locking
+
+**Situação: ADIADO**
+
+A persistência de progresso será definida em uma fase posterior, quando os sistemas de missão e progressão estiverem estabilizados.
+
+Não implementar nesta etapa:
+
+- DataStoreService.
+- Salvamento de missões.
+- Persistência de recompensas.
+- Histórico de operações.
+- Session locking.
+- Recuperação de progresso após reconexão.
+
+#### Planejamento futuro
+
+Quando implementado, o sistema deverá avaliar:
+
+- Salvamento de progresso individual.
+- Prevenção de gravações concorrentes.
+- Proteção contra sessões simultâneas.
+- Tratamento de falhas de leitura e escrita.
+- Tentativas controladas de recuperação.
+- Versionamento dos dados.
+
+O session locking deverá impedir que duas sessões concorrentes sobrescrevam indevidamente o progresso do mesmo jogador.
+
+**Não criar estruturas de persistência apenas como antecipação nesta fase.**
+
+---
+
+### 16.9 Emblemas
+
+**Situação: ADIADO**
+
+Os emblemas serão definidos depois da implementação das missões e do sistema de progressão.
+
+Não implementar BadgeService nesta etapa.
+
+#### Planejamento futuro
+
+Os emblemas poderão reconhecer atividades como:
+
+- Conclusão da visita ao museu.
+- Exploração do VAB.
+- Acesso à cápsula Orion.
+- Participação em uma operação de transporte.
+- Participação em uma demonstração de lançamento.
+- Conclusão de missões espaciais.
+- Conclusão de todas as etapas de uma experiência.
+
+Os critérios de concessão, nomes, imagens e identificadores dos emblemas serão especificados posteriormente.
+
+A concessão deverá ser validada pelo servidor.
+
+---
+
+### 16.10 Regra geral de escopo
+
+Durante a construção do mapa, o desenvolvedor deverá seguir estas regras:
+
+1. Não implementar sistemas funcionais classificados como próxima fase ou adiados.
+2. Não reconstruir estruturas já existentes sem necessidade comprovada.
+3. Não duplicar o SLS para facilitar animações futuras.
+4. Não movimentar estruturas fixas do VAB.
+5. Não criar sistemas de persistência antecipadamente.
+6. Não criar controles funcionais de transporte ou lançamento.
+7. Preparar os modelos para receber os sistemas futuros sem implementá-los.
+8. Priorizar a validação dimensional, a circulação e a qualidade visual do complexo.
+
+#### Resultado esperado desta fase
+
+Ao terminar esta etapa, o projeto deverá possuir um complexo espacial fisicamente construído e organizado, com o conjunto SLS + Mobile Launcher + Crawler preparado para futuras operações.
+
+O mapa deverá estar pronto para receber, em fases posteriores, transporte sincronizado, controle de operações, decolagem, missões, persistência e recompensas.
+
+**A conclusão física do mapa é o requisito prioritário. Os sistemas funcionais não deverão atrasar essa entrega.**

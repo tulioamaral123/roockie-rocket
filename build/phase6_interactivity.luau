@@ -9,12 +9,12 @@
 
 local lib = ...
 local B = lib.builder(6)
-local Map = workspace:FindFirstChild("Map")
+local Map = workspace:FindFirstChild("NASAComplex")
 assert(Map, "Execute as Fases 1–5 antes")
 B.clear(Map)
 
 -- 1. Folhas da porta automática (abertura de 14 × 12 em Z = 55) --------------------------
-local door = B.group(Map.NASA_Base.Walls, "Exit_AutoDoor")
+local door = B.group(Map.Reception.Walls, "Exit_AutoDoor")
 door:SetAttribute("AutoDoor", true)
 door:SetAttribute("SensorCenter", Vector3.new(0, 3, 55))
 door:SetAttribute("SensorRadius", 13)
@@ -52,7 +52,7 @@ putScript("Script", systems, "AutomaticDoors", [==[
 local TweenService = game:GetService("TweenService")
 local Players = game:GetService("Players")
 
-local map = workspace:WaitForChild("Map")
+local map = workspace:WaitForChild("NASAComplex")
 local INFO = TweenInfo.new(0.6, Enum.EasingStyle.Quad, Enum.EasingDirection.Out)
 local doors = {}
 
@@ -111,7 +111,7 @@ putScript("LocalScript", sps, "PlanetOrbits", [==[
 -- OrbitSpeed (graus/s) e OrbitCenter de cada Model em Space_Adventure/Solar_System.
 local RunService = game:GetService("RunService")
 
-local solar = workspace:WaitForChild("Map"):WaitForChild("Space_Adventure"):WaitForChild("Solar_System")
+local solar = workspace:WaitForChild("NASAComplex"):WaitForChild("CapeCanaveralMuseum"):WaitForChild("Solar_System")
 local planets = {}
 
 local function track(m)

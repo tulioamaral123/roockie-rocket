@@ -6,11 +6,11 @@
 
 local lib = ...
 local B = lib.builder(3)
-local Map = workspace:FindFirstChild("Map")
+local Map = workspace:FindFirstChild("NASAComplex")
 assert(Map, "Execute as Fases 1 e 2 antes")
 B.clear(Map)
 
-local Museum, Hangar = Map.Space_Adventure, Map.Rocket_Hangar
+local Museum, Hangar = Map.CapeCanaveralMuseum, Map.VABHangar
 local DECOR = { collide = false }
 local DECOR_NS = { collide = false, shadow = false }
 

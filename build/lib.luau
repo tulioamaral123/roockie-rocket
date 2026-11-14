@@ -164,7 +164,7 @@ function lib.builder(phase)
 		t.Size = UDim2.fromScale(0.88, titleH)
 		t.Text = title
 		t.TextScaled = true
-		t.Font = Enum.Font.GothamBlack
+		t.FontFace = Font.new("rbxasset://fonts/families/Montserrat.json", Enum.FontWeight.Heavy)
 		t.TextXAlignment = body and Enum.TextXAlignment.Left or Enum.TextXAlignment.Center
 		t.TextColor3 = Color3.fromHex(C[opts.titleColor or "lightBlue"] or opts.titleColor)
 		t.Parent = bg
@@ -176,7 +176,7 @@ function lib.builder(phase)
 			b.Text = body
 			b.TextScaled = true
 			b.TextWrapped = true
-			b.Font = Enum.Font.GothamMedium
+			b.FontFace = Font.new("rbxasset://fonts/families/Montserrat.json", Enum.FontWeight.Medium)
 			b.TextXAlignment = Enum.TextXAlignment.Left
 			b.TextYAlignment = Enum.TextYAlignment.Top
 			b.TextColor3 = Color3.fromHex(C[opts.bodyColor or "white"] or opts.bodyColor)
