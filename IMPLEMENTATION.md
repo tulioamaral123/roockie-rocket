@@ -333,6 +333,59 @@ Pedido do usuário: trocar o museu de lugar com a central de controle e colocar 
 
 Validação: reconstrução do zero (Fases 1–14) sem erros; segunda execução da Fase 14 sem mover nada; nada sobrou na área antiga do museu; só encaixes esperados nas sobreposições; planetas na órbita certa em volta de (90, 28) no cliente. Playtest: spawn → museu (ida e volta pela ala leste); recepção → Corredor 1 → porta sul do LCC → corredor de fundo → saguão → porta norte → Corredor 2 → VAB; saguão → Firing Room; saída de pedestres do VAB → área de observação. Console sem erros.
 
+## Missão Friendship 7 (missaoUm.md) — Fase 15
+
+Decisões do usuário:
+- Textos em inglês.
+- A missão começa sentado no assento do comandante (CDR); o piloto (PLT) também pode iniciar.
+- Sons da Creator Store, com as falas de rádio só como legenda.
+
+**Fase 15, `build/phase15_friendship7.luau`:** acrescenta `OrionInterior.Friendship7Mission` sem mexer na cápsula da Fase 8.
+- Botões físicos no console: AUTOPILOT OFF, RETRY, CONFIRM, EJECT CAPSULE (com guarda), JETTISON RETROPACK e RETAIN RETROPACK.
+- Folhas de procedimento presas aos dois painéis de chaves.
+- Âncoras do prompt "Start mission" (tecla F, só aparece para quem está sentado no assento dele).
+- Duas luzes de alerta.
+- As três telas existentes (DU 1/2/3) viram os painéis de controle de atitude, rádio/terminal e reentrada.
+
+**Scripts:** os fontes ficam em `build/mission/`, e a Fase 15 os baixa pelo mesmo servidor HTTP.
+- `ReplicatedStorage.MissionSystem`:
+  - Remotes: StartMission, MissionUpdate, MissionAction, SubmitCode e SubmitChoice.
+  - `Config.Friendship7Config`, com todos os valores da §10.
+  - Desvio da spec: `CompleteTask` virou `MissionAction`; quem conclui cada tarefa é sempre o servidor.
+- `ServerScriptService.MissionSystem.Friendship7MissionService`, com os módulos Task1ControlService, Task2CommunicationService e Task3ReentryService.
+  - Estado por jogador, ordem fixa das tarefas, validação de código e escolha, e limite de taxa.
+  - Levantar, morrer ou sair do jogo encerra a missão.
+  - Atributo `MissionActive` no jogador.
+- `StarterPlayerScripts.MissionClient.MissionController`, com os módulos FirstPerson, CameraShake, GazeInteraction, PanelInteraction, Audio e PanelDisplays.
+  - Telas, papel, janelas (Terra; plasma na reentrada) e HUD mínimo (faixa, legenda, mira, resumo) só no cliente do jogador.
+- **Fase 8:** o CrewAccess ignora os prompts de quem tem `MissionActive`, então não dá para sair pela escotilha no meio da missão.
+- **Áudio:** 8 sons do catálogo licenciado ProSoundEffects, ligados por Audio API com buses (ver `assets/LICENSES.md`).
+
+**Playtest em Studio (1 jogador, CDR):**
+- **Início:** o prompt iniciou a missão em primeira pessoa, com a câmera virada para o console.
+- **Tarefa 1:**
+  - O alerta apareceu e o AUTOPILOT OFF funcionou.
+  - Os 4 pontos foram detectados pelo olhar em cerca de 0,77 s cada.
+  - O combustível caiu de 100 % para 96,9 %.
+  - A atitude foi estabilizada.
+- **Tarefa 2:**
+  - Estática, cronômetro e código legível no papel.
+  - Código errado foi recusado (1/3).
+  - O código certo em minúsculas e com espaços foi aceito.
+  - A fala de rádio apareceu como legenda.
+- **Tarefa 3:**
+  - JETTISON gerou falha, e RETRY reiniciou a tarefa.
+  - RETAIN levou à reentrada; segurando, o progresso subiu (0,40 em 4 s) e, solto, caiu (0,28 em 2 s).
+  - A reentrada foi concluída e o resumo final apareceu.
+- **Abortar:** levantar no meio da missão encerrou tudo. Câmera Classic de volta, telas originais restauradas e aviso na tela.
+- **Console:** sem erros.
+
+**Não testado:**
+- Botões apertados com o mouse de verdade: o teste usou os remotes. O raio e o destaque dos botões dependem do mouse travado no centro.
+- Toque no celular.
+- Dois jogadores ao mesmo tempo, CDR e PLT (o estado é por jogador; use Test → Clients and Servers).
+- O EJECT e as falhas por tempo e por combustível foram revisados no código, não exercitados no Play.
+
 ## Pontos que dependem de você
 
 1. **Salvar o place.** O Place1 ainda não foi salvo; use File → Save to File ou Publish to Roblox.

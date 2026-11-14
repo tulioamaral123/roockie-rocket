@@ -24,12 +24,13 @@ O place (`Place1.rbxl`) é gerado por scripts Luau em `build/`. Não editar peç
 | 12 | `phase12_control_center.luau` | Launch Control Center e caminhos de pedestres |
 | 13 | `phase13_finishing.luau` | SafetyZones, sinalização, passe de otimização |
 | 14 | `phase14_relocation.luau` | Museu na ala leste da recepção (giro + translação) e ligações do LCC |
+| 15 | `phase15_friendship7.luau` | Missão Friendship 7 na cápsula (missaoUm.md): botões, papel, luzes + scripts de `build/mission/` |
 
 Reconstruir:
 
 1. Servir `build/` em segundo plano: `python3 -m http.server 8765 --bind 127.0.0.1` (parar ao terminar).
 2. Fases 1 e 2 (autônomas): carregar e executar no Edit (`loadstring(HttpService:GetAsync(...))()`).
-3. `build/run_in_studio.luau`: executa as Fases 3–6 e 8–14 em ordem, passando `lib.luau`.
+3. `build/run_in_studio.luau`: executa as Fases 3–6 e 8–15 em ordem, passando `lib.luau`.
 
 Regras dos geradores:
 
@@ -46,6 +47,7 @@ Regras dos geradores:
 - **Varredura do trajeto** (peça a peça, caixas transladadas): chegada do conjunto de Z 265 a Z 700, recuo do crawler de 700 a 620 e lateral até (90, 0, 620) — 0 interseções, exceto as folhas do portão dos fundos.
 - **Visão do SLS** a partir do portão frontal (olho em (0, 4,5, 211)): nada fixo entre o visitante e o foguete.
 - Playtest do percurso: recepção → museu (ala leste) → Corredor 1 → LCC → Corredor 2 → VAB → vestiário → escada → elevador → Orion → saída de pedestres → área de observação. Console sem erros.
+- Missão Friendship 7: sentar no CDR → "Start mission" → Tarefas 1–3 → resumo; levantar no meio aborta e restaura a câmera.
 
 ## Studio via MCP
 

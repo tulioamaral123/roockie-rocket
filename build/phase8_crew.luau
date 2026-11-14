@@ -696,6 +696,8 @@ PPS.PromptTriggered:Connect(function(prompt, player)
 	local action = prompt:GetAttribute("CrewAction")
 	local char = player.Character
 	if not action or not char or not char:FindFirstChild("HumanoidRootPart") then return end
+	-- durante a missão Friendship 7 (Fase 15) o jogador fica na cápsula: nenhum prompt da tripulação vale
+	if player:GetAttribute("MissionActive") then return end
 	if action == "Suit" then
 		local suit = char:FindFirstChild("SpaceSuit")
 		if suit then takeOffSuit(char, suit) else putOnSuit(char) end
