@@ -206,10 +206,18 @@ function Codigo:iniciar()
 	self.codigo = tostring(math.random(min, max))
 	self:desenhar(self.codigo)
 	-- o cliente abre o teclado ao usar este prompt (atributo RookiePainel)
+	self.lidos = {}
+	self.promptRead = Naves.prompt(self.clipboard, "Read flight code", "Navigation clipboard", { distancia = 6 })
+	table.insert(self.conexoes, self.promptRead.Triggered:Connect(function(p)
+		if not self.s:perto(p, self.clipboard, 7) then return end
+		self.lidos[tostring(p.UserId)] = true
+		self.s:aviso(p, "Backup radio code: " .. self.codigo .. ". Enter it at the radio keypad.")
+		self.s:marcar()
+	end))
 	self.promptRadio = Naves.prompt(self.keypad, "Use radio", "Radio keypad", { painel = "Radio" })
 	self.promptEject = Naves.prompt(self.eject, "EJECT CAPSULE", "Emergency", { tecla = Enum.KeyCode.F })
 	table.insert(self.conexoes, self.promptEject.Triggered:Connect(function(p)
-		if self.s:membro(p) then self.s:falhar("EjetarBlackout", { name = self.s:nome(p) }) end
+		if self.s:perto(p, self.eject, 8) then self.s:falhar("EjetarBlackout", { name = self.s:nome(p) }) end
 	end))
 end
 
@@ -234,13 +242,14 @@ function Codigo:tick()
 end
 
 function Codigo:estado()
-	return { limite = self.limite, manual = self.manual }
+	return { limite = self.limite, manual = self.manual, lidos = self.lidos }
 end
 
 function Codigo:limpar()
 	desconectar(self)
 	if self.promptEject then self.promptEject:Destroy() end
 	if self.promptRadio then self.promptRadio:Destroy() end
+	if self.promptRead then self.promptRead:Destroy() end
 	self:desenhar(nil)
 end
 
@@ -258,14 +267,16 @@ function Retropack.new(sessao, n)
 	self.progresso = 0 -- segundos acumulados
 	self.decidiu = false
 	self.segurando = {} -- [player] = prompt
+	self.holdEnded = {}
 	return self
 end
 
 function Retropack:iniciar()
 	local reentry = Naves.peca(self.nave, "Stations/Reentry")
-	self.promptEject = Naves.prompt(Naves.peca(reentry, "EjectButton"), "EJECT CAPSULE", "Emergency", { tecla = Enum.KeyCode.F })
+	self.eject = Naves.peca(reentry, "EjectButton")
+	self.promptEject = Naves.prompt(self.eject, "EJECT CAPSULE", "Emergency", { tecla = Enum.KeyCode.F })
 	table.insert(self.conexoes, self.promptEject.Triggered:Connect(function(p)
-		if self.s:membro(p) then self.s:falhar("EjetarEscudo", { name = self.s:nome(p) }) end
+		if self.s:perto(p, self.eject, 8) then self.s:falhar("EjetarEscudo", { name = self.s:nome(p) }) end
 	end))
 	self.promptsManter = {}
 	for _, nome in { "RetainButtonA", "RetainButtonB" } do
@@ -276,16 +287,16 @@ function Retropack:iniciar()
 			if not self.s:perto(p, pr.Parent) then return end
 			self.decidiu = true
 			self.segurando[p] = pr
+			self.holdEnded[p] = nil
 			self.s:marcar()
 		end))
 		table.insert(self.conexoes, pr.PromptButtonHoldEnded:Connect(function(p)
-			if self.segurando[p] == pr then self.segurando[p] = nil end
+			if self.segurando[p] == pr then self.holdEnded[p] = os.clock() end
 			self.s:marcar()
 		end))
 		table.insert(self.conexoes, pr.Triggered:Connect(function(p)
 			-- segurou o tempo todo sem soltar: o progresso já está no máximo (ou quase)
-			if self.segurando[p] == pr then self.segurando[p] = nil end
-			self.s:marcar()
+			if self.s:perto(p, pr.Parent, 8) and self.progresso >= self.segurar - 0.2 then self.s:concluirTask() end
 		end))
 	end
 end
@@ -299,7 +310,7 @@ function Retropack:acao() end
 function Retropack:segurandoAgora()
 	local n = 0
 	for p, pr in self.segurando do
-		if self.s:perto(p, pr.Parent, pr.MaxActivationDistance + 2) then n += 1 else self.segurando[p] = nil end
+		if self.holdEnded[p] or not self.s:perto(p, pr.Parent, 8) then self.segurando[p] = nil else n += 1 end
 	end
 	return n
 end

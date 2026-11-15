@@ -58,7 +58,8 @@ function Naves.prompt(peca, acao, objeto, opcoes)
 	p.ActionText = acao
 	p.ObjectText = objeto or ""
 	p.HoldDuration = opcoes.segurar or 0
-	p.MaxActivationDistance = opcoes.distancia or 10
+	p.MaxActivationDistance = opcoes.distancia or 7
+	p.Exclusivity = Enum.ProximityPromptExclusivity.OnePerButton
 	p.RequiresLineOfSight = false
 	p.KeyboardKeyCode = opcoes.tecla or Enum.KeyCode.E
 	p.Enabled = opcoes.ligado ~= false
@@ -87,13 +88,13 @@ function Naves.vivo(player)
 end
 
 -- teleporta o personagem para um CFrame (com streaming: pede a região antes)
-function Naves.teleportar(player, cf)
+function Naves.teleportar(player, cf, stillValid)
 	local char = player.Character
 	if not char or not char.PrimaryPart then return false end
 	pcall(function()
 		player:RequestStreamAroundAsync(cf.Position, 5)
 	end)
-	if player.Parent ~= Players or player.Character ~= char then return false end
+	if player.Parent ~= Players or player.Character ~= char or (stillValid and not stillValid()) then return false end
 	char:PivotTo(cf + Vector3.new(0, 3, 0))
 	local root = char:FindFirstChild("HumanoidRootPart")
 	if root then

@@ -21,6 +21,13 @@ local UI = require(script.Parent:WaitForChild("GuideUI"))
 
 local player = Players.LocalPlayer
 local NavigationClient = {}
+local missionMode, missionRoute = false, nil
+
+-- Mesmo desenho/oclusão da seta dos guias; a task fornece a estação atual.
+function NavigationClient.missionTarget(active, target, position)
+	missionMode = active
+	missionRoute = target and { points = { position, target }, idx = 2, target = target, beacon = true } or nil
+end
 
 local A = Settings.Arrow
 local state = { points = nil, idx = 1, target = nil, beacon = false, objective = nil }
@@ -151,10 +158,11 @@ local function distToSegment(p, a, b)
 end
 
 -- próximo ponto do caminho a seguir (monotônico: nunca volta para trás)
-local function nextPoint(pos)
-	local pts = state.points
+local function nextPoint(pos, route)
+	route = route or state
+	local pts = route.points
 	if not pts or #pts == 0 then return nil end
-	local i = math.clamp(state.idx, 1, #pts)
+	local i = math.clamp(route.idx, 1, #pts)
 	while i < #pts do
 		local d = flat(pts[i] - pos).Magnitude
 		local dy = math.abs(pts[i].Y - pos.Y)
@@ -166,11 +174,11 @@ local function nextPoint(pos)
 			break
 		end
 	end
-	state.idx = i
+	route.idx = i
 	-- saiu muito da rota: pede outro caminho ao servidor
 	local off = math.huge
 	if i > 1 then off = distToSegment(pos, pts[i - 1], pts[i]) else off = 0 end
-	if off > 18 and os.clock() - lastRepath > 2.5 then
+	if not missionMode and off > 18 and os.clock() - lastRepath > 2.5 then
 		lastRepath = os.clock()
 		GS.Remotes.NavigationUpdate:FireServer("Repath")
 	end
@@ -213,7 +221,10 @@ function NavigationClient.start()
 		local char = player.Character
 		local root = char and char:FindFirstChild("HumanoidRootPart")
 		local t = os.clock()
-		if not root or not state.points or not state.target then
+		local route = state
+		if missionMode then route = missionRoute end
+		if missionMode then hud.frame.Visible = false end
+		if not root or not route or not route.points or not route.target then
 			arrow.visible(false)
 			beacon.visible(false)
 			return
@@ -221,18 +232,18 @@ function NavigationClient.start()
 		local pos = root.Position
 		-- seta de destino girando acima do alvo
 		local bob = math.sin(t * 2.4) * A.Bob
-		local tgt = state.target
-		local showBeacon = state.beacon and (tgt - pos).Magnitude < 260
+		local tgt = route.target
+		local showBeacon = route.beacon and (tgt - pos).Magnitude < 260
 		beacon.visible(showBeacon)
 		if showBeacon then
 			beacon.set(CFrame.new(tgt + Vector3.new(0, A.BeaconHeight + bob * 2, 0)) * CFrame.Angles(0, t * 1.6, 0) * CFrame.Angles(-math.pi / 2, 0, 0))
 		end
 		-- seta do jogador: some ao chegar
-		if (tgt - pos).Magnitude < 7 then
+		if (tgt - pos).Magnitude < (missionMode and 3 or 7) then
 			arrow.visible(false)
 			return
 		end
-		local p = nextPoint(pos)
+		local p = nextPoint(pos, route)
 		if not p then
 			arrow.visible(false)
 			return

@@ -51,7 +51,7 @@ local N = Enum.NormalId
 local mercury = B.group(root, "Mercury")
 mercury.ModelStreamingMode = Enum.ModelStreamingMode.Persistent
 
--- Coordenadas locais da cabine: X ±18, Z ±24, piso Y 0 e teto Y 14.
+-- Cápsula de 16 lados inspirada na Orion: Ø32 no piso, Ø24 no teto, H15.
 local function part(parent, name, x, y, z, sx, sy, sz, color, material, options, rotation, shape)
 	return B.part(parent, name, BASE * CFrame.new(x, y, z) * (rotation or CFrame.identity),
 		Vector3.new(sx, sy, sz), color, material, options, shape)
@@ -65,9 +65,9 @@ local function label(parent, text, cf, width, height, face)
 	return p
 end
 mercury.PrimaryPart = marker(mercury, "Origin", 0, 0, 0)
-marker(mercury, "Bounds", 0, 7, 0, 36, 14, 48)
+marker(mercury, "Bounds", 0, 7.5, 0, 32, 15, 32)
 local spawns = B.group(mercury, "Spawns", "Folder")
-for i, p in { { -5, -13 }, { 5, -13 }, { -5, -7 }, { 5, -7 } } do
+for i, p in { { -3, -4 }, { 3, -4 }, { -3, 2 }, { 3, 2 } } do
 	marker(spawns, "Spawn" .. i, p[1], 3, p[2], 1, 1, 1, CFrame.Angles(0, math.pi, 0))
 end
 
@@ -76,58 +76,34 @@ end
 ---------------------------------------------------------------------------------
 local shell = B.group(mercury, "Cabin")
 local windows = B.group(mercury, "Windows", "Folder")
-part(shell, "Floor", 0, -0.5, 0, 37, 1, 49, "darkGray", "Metal")
-part(shell, "Ceiling", 0, 14.5, 0, 37, 1, 49, CREAM, "Metal")
-part(shell, "RearBulkhead", 0, 7, -24.5, 37, 14, 1, CREAM, "Metal")
-part(shell, "FrontSill", 0, 2, 24.5, 37, 4, 1, "midGray", "Metal")
-part(shell, "FrontHeader", 0, 13, 24.5, 37, 2, 1, CREAM, "Metal")
-for _, x in { -15.25, 15.25 } do
-	part(shell, "FrontCheek", x, 8, 24.5, 6.5, 8, 1, CREAM, "Metal")
+local sides, height = 16, 15
+local ap0, ap1 = 16 * math.cos(math.pi / sides), 12 * math.cos(math.pi / sides)
+local width = 2 * ap0 * math.tan(math.pi / sides) + 0.12
+local slope = math.sqrt(height ^ 2 + (ap0 - ap1) ^ 2)
+local function wallCF(k, h)
+	local a = k * 2 * math.pi / sides
+	local radial = Vector3.new(math.cos(a), 0, math.sin(a))
+	local tangent = Vector3.new(-math.sin(a), 0, math.cos(a))
+	local up = (Vector3.new(0, height, 0) + radial * (ap1 - ap0)).Unit
+	return BASE * CFrame.fromMatrix(radial * (ap0 + (ap1 - ap0) * h / height) + Vector3.new(0, h, 0), tangent, up)
 end
-part(windows, "Front", 0, 8, 24.5, 24, 8, 1, "glass", "Glass", { transparency = 0.35 })
-for _, side in { -1, 1 } do
-	local x = side * 18.5
-	part(shell, "SideSill", x, 2, 0, 1, 4, 48, "midGray", "Metal")
-	part(shell, "SideHeader", x, 12.5, 0, 1, 3, 48, CREAM, "Metal")
-	for _, z in { -15.5, 15.5 } do
-		part(shell, "SideBulkhead", x, 7.5, z, 1, 7, 17, CREAM, "Metal")
-	end
-	part(windows, side == -1 and "Left" or "Right", x, 7.5, 0, 1, 7, 14, "glass", "Glass", { transparency = 0.35 })
-	-- Molduras ficam nas bordas do vidro; nenhum montante cruza o campo de mira.
-	for _, z in { -7.2, 7.2 } do
-		part(shell, "WindowFrame", side * 17.94, 7.5, z, 0.12, 7.4, 0.3, "metalGray", "Metal", DECOR)
-	end
-	for _, y in { 3.85, 11.15 } do
-		part(shell, "WindowFrame", side * 17.94, y, 0, 0.12, 0.3, 14.7, "metalGray", "Metal", DECOR)
-	end
-	-- Nervuras, painéis de serviço, cabos e rebites: fora do volume livre central.
-	for _, z in { -22, -11, 11, 22 } do
-		part(shell, "PressureRib", side * 17.8, 7, z, 0.25, 14, 0.3, "metalGray", "Metal", DECOR)
-		part(shell, "ServicePanel", side * 17.65, 7, z, 0.12, 3.5, 3.2, "darkGray", "Metal", DECOR)
-		for _, dy in { -1.4, 1.4 } do
-			for _, dz in { -1.25, 1.25 } do
-				part(shell, "Rivet", side * 17.55, 7 + dy, z + dz, 0.15, 0.15, 0.15, "metalGray", "Metal", DECOR, nil, "Ball")
-			end
+-- Vidros substituem painéis; nenhuma parede opaca fica atrás dos alvos.
+for k = 0, sides - 1 do
+	local glass = k == 0 or k == 8 or k == 3 or k == 4 or k == 5
+	if glass then
+		for _, band in { { 2, 4 }, { 13, 4 } } do
+			B.part(shell, "WindowBulkhead", wallCF(k, band[1]), Vector3.new(width, band[2] * slope / height, 0.5), CREAM, "Metal")
 		end
+		B.part(windows, "Window" .. k, wallCF(k, 7.5), Vector3.new(width, 7 * slope / height, 0.5), "glass", "Glass", { transparency = 0.35 })
+	else
+		B.part(shell, "PressurePanel", wallCF(k, 7.5), Vector3.new(width, slope, 0.5), CREAM, "Metal")
 	end
-	for _, y in { 1.0, 1.35, 12.7 } do
-		B.cylBetween(shell, "CableRun", BASE:PointToWorldSpace(Vector3.new(side * 17.6, y, -23)),
-			BASE:PointToWorldSpace(Vector3.new(side * 17.6, y, 23)), 0.16, "black", "SmoothPlastic", DECOR)
-	end
+	B.part(shell, "PressureRib", wallCF(k, 7.5) * CFrame.new(width / 2 - 0.1, 0, 0), Vector3.new(0.16, slope, 0.65), "metalGray", "Metal", DECOR)
+	B.part(shell, "PanelTrim", wallCF(k, 2), Vector3.new(width - 0.3, 0.18, 0.65), "darkGray", "Metal", DECOR)
 end
-for _, x in { -12.2, 12.2 } do
-	part(shell, "FrontWindowFrame", x, 8, 23.94, 0.3, 8.4, 0.12, "metalGray", "Metal", DECOR)
-end
-for _, y in { 3.85, 12.15 } do
-	part(shell, "FrontWindowFrame", 0, y, 23.94, 24.7, 0.3, 0.12, "metalGray", "Metal", DECOR)
-end
-for _, z in { -23, -12, 0, 12, 23 } do
-	part(shell, "CeilingRib", 0, 13.85, z, 36, 0.3, 0.35, "metalGray", "Metal", DECOR)
-end
--- Faixas pintadas, sem ressaltos nem obstáculos entre as estações.
-for _, x in { -7, 7 } do
-	part(shell, "WalkwayStripe", x, 0.012, 0, 0.12, 0.02, 42, "safety", "SmoothPlastic", DECOR)
-end
+part(shell, "Floor", 0, -0.5, 0, 1, 32.6, 32.6, "darkGray", "Metal", nil, CFrame.Angles(0, 0, math.pi / 2), "Cylinder")
+part(shell, "Ceiling", 0, 15.25, 0, 0.5, 24.6, 24.6, CREAM, "Metal", nil, CFrame.Angles(0, 0, math.pi / 2), "Cylinder")
+marker(mercury, "CapsuleBounds", 0, 7.5, 0, 32, 15, 32)
 
 ---------------------------------------------------------------------------------
 -- 3. Consoles anos 60: instrumentos físicos, chaves e placas fixas
@@ -149,24 +125,24 @@ local function console(parent, name, cf, width)
 	end
 	return body
 end
-local frontCF = BASE * CFrame.new(0, 0, 21.5)
-console(stations, "FlightPanel", frontCF, 22)
+local frontCF = BASE * CFrame.new(0, 0, 10)
+console(stations, "FlightPanel", frontCF, 12)
 label(stations, "01  /  ATTITUDE CONTROL", frontCF * CFrame.new(0, 4.65, -1.02), 10, 0.65)
 -- Periscópio ao lado do campo panorâmico principal.
-part(stations, "Periscope", 14.5, 6, 21.8, 1.4, 3, 1.2, "darkGray", "Metal")
-part(stations, "PeriscopeLens", 14.5, 5.8, 21.15, 1, 0.7, 0.1, "glass", "Glass", { transparency = 0.3 })
-local prep = part(stations, "PrepConsole", -13, 3.5, -17, 4, 1.2, 1.8, "nasaBlue", "Metal")
-part(stations, "PrepStand", -13, 1.45, -17, 2.8, 2.9, 1.4, "darkGray", "Metal")
-label(stations, "MISSION PREPARATION", prep.CFrame * CFrame.new(0, 0, -0.94), 3.6, 0.8)
-local exit = part(stations, "Exit", 12, 4.5, -23.85, 7, 9, 0.3, "darkGray", "Metal")
+part(stations, "Periscope", 7, 6, 10, 1.4, 3, 1.2, "darkGray", "Metal")
+part(stations, "PeriscopeLens", 7, 5.8, 9.35, 1, 0.7, 0.1, "glass", "Glass", { transparency = 0.3 })
+local prep = part(stations, "PrepConsole", -6, 3.5, -9, 4, 1.2, 1.8, "nasaBlue", "Metal")
+part(stations, "PrepStand", -6, 1.45, -9, 2.8, 2.9, 1.4, "darkGray", "Metal")
+label(stations, "FLIGHT MANIFEST", prep.CFrame * CFrame.new(0, 0, -0.94), 3.6, 0.8)
+local exit = part(stations, "Exit", 0, 4.5, -13.7, 7, 9, 0.3, "darkGray", "Metal")
 label(stations, "RETURN TO LCC", exit.CFrame * CFrame.new(0, 1.7, 0.2) * CFrame.Angles(0, math.pi, 0), 5.8, 0.8)
-part(stations, "HatchWheel", 12, 4, -23.5, 2, 2, 0.2, "metalGray", "Metal", DECOR, nil, "Ball")
+part(stations, "HatchWheel", 0, 4, -13.4, 2, 2, 0.2, "metalGray", "Metal", DECOR, nil, "Ball")
 
 local nav = B.group(stations, "NavTable")
-local navCF = BASE * CFrame.new(-13.5, 0, 2)
-B.part(nav, "Tabletop", navCF * CFrame.new(0, 3.25, 0), Vector3.new(6, 0.4, 7), CREAM, "Metal")
-for _, x in { -2.4, 2.4 } do
-	for _, z in { -2.7, 2.7 } do
+local navCF = BASE * CFrame.new(-10.5, 0, 0)
+B.part(nav, "Tabletop", navCF * CFrame.new(0, 3.25, 0), Vector3.new(4, 0.4, 5), CREAM, "Metal")
+for _, x in { -1.4, 1.4 } do
+	for _, z in { -1.7, 1.7 } do
 		B.part(nav, "TableLeg", navCF * CFrame.new(x, 1.5, z), Vector3.new(0.3, 3, 0.3), "metalGray", "Metal")
 	end
 end
@@ -174,10 +150,10 @@ B.part(nav, "ClipboardBacking", navCF * CFrame.new(0, 3.52, 0), Vector3.new(2.8,
 -- A face Top fica livre: o código é responsabilidade do cliente.
 B.part(nav, "Clipboard", navCF * CFrame.new(0, 3.63, 0), Vector3.new(2.5, 0.1, 3.5), "#F5EED8", "SmoothPlastic", DECOR)
 B.part(nav, "Clip", navCF * CFrame.new(0, 3.74, -1.65), Vector3.new(0.8, 0.13, 0.22), "metalGray", "Metal", DECOR)
-label(nav, "02  /  NAVIGATION", navCF * CFrame.new(0, 2.6, -3.56), 5.6, 0.65)
+label(nav, "02  /  NAVIGATION", navCF * CFrame.new(0, 2.6, -2.56), 5.6, 0.65)
 
 local radio = B.group(stations, "Radio")
-local radioCF = BASE * CFrame.new(15, 0, -12) * CFrame.Angles(0, math.pi / 2, 0)
+local radioCF = BASE * CFrame.new(9, 0, 4) * CFrame.Angles(0, math.pi / 2, 0)
 console(radio, "Cabinet", radioCF, 8)
 -- Controles a 3,5 studs, na face livre voltada ao corredor.
 B.part(radio, "Keypad", radioCF * CFrame.new(-1.5, 3.5, -1.4), Vector3.new(2, 1.1, 0.4), "black", "Metal")
@@ -192,9 +168,9 @@ label(radio, "EJECT CAPSULE", radioCF * CFrame.new(2, 2.65, -1.3), 3, 0.45)
 label(radio, "03  /  RADIO", radioCF * CFrame.new(0, 4.7, -1), 7, 0.65)
 
 local reentry = B.group(stations, "Reentry")
-local reentryCF = BASE * CFrame.new(0, 0, -21) * CFrame.Angles(0, math.pi, 0)
-console(reentry, "RetropackCabinet", reentryCF, 13)
-for _, button in { { "RetainButtonA", -4, GREEN }, { "RetainButtonB", 4, GREEN }, { "EjectButton", 0, "red" } } do
+local reentryCF = BASE * CFrame.new(9, 0, -7) * CFrame.Angles(0, math.pi, 0)
+console(reentry, "RetropackCabinet", reentryCF, 8)
+for _, button in { { "RetainButtonA", -3.5, GREEN }, { "RetainButtonB", 3.5, GREEN }, { "EjectButton", 0, "red" } } do
 	B.part(reentry, button[1], reentryCF * CFrame.new(button[2], 3.5, -1.4), Vector3.new(1, 1, 0.4), button[3], "SmoothPlastic")
 	label(reentry, button[1] == "EjectButton" and "EJECT CAPSULE" or "HOLD RETROPACK",
 		reentryCF * CFrame.new(button[2], 2.6, -1.3), 3.7, 0.5)
@@ -205,19 +181,18 @@ label(reentry, "03  /  RETROPACK", reentryCF * CFrame.new(0, 4.7, -1), 11, 0.65)
 -- 4. Luzes de cabine e alvos externos: linhas de mira a partir do piso + 5
 ---------------------------------------------------------------------------------
 local lights = B.group(mercury, "Lights", "Folder")
-for i, p in { { -10, -15 }, { 10, -15 }, { -10, 12 }, { 10, 12 } } do
-	local lamp = part(lights, "CabinLight" .. i, p[1], 13.4, p[2], 3, 0.3, 1.5, "#FFF0D2", "Neon", DECOR)
+for i, p in { { -5, -5 }, { 5, -5 }, { -5, 5 }, { 5, 5 } } do
+	local lamp = part(lights, "CabinLight" .. i, p[1], 14.4, p[2], 3, 0.3, 1.5, "#FFF0D2", "Neon", DECOR)
 	B.light(lamp, "PointLight", { Brightness = 1.8, Range = 30, Color = Color3.fromRGB(255, 235, 205), Shadows = false })
 end
 local exterior = B.group(mercury, "Exterior", "Folder")
 local points = B.group(exterior, "AlignPoints", "Folder")
--- Frontal: 51,5 studs além do vidro; laterais: 53,5. Olhos em (±4,5,18)
--- e (±10,5,0) atravessam somente os vidros, acima dos consoles/mesa.
-for i, p in { { -8, 7, 76 }, { 8, 7, 76 }, { -72, 7, 0 }, { 72, 7, 0 } } do
+-- Alvos alinhados aos vidros, visíveis do corredor central na altura dos olhos.
+for i, p in { { -12, 6, 65 }, { 12, 6, 65 }, { -64, 6, 0 }, { 64, 6, 0 } } do
 	part(points, "Point" .. i, p[1], p[2], p[3], 4, 4, 4, "red", "Neon", DECOR, nil, "Ball")
 end
 local plasma = B.group(exterior, "PlasmaEmitters", "Folder")
-for i, p in { { -8, 4, 26 }, { 8, 4, 26 }, { -20, 4, -4 }, { -20, 4, 4 }, { 20, 4, -4 }, { 20, 4, 4 } } do
+for i, p in { { -5, 4, 17 }, { 5, 4, 17 }, { -17, 4, -3 }, { -17, 4, 3 }, { 17, 4, -3 }, { 17, 4, 3 } } do
 	local anchor = marker(plasma, "Emitter" .. i, p[1], p[2], p[3])
 	local emitter = Instance.new("ParticleEmitter")
 	emitter.Name = "Plasma"

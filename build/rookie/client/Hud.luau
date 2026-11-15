@@ -128,6 +128,9 @@ local function detalhes(e)
 			if v then feitos += 1 end
 		end
 		r.extra.Text = ("Targets locked: %d/4 · hold %.1f s each"):format(feitos, d.segurar or 2)
+	elseif missao == 1 and n == 2 then
+		local read = d.lidos and d.lidos[tostring(game:GetService("Players").LocalPlayer.UserId)]
+		r.extra.Text = read and "Code read. Follow the arrow to the radio; press E and enter the code." or "Follow the arrow to the clipboard. Press E to read the backup code."
 	elseif missao == 1 and n == 3 then
 		if d.decidiu then
 			r.barraFrame.Visible = true
@@ -190,7 +193,13 @@ end
 
 local function quadro()
 	local e = estado
-	if not e or e.fase ~= "Task" then return end
+	if not e then return end
+	if e.fase == "Lancamento" then
+		r.timer.Text = UI.segundos(math.max(0, (e.fimLancamento or workspace:GetServerTimeNow()) - workspace:GetServerTimeNow()))
+		r.timer.TextColor3 = UI.C.yellow
+		return
+	end
+	if e.fase ~= "Task" then return end
 	local decorrido = workspace:GetServerTimeNow() - (e.inicioTask or workspace:GetServerTimeNow())
 	if e.limite then
 		local resta = e.limite - decorrido
@@ -213,8 +222,8 @@ function H.atualizar(e)
 		if e.fase == "Lancamento" then
 			gui.Enabled = true
 			r.alerta.Visible = false
-			r.titulo.Text = "LIFTOFF"
-			r.objetivo.Text = "Hold on! The tasks start in a few seconds."
+			r.titulo.Text = e.missao == 2 and "DOCKING WITH THE ISS" or "LIFTOFF"
+			r.objetivo.Text = e.missao == 2 and "Explore the capsule. The hatch opens after docking; follow the arrow into the station." or "Explore the capsule. Crew may join with the same manifest during the 12 s countdown."
 			r.item.Text, r.extra.Text, r.timer.Text = "", "", ""
 			r.barraFrame.Visible = false
 		end

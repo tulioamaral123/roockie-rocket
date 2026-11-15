@@ -22,7 +22,8 @@ ReplicatedStorage.GuideSystem
 └── Remotes (criados pelo GuideBoot)     NavigationUpdate, DialogueEvent, MissionSelect
 ServerScriptService.GuideSystem          GuideBoot, ProgressService, NavigationService, NPCService, World, MarcosLook
 StarterPlayerScripts.GuideClient         GuideClient, NavigationClient, DialogueGui, MissionSelect, GuideUI
-ServerStorage.RookieBridge               criado pelo GerenciadorMissao: Embarcar, Perfil, EmMissao
+ServerStorage.RookieBridge               criado pelo GerenciadorMissao: Embarcar(player, id, items), Perfil, EmMissao
+ServerStorage.CrewSuit                   BindableFunction do CrewAccess: Invoke(player, true) veste o traje
 ServerStorage.GuideParking               a Ana fica aqui enquanto está fora de cena
 ```
 
@@ -36,7 +37,7 @@ Estrutura sugerida na spec × projeto: `Workspace.NPCs` e `Workspace.NavigationP
 `MeetMarcos → FollowMarcos → Museum → Rocket → FollowAna → Elevator → TalkAna → ChooseMission → InMission → Free`
 
 - Museu: o primeiro ProximityPrompt com o atributo `ExhibitId` (ExhibitService) libera `Rocket`.
-- `ChooseMission`: na primeira experiência (sem estrelas na missão 1) só o Mercury fica liberado. O embarque chama `RookieBridge.Embarcar`; a Preparação do Rookie Rocket é o trade-off (itens × 60 kg) e o lançamento.
+- `ChooseMission`: na primeira experiência (sem estrelas na missão 1) só o Mercury fica liberado. O mesmo painel escolhe missão, veste o traje e seleciona até dois equipamentos com peso/efeitos visíveis. Cliente envia `{ action = "Suit" }` ou `{ action = "Board", id = 1|2, items = { [equipmentKey] = true } }`. O servidor valida etapa, proximidade à Ana e desbloqueio; `CrewSuit` veste o traje e `RookieBridge.Embarcar(player, id, items)` valida traje, itens, 60 kg, vaga e manifesto compartilhado antes do teleporte. Resposta `MissionSelect { kind = "Feedback", text = ... }` mantém o painel aberto em erros. Excesso de peso falha ainda na plataforma. Ao embarcar, o painel fecha por `RookieMission`; não há preparação adicional na cápsula. Co-op entra na contagem de 12 s com o mesmo manifesto.
 - Saindo da missão (`EmMissao` falso): `Free`. A Ana no topo continua abrindo a escolha.
 
 ## Regras

@@ -3,7 +3,7 @@
 
 	- Cria (se faltar) ReplicatedStorage.RookieRocket.Remotes.
 	- Uma Sessao por nave (Mercury = missão 1, ISS = missão 2).
-	- Quiosque no LCC: prompts de embarque e tela de status.
+	- Quiosque no LCC: orientação até a Ana e tela de status.
 	- Repassa os remotes para a sessão do jogador. O cliente nunca envia tempo, peso nem estrelas.
 ]]
 
@@ -139,13 +139,13 @@ if kiosk then
 		local s = sessoes[id]
 		if peca and s then
 			-- pedestais lado a lado: teclas diferentes para os dois prompts aparecerem juntos
-			local pr = Naves.prompt(peca, "Board " .. s.missao.Chave .. " mission", s.missao.Nome, {
+			local pr = Naves.prompt(peca, "Mission briefing", s.missao.Nome, {
 				distancia = 9,
 				tecla = id == 2 and Enum.KeyCode.F or Enum.KeyCode.E,
 			})
 			pr.Triggered:Connect(function(player)
-				local ok, motivo = s:embarcar(player)
-				if not ok and motivo then s:aviso(player, motivo) end
+				if Naves.distancia(player, peca) > 11 then return end
+				s:aviso(player, "Meet Ana at the rocket access arm to choose your mission, suit and equipment.")
 			end)
 		end
 	end
@@ -153,16 +153,17 @@ end
 atualizarTela()
 
 -- Ponte para outros sistemas do servidor (GuideSystem: a Ana embarca a equipe no topo do foguete)
--- ServerStorage.RookieBridge.Embarcar:Invoke(player, missaoId) → ok, motivo
+-- ServerStorage.RookieBridge.Embarcar:Invoke(player, missaoId, manifest) → ok, motivo
 -- ServerStorage.RookieBridge.Perfil:Invoke(player) → { estrelas = { ["1"] = n, ... } }
 -- ServerStorage.RookieBridge.EmMissao:Invoke(player) → boolean
 do
 	local SS = game:GetService("ServerStorage")
 	local ponte = garantir(SS, "Folder", "RookieBridge")
-	garantir(ponte, "BindableFunction", "Embarcar").OnInvoke = function(player, id)
+	garantir(ponte, "BindableFunction", "Embarcar").OnInvoke = function(player, id, manifest)
 		local s = sessoes[id]
 		if not s or typeof(player) ~= "Instance" or not player:IsA("Player") then return false, nil end
-		local ok, motivo = s:embarcar(player)
+		if type(manifest) ~= "table" then return false, "Choose equipment before boarding." end
+		local ok, motivo = s:embarcar(player, manifest)
 		if not ok and motivo then s:aviso(player, motivo) end
 		return ok, motivo
 	end

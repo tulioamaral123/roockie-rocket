@@ -19,6 +19,8 @@ local Hud = require(pasta:WaitForChild("Hud"))
 local Modais = require(pasta:WaitForChild("Modais"))
 local Paineis = require(pasta:WaitForChild("Paineis"))
 local Mira = require(pasta:WaitForChild("Mira"))
+local Capsule = require(pasta:WaitForChild("Capsule"))
+Capsule.start()
 
 Efeitos.iniciar(Missoes.Audio)
 EVA.iniciar()
@@ -32,6 +34,7 @@ local function nave(id)
 end
 
 local function limparTudo()
+	Capsule.clear()
 	Mira.desligar()
 	Paineis.fecharTodos()
 	Preparacao.fechar()
@@ -49,7 +52,8 @@ local function aoEstado(e)
 	if not modelo then return end
 	Efeitos.entrar(e.missao, modelo)
 	Efeitos.aplicar(e)
-	Preparacao.atualizar(e)
+	Capsule.update(e, modelo)
+	if not e.preflight then Preparacao.atualizar(e) else Preparacao.fechar() end
 	Hud.atualizar(e)
 	Modais.atualizar(e)
 	Paineis.fecharSeNaoFor(e)
@@ -71,6 +75,8 @@ remotes.SincronizarEstado.OnClientEvent:Connect(function(msg)
 		aoEstado(msg)
 	elseif msg.tipo == "Efeito" then
 		Efeitos.pulso(msg.nome, msg.dados or {})
+		local feedback = { PontoTravado = "Target locked ✓", TaskConcluida = "Task complete ✓ · Follow the arrow to the next station.", Acoplado = "Modules docked ✓", CaboPreso = "Cable attached ✓", EscotilhaFechada = "Hatch closed ✓", FuroVedado = "Leak sealed ✓" }
+		if feedback[msg.nome] then Hud.aviso(feedback[msg.nome]) end
 		if msg.nome == "RadioOk" and msg.dados and msg.dados.fala then Hud.legenda(msg.dados.fala) end
 	elseif msg.tipo == "Aviso" then
 		Hud.aviso(msg.texto)

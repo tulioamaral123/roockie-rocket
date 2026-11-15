@@ -11,10 +11,10 @@
 	  guia o grupo pelo vestiário e pela escada até o elevador da tripulação e espera no braço de
 	  acesso. Lá explica a missão obrigatória e o trade-off e abre a escolha da missão.
 	- Embarque pela ponte ServerStorage.RookieBridge (GerenciadorMissao do Rookie Rocket); a
-	  Preparação do Rookie Rocket é a seleção do trade-off e o lançamento.
+	  escolha no topo inclui traje e trade-off antes do teleporte.
 
 	Remotes: DialogueEvent (servidor → cliente: Dialogue/Toast/Sound/Bubble; cliente → servidor:
-	Done), MissionSelect (servidor → cliente: Open; cliente → servidor: id da missão ou "Cancel").
+	Done), MissionSelect (servidor → cliente: Open/Feedback; cliente → servidor: Suit/Board com manifesto).
 ]]
 
 local Players = game:GetService("Players")
@@ -851,21 +851,34 @@ function NPCService.start(progress, remotes)
 	local lastChoice = {}
 	Players.PlayerRemoving:Connect(function(p) lastChoice[p] = nil end)
 	remotes.MissionSelect.OnServerEvent:Connect(function(player, choice)
-		if os.clock() - (lastChoice[player] or 0) < 1 then return end
+		if os.clock() - (lastChoice[player] or 0) < 0.25 then return end
 		lastChoice[player] = os.clock()
-		local stage = Progress.get(player)
-		if stage ~= "ChooseMission" and stage ~= "Free" then return end
 		if choice == "Cancel" then return end
-		if choice ~= 1 and choice ~= 2 then return end
+		if type(choice) ~= "table" then return end
+		local stage = Progress.get(player)
+		if stage == "InMission" and invoke("EmMissao", player) == false then
+			Progress.set(player, "Free")
+			stage = "Free"
+		end
 		local a = npcs.Ana
 		local r = World.rootOf(player)
-		if not (a and r and World.isAtTop(player) and (r.Position - a.root.Position).Magnitude <= 25) then return end
-		if choice == 2 and not mercuryDone(player) then
-			Remotes.DialogueEvent:FireClient(player, { kind = "Toast", speaker = "Ana", text = Dialogues.MissionSelect.Locked })
+		if not r then return end
+		local top = (stage == "ChooseMission" or stage == "Free") and a and World.isAtTop(player)
+			and (r.Position - a.root.Position).Magnitude <= 25
+		if not top then return end
+		local function reply(text)
+			Remotes.MissionSelect:FireClient(player, { kind = "Feedback", text = text })
+		end
+		if choice.action == "Suit" then
+			local suit = ServerStorage:FindFirstChild("CrewSuit")
+			local ok = suit and suit:Invoke(player, true)
+			reply(ok and "Space suit ready. Choose equipment, then board." or "Space suit unavailable. Try again.")
 			return
 		end
-		local ok = invoke("Embarcar", player, choice)
-		if ok then Progress.set(player, "InMission") end
+		if choice.action ~= "Board" or (choice.id ~= 1 and choice.id ~= 2) then return end
+		if choice.id == 2 and not mercuryDone(player) then reply(Dialogues.MissionSelect.Locked) return end
+		local ok, reason = invoke("Embarcar", player, choice.id, choice.items)
+		if ok then Progress.set(player, "InMission") else reply(reason or "Boarding unavailable. Try again.") end
 	end)
 
 	-- museu: a primeira exposição selecionada libera o caminho até o foguete

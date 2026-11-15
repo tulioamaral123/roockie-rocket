@@ -53,9 +53,9 @@ local origin = marker(iss, "Origin", CF())
 iss.PrimaryPart = origin
 local spawns = B.group(iss, "Spawns", "Folder")
 for i = 1, 4 do
-	marker(spawns, "Spawn" .. i, CF(-6 + (i - 1) * 4, 3, -16) * CFrame.Angles(0, math.pi, 0))
+	marker(spawns, "Spawn" .. i, CF(-48 + (i - 1) * 4, 0, -12) * CFrame.Angles(0, math.pi, 0))
 end
-marker(iss, "Bounds", CF(10, 6, -2), V(58, 24, 110))
+marker(iss, "Bounds", CF(-9, 6, -2), V(98, 24, 110))
 
 local habitat = B.group(iss, "Habitat")
 local adjacent = B.group(iss, "AdjacentModule")
@@ -66,11 +66,53 @@ local exterior = B.group(iss, "Exterior", "Folder")
 local lights = B.group(iss, "Lights", "Folder")
 
 --------------------------------------------------------------------------------
+-- Cápsula de chegada: Ø32/24, 16 lados, ligada ao habitat por túnel de acoplamento.
+-- A cabine fica imóvel para preservar física dos jogadores; o colar fecha na chegada.
+--------------------------------------------------------------------------------
+local capsule = B.group(iss, "Capsule")
+marker(iss, "CapsuleBounds", CF(-42, 7.5, -12), V(32, 15, 32))
+local ap0, ap1 = 16 * math.cos(math.pi / 16), 12 * math.cos(math.pi / 16)
+local width = 2 * ap0 * math.tan(math.pi / 16) + 0.12
+local length = math.sqrt(15 ^ 2 + (ap0 - ap1) ^ 2)
+for k = 0, 15 do
+	local angle = k * math.pi / 8
+	local radial = V(math.cos(angle), 0, math.sin(angle))
+	local tangent = V(-math.sin(angle), 0, math.cos(angle))
+	local up = (V(0, 15, 0) + radial * (ap1 - ap0)).Unit
+	local function wall(h)
+		return CFrame.fromMatrix(V(-42, h, -12) + radial * (ap0 + (ap1 - ap0) * h / 15), tangent, up)
+	end
+	if k == 0 or k == 1 or k == 15 then
+		-- Abertura inteira abaixo de 12; túnel fechado ocupa os três painéis removidos.
+		part(capsule, "DockingLintel", wall(13.5), V(width, length * 3 / 15, 0.5), "white", "Metal")
+	elseif k == 4 or k == 8 or k == 12 then
+		part(capsule, "Window", wall(7.5), V(width, length * 7 / 15, 0.5), "glass", "Glass", GLASS)
+		for _, h in { 2, 13 } do part(capsule, "WindowBulkhead", wall(h), V(width, length * 4 / 15, 0.5), "white", "Metal") end
+	else
+		part(capsule, "PressurePanel", wall(7.5), V(width, length, 0.5), "white", "Metal")
+	end
+end
+part(capsule, "Floor", CF(-42, -0.5, -12) * CFrame.Angles(0, 0, math.pi / 2), V(1, 32.6, 32.6), "midGray", "Metal", nil, "Cylinder")
+part(capsule, "Ceiling", CF(-42, 15.25, -12) * CFrame.Angles(0, 0, math.pi / 2), V(0.5, 24.6, 24.6), "white", "Metal", nil, "Cylinder")
+box(capsule, "TunnelFloor", -31, -18, -1, 0, -22, -2, "midGray", "Metal")
+box(capsule, "TunnelCeiling", -31, -18, 12, 12.5, -22.5, -1.5)
+box(capsule, "TunnelForwardWall", -31, -18, 0, 12, -22.5, -22)
+box(capsule, "TunnelAftWall", -31, -18, 0, 12, -2, -1.5)
+part(capsule, "DockingHatch", CF(-25, 6, -12), V(0.6, 12, 20), "nasaBlue", "Metal")
+local collar = part(capsule, "DockingCollar", CF(-23, 12.4, -12), V(2, 0.6, 20), "metalGray", "Metal", DECOR)
+collar:SetAttribute("DockedPose", collar.CFrame)
+sign(capsule, "ArrivalLabel", CF(-42, 7, -25.3) * CFrame.Angles(0, math.pi, 0), V(7, 1.2, 0.1), "ISS TRANSFER CAPSULE", "DOCKING · WAIT FOR GREEN ACCESS")
+local cabinLamp = part(lights, "CabinLightCapsule", CF(-42, 14, -12), V(3, 0.2, 2), "white", "Neon", DECOR)
+B.light(cabinLamp, "PointLight", { Brightness = 1.8, Range = 30, Shadows = false })
+
+--------------------------------------------------------------------------------
 -- Casco fechado: piso Y0, teto Y16; ligações sem soleira e vão livre 10 × 12.
 --------------------------------------------------------------------------------
 box(habitat, "Floor", -18, 18, -0.8, 0, -24, 24, "paleGray", "Metal")
 box(habitat, "Ceiling", -18.6, 18.6, 16, 16.8, -24.6, 24.6)
-box(habitat, "PortWall", -18.6, -18, 0, 16, -24.6, 24.6)
+box(habitat, "PortWallAft", -18.6, -18, 0, 16, -2, 24.6)
+box(habitat, "PortWallForward", -18.6, -18, 0, 16, -24.6, -22)
+box(habitat, "CapsuleLintel", -18.6, -18, 12, 16, -22, -2)
 box(habitat, "StarboardAftWall", 18, 18.6, 0, 16, 10, 24.6)
 box(habitat, "StarboardForwardWall", 18, 18.6, 0, 16, -24.6, -10)
 box(habitat, "AirlockLintel", 18, 18.6, 12, 16, -10, 10)
@@ -132,7 +174,7 @@ end
 local prep = part(stations, "PrepConsole", CF(-8, 3.5, -10), V(5, 2, 3), "nasaBlue", "Metal")
 part(habitat, "PrepPedestal", CF(-8, 1.25, -10), V(3, 2.5, 2), "metalGray", "Metal")
 part(habitat, "PrepDisplay", CF(-8, 4.55, -10) * CFrame.Angles(RAD(-18), 0, 0), V(4.3, 0.14, 2.1), "darkBlue", nil, DECOR)
-B.sign(prep, "MISSION PREPARATION", nil, { bg = "nasaBlue", titleColor = "white" })
+B.sign(prep, "FLIGHT MANIFEST", nil, { bg = "nasaBlue", titleColor = "white" })
 local exit = part(stations, "Exit", CF(-10, 5, 51.5), V(7, 10, 0.7), "midGray", "Metal")
 B.sign(exit, "RETURN TO MISSION BRIEFING", nil, { titleColor = "white", bg = "nasaBlue" })
 local toolbox = part(stations, "Toolbox", CF(10, 2, 14), V(4.5, 3, 2.5), "orange", "Metal")

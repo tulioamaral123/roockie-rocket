@@ -108,6 +108,65 @@ local function takeOffSuit(char, suit)
 	end
 end
 
+-- Ponte interna: a Ana usa o mesmo traje do vestiário, sem aceitar modelos do cliente.
+local SS = game:GetService("ServerStorage")
+local suitBridge = SS:FindFirstChild("CrewSuit") or Instance.new("BindableFunction")
+suitBridge.Name = "CrewSuit"
+suitBridge.Parent = SS
+suitBridge.OnInvoke = function(player, enabled)
+	local char = player.Character
+	local hum = char and char:FindFirstChildOfClass("Humanoid")
+	if not hum or hum.Health <= 0 then return false end
+	local suit = char:FindFirstChild("SpaceSuit")
+	if enabled and not suit then putOnSuit(char) end
+	if not enabled and suit then takeOffSuit(char, suit) end
+	player:SetAttribute("SuitOn", char:FindFirstChild("SpaceSuit") ~= nil)
+	return player:GetAttribute("SuitOn") == enabled
+end
+
+local function insideBox(cf, size, position)
+	local p = cf:PointToObjectSpace(position)
+	local h = size / 2
+	return math.abs(p.X) <= h.X and math.abs(p.Y) <= h.Y and math.abs(p.Z) <= h.Z
+end
+
+local function inRocketZone(position)
+	-- VAB fixo; lançador/braço acompanham o conjunto móvel da Fase 9.
+	local hangar = map:FindFirstChild("VABHangar")
+	local floors = hangar and hangar:FindFirstChild("Floor")
+	local floor = floors and floors:FindFirstChild("Floor")
+	if floor and insideBox(floor.CFrame * CFrame.new(0, 75, 0), Vector3.new(floor.Size.X, 160, floor.Size.Z), position) then return true end
+	local transport = map:FindFirstChild("TransportSystem")
+	local assembly = transport and transport:FindFirstChild("TransportAssembly")
+	local deck = (assembly and assembly:FindFirstChild("Arm_Deck", true)) or map:FindFirstChild("Arm_Deck", true)
+	if deck and insideBox(CFrame.new(deck.Position.X, 65, deck.Position.Z), Vector3.new(110, 160, 100), position) then return true end
+	-- Interior ampliado da Orion tem coordenadas próprias abaixo do mapa.
+	local orion = map:FindFirstChild("OrionInterior")
+	if orion and orion:IsA("Model") then
+		local cf, size = orion:GetBoundingBox()
+		if insideBox(cf, size + Vector3.one * 6, position) then return true end
+	end
+	return false
+end
+
+local elapsed = 0
+game:GetService("RunService").Heartbeat:Connect(function(dt)
+	elapsed += dt
+	if elapsed < 0.5 then return end
+	elapsed = 0
+	for _, player in Players:GetPlayers() do
+		local char = player.Character
+		local root = char and char:FindFirstChild("HumanoidRootPart")
+		local suit = char and char:FindFirstChild("SpaceSuit")
+		if not suit then
+			player:SetAttribute("SuitOn", false)
+		elseif root and not player:GetAttribute("RookieMission") and not inRocketZone(root.Position) then
+			takeOffSuit(char, suit)
+			player:SetAttribute("SuitOn", false)
+		end
+	end
+end)
+
 local TweenService = game:GetService("TweenService")
 local fade = game:GetService("ReplicatedStorage"):WaitForChild("CrewFade")
 local DOOR_INFO = TweenInfo.new(0.6, Enum.EasingStyle.Quad, Enum.EasingDirection.InOut)
@@ -243,7 +302,7 @@ PPS.PromptTriggered:Connect(function(prompt, player)
 	local char = player.Character
 	if not action or not char or not char:FindFirstChild("HumanoidRootPart") then return end
 	-- durante a missão Friendship 7 (Fase 15) o jogador fica na cápsula: nenhum prompt da tripulação vale
-	if player:GetAttribute("MissionActive") then return end
+	if player:GetAttribute("MissionActive") or player:GetAttribute("RookieMission") then return end
 	if action == "Suit" then
 		local suit = char:FindFirstChild("SpaceSuit")
 		if suit then takeOffSuit(char, suit) else putOnSuit(char) end

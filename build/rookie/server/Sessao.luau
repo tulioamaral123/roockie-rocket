@@ -33,6 +33,7 @@ function Sessao.new(missaoId, nave, ctx)
 	self.remotes = ctx.remotes
 	self.bounds = Naves.peca(nave, "Bounds")
 	self.spawns = Naves.numerados(Naves.peca(nave, "Spawns"), "Spawn")
+	self.boardingPoints = {}
 	self.tripulacao = {} -- lista de Players, em ordem de embarque
 	self.itens = {}
 	self.fase = "Livre"
@@ -45,10 +46,10 @@ function Sessao.new(missaoId, nave, ctx)
 	self.sujo = false
 
 	-- prompts fixos da nave
-	Naves.prompt(Naves.peca(nave, "Stations/PrepConsole"), "Mission prep", self.missao.Nome, { painel = "Preparacao" })
+	Naves.prompt(Naves.peca(nave, "Stations/PrepConsole"), "Flight manifest confirmed", self.missao.Nome, { ligado = false })
 	self.promptSaida = Naves.prompt(Naves.peca(nave, "Stations/Exit"), Missoes.Textos.Sair, self.missao.Nome)
 	self.promptSaida.Triggered:Connect(function(p)
-		if self:membro(p) and self:podeSair() then self:sair(p, true) end
+		if self:perto(p, self.promptSaida.Parent, 8) and self:podeSair() then self:sair(p, true) end
 	end)
 	return self
 end
@@ -74,7 +75,7 @@ function Sessao:perto(player, peca, dist)
 end
 
 function Sessao:podeSair()
-	return self.fase == "Preparacao" or self.fase == "Resultado" or self.fase == "Falha"
+	return self.fase ~= "Livre"
 end
 
 function Sessao:lider()
@@ -86,21 +87,56 @@ function Sessao:nome(player)
 	return player and player.DisplayName or "crew"
 end
 
--- quiosque: embarcar
-function Sessao:embarcar(player)
+-- Ana: manifesto validado na plataforma antes do teleporte.
+function Sessao:embarcar(player, manifest)
+	if player:GetAttribute("SuitOn") ~= true or not (player.Character and player.Character:FindFirstChild("SpaceSuit")) then
+		return false, "Put on your space suit before boarding."
+	end
+	local selected = {}
+	if manifest ~= nil then
+		if type(manifest) ~= "table" then return false, "Invalid flight manifest." end
+		local count = 0
+		for key, value in manifest do
+			if type(key) ~= "string" or value ~= true or not self.missao.Equipamentos[key] then return false, "Invalid equipment." end
+			selected[key] = true
+			count += 1
+		end
+		local weight = Missoes.pesoTotal(self.missao, selected)
+		if weight > REGRAS.LimiteFoguete then
+			return false, Missoes.formatar(Missoes.FalasMarcos.ExcessoPeso, { name = player.DisplayName, weight = weight })
+		end
+		if count > 2 then return false, "Choose up to two items for the shared 60 kg payload." end
+		if self.fase ~= "Livre" then
+			local names = {}
+			for _, key in self.missao.OrdemEquipamentos do
+				if self.itens[key] then table.insert(names, self.missao.Equipamentos[key].Nome) end
+			end
+			local shared = "Match the crew payload: " .. (#names > 0 and table.concat(names, " + ") or "no equipment") .. " (" .. self:peso() .. "/60 kg)."
+			for key in self.itens do if not selected[key] then return false, shared end end
+			for key in selected do if not self.itens[key] then return false, shared end end
+		end
+	end
 	if self.ctx.emMissao[player] then return false, Missoes.Textos.JaEmMissao end
-	if self.fase ~= "Livre" and self.fase ~= "Preparacao" then return false, Missoes.Textos.MissaoEmAndamento end
+	if self.fase ~= "Livre" and self.fase ~= "Preparacao" and not (manifest and self.fase == "Lancamento" and os.clock() < self.fimLancamento - 1) then return false, Missoes.Textos.MissaoEmAndamento end
 	if #self.tripulacao >= REGRAS.MaxJogadoresPorNave then return false, Missoes.Textos.NaveCheia end
-	if not Naves.vivo(player) then return false, nil end
+	local boardingRoot = Naves.raiz(player)
+	if not Naves.vivo(player) or not boardingRoot then return false, nil end
+	self.boardingPoints[player] = boardingRoot.CFrame
 	table.insert(self.tripulacao, player)
 	self.ctx.emMissao[player] = self
+	player:SetAttribute("RookieMission", self.id)
 	if self.fase == "Livre" then
 		self.fase = "Preparacao"
-		self.itens = {}
+		self.itens = selected
+		self.preflight = manifest ~= nil
 	end
 	local spawn = self.spawns[#self.tripulacao] or self.spawns[1]
 	task.spawn(function()
-		if not Naves.teleportar(player, spawn.CFrame) then self:sair(player, false) end
+		if not Naves.teleportar(player, spawn.CFrame, function() return self.ctx.emMissao[player] == self end) then
+			self:sair(player, false)
+		elseif self.preflight and self.fase == "Preparacao" then
+			self:lancar(player)
+		end
 	end)
 	self:sync()
 	return true
@@ -112,12 +148,14 @@ function Sessao:sair(player, voltar)
 	if not i then return end
 	table.remove(self.tripulacao, i)
 	self.ctx.emMissao[player] = nil
+	self.boardingPoints[player] = nil
+	player:SetAttribute("RookieMission", nil)
 	if self.handler and self.handler.jogadorSaiu then self.handler:jogadorSaiu(player) end
 	player:SetAttribute("RookieEVA", nil)
 	player:SetAttribute("RookieGaze", nil)
 	self.remotes.SincronizarEstado:FireClient(player, { tipo = "Saiu" })
 	if voltar and self.ctx.retorno then
-		task.spawn(Naves.teleportar, player, self.ctx.retorno)
+		task.spawn(Naves.teleportar, player, self.ctx.retorno, function() return self.ctx.emMissao[player] == nil end)
 	end
 	if #self.tripulacao == 0 then
 		self:resetar()
@@ -143,7 +181,7 @@ end
 ---------------------------------------------------------------------------------
 
 function Sessao:selecionar(player, chave, ligado)
-	if self.fase ~= "Preparacao" or not self:membro(player) then return end
+	if self.preflight or self.fase ~= "Preparacao" or not self:membro(player) then return end
 	if type(chave) ~= "string" or not self.missao.Equipamentos[chave] then return end -- só itens desta missão
 	self.itens[chave] = ligado == true or nil
 	self:sync()
@@ -159,18 +197,38 @@ end
 
 function Sessao:lancar(player)
 	if self.fase ~= "Preparacao" or not self:membro(player) then return end
+	for _, crew in self.tripulacao do
+		if crew:GetAttribute("SuitOn") ~= true or not (crew.Character and crew.Character:FindFirstChild("SpaceSuit")) then
+			self:aviso(player, "Every astronaut must wear a space suit.")
+			return
+		end
+	end
+	local count = 0
+	for _ in self.itens do count += 1 end
 	local peso = self:peso()
 	if peso > REGRAS.LimiteFoguete then
 		-- erro didático: o foguete nem sai da plataforma
 		self:falhar("ExcessoPeso", { name = self:nome(player), weight = peso }, false)
 		return
 	end
+	if count > 2 then self:aviso(player, "Choose up to two items.") return end
 	self.bonus = Missoes.bonusLeveza(peso)
 	self.tempos = {}
 	self.resultado = nil
 	self.fase = "Lancamento"
-	self.fimLancamento = os.clock() + REGRAS.SegundosLancamento
-	self:efeito("Lancamento", { duracao = REGRAS.SegundosLancamento })
+	if self.id == 2 then
+		local hatch = Naves.talvez(self.nave, "Capsule/DockingHatch")
+		if hatch then hatch.CanCollide = true hatch.Transparency = 0 end
+		local collar = Naves.talvez(self.nave, "Capsule/DockingCollar")
+		if collar then
+			local final = collar:GetAttribute("DockedPose")
+			collar.CFrame = final * CFrame.new(3, 0, 0)
+			game:GetService("TweenService"):Create(collar, TweenInfo.new(REGRAS.SegundosLancamento), { CFrame = final }):Play()
+		end
+	end
+	self.fimLancamento = os.clock() + math.max(12, REGRAS.SegundosLancamento)
+	self.fimLancamentoServidor = workspace:GetServerTimeNow() + math.max(12, REGRAS.SegundosLancamento)
+	self:efeito("Lancamento", { duracao = math.max(12, REGRAS.SegundosLancamento) })
 	self:sync()
 end
 
@@ -197,6 +255,10 @@ function Sessao:iniciarTask(n)
 	self.handler = modulo.new(self, n)
 	self.inicioTask = os.clock()
 	self.inicioTaskServidor = workspace:GetServerTimeNow()
+	if self.id == 2 then
+		local hatch = Naves.talvez(self.nave, "Capsule/DockingHatch")
+		if hatch then hatch.CanCollide = false hatch.Transparency = 1 end
+	end
 	self.handler:iniciar()
 	self:efeito("TaskInicio", { task = n })
 	self:sync()
@@ -299,14 +361,20 @@ function Sessao:reiniciar(player, modo)
 		-- zera só o cronômetro da task atual; itens e tempos anteriores ficam
 		self:iniciarTask(self.falha.task)
 	elseif modo == "Missao" and (self.fase == "Falha" or self.fase == "Resultado") then
-		self:pararTask()
-		self.fase = "Preparacao"
-		self.taskAtual = 0
-		self.tempos = {}
-		self.falha = nil
-		self.resultado = nil
-		self:voltarAosSpawns()
-		self:sync()
+		local crew = table.clone(self.tripulacao)
+		for _, p in crew do
+			local returnTo = self.boardingPoints[p] or self.ctx.retorno
+			self:sair(p, false)
+			task.spawn(function()
+				if returnTo then Naves.teleportar(p, returnTo - Vector3.new(0, 3, 0), function() return self.ctx.emMissao[p] == nil end) end
+				local guides = RS:FindFirstChild("GuideSystem")
+				local remote = guides and guides:FindFirstChild("Remotes") and guides.Remotes:FindFirstChild("MissionSelect")
+				if remote then
+					local profile = self.ctx.dados.perfil(p)
+					remote:FireClient(p, { kind = "Open", issLocked = (profile.estrelas["1"] or 0) < 1 })
+				end
+			end)
+		end
 	elseif modo == "Sair" and self:podeSair() then
 		self:sair(player, true)
 	end
@@ -368,6 +436,8 @@ function Sessao:estado()
 	return {
 		tipo = "Estado",
 		missao = self.id,
+		preflight = self.preflight == true,
+		fimLancamento = self.fimLancamentoServidor,
 		fase = self.fase,
 		tripulacao = tripulantes,
 		itens = itens,

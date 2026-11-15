@@ -189,10 +189,11 @@ function EVA:iniciar()
 		local pc = Naves.prompt(cabo, "Grab cable", "Cable " .. i, { distancia = 9 })
 		table.insert(self.prompts, pc)
 		table.insert(self.conexoes, pc.Triggered:Connect(function(p)
-			if self.presos[i] or self.carregando[i] or not p:GetAttribute("RookieEVA") then return end
+			if self.presos[i] or self.carregando[i] or not p:GetAttribute("RookieEVA") or not self.s:perto(p, cabo, 10) then return end
 			for _, outro in self.carregando do
 				if outro == p then return end -- um cabo por vez
 			end
+			self.s:aviso(p, "Cable " .. i .. " secured. Follow the arrow to the matching pulley; move slowly.")
 			self.carregando[i] = p
 			self.rapido[i] = 0
 			pc.Enabled = false
@@ -307,13 +308,13 @@ function EVA:limpar()
 		if p:GetAttribute("RookieEVA") then
 			p:SetAttribute("RookieEVA", nil)
 			task.spawn(function()
-				Naves.teleportar(p, volta)
+				Naves.teleportar(p, volta, function() return self.s.ctx.emMissao[p] == self.s end)
 				-- o personagem é do cliente: se a física dele desfez o teleporte, tenta de novo
 				for _ = 1, 3 do
 					task.wait(0.6)
 					local root = Naves.raiz(p)
-					if not root or Naves.dentro(bounds, root.Position, 2) then break end
-					Naves.teleportar(p, volta)
+					if self.s.ctx.emMissao[p] ~= self.s or not root or Naves.dentro(bounds, root.Position, 2) then break end
+					Naves.teleportar(p, volta, function() return self.s.ctx.emMissao[p] == self.s end)
 				end
 			end)
 		end
@@ -378,6 +379,7 @@ function Vazamento:iniciar()
 	table.insert(self.conexoes, pt.Triggered:Connect(function(p)
 		if not self.s:perto(p, self.toolbox) then return end
 		p:SetAttribute("RookieGaze", true)
+		self.s:aviso(p, "Epoxy gauze ready. Follow the arrow to the leak and hold F to seal it.")
 		self.s:marcar()
 	end))
 
@@ -387,14 +389,18 @@ function Vazamento:iniciar()
 	-- o servidor mede o próprio hold (o cliente poderia encurtar o HoldDuration)
 	self.inicioHold = {}
 	table.insert(self.conexoes, pf.PromptButtonHoldBegan:Connect(function(p)
-		self.inicioHold[p] = os.clock()
+		if self.s:perto(p, furo, 8) then self.inicioHold[p] = { elapsed = 0, ended = nil } end
+	end))
+	table.insert(self.conexoes, pf.PromptButtonHoldEnded:Connect(function(p)
+		local hold = self.inicioHold[p]
+		if hold then hold.ended = os.clock() end
 	end))
 	-- não limpar em PromptButtonHoldEnded: no servidor ele chega ANTES do Triggered (testado
 	-- no Studio); um novo HoldBegan já reinicia a contagem se o jogador soltar e apertar de novo
 	table.insert(self.conexoes, pf.Triggered:Connect(function(p)
 		local inicio = self.inicioHold[p]
 		self.inicioHold[p] = nil
-		if not inicio or os.clock() - inicio < self.segurar - 0.2 then return end
+		if not inicio or inicio.elapsed < self.segurar - 0.2 or (inicio.ended and os.clock() - inicio.ended > 0.3) then return end
 		if not self.s:perto(p, furo) then return end
 		if not self.fechada then
 			self.s:aviso(p, Missoes.Textos.FecheEscotilha)
@@ -414,6 +420,11 @@ end
 function Vazamento:acao() end
 
 function Vazamento:tick(dt)
+	for p, hold in self.inicioHold or {} do
+		if not self.s:perto(p, self.furos[self.furo], 8) or (hold.ended and os.clock() - hold.ended > 0.3) then
+			self.inicioHold[p] = nil
+		elseif not hold.ended then hold.elapsed += dt end
+	end
 	local taxa = self.taxa * (self.fechada and self.cfg.MultiplicadorEscotilhaFechada or 1)
 	self.pressao = math.max(0, self.pressao - taxa * dt)
 	if self.pressao <= 0 then self.s:falhar("Tempo") end
