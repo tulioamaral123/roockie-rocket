@@ -52,6 +52,7 @@ local enUS = {
 	["settings.captions"] = "Captions",
 	["settings.reduceMotion"] = "Reduce camera motion",
 	["settings.arrows"] = "Navigation arrows",
+	["settings.firstPerson"] = "First person camera",
 	["settings.on"] = "On",
 	["settings.off"] = "Off",
 

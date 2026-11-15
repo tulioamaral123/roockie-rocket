@@ -32,7 +32,7 @@ local function defaults()
 		exhibitsSeen = {},
 		cards = {},
 		showsSeen = {},
-		settings = { textSize = 2, captions = true, reduceMotion = false, arrows = true },
+		settings = { textSize = 2, captions = true, reduceMotion = false, arrows = true, firstPerson = false },
 		firstVisit = true,
 	}
 end
@@ -173,6 +173,7 @@ function ProgressService.setSettings(player, new)
 	if type(new.captions) == "boolean" then cur.captions = new.captions end
 	if type(new.reduceMotion) == "boolean" then cur.reduceMotion = new.reduceMotion end
 	if type(new.arrows) == "boolean" then cur.arrows = new.arrows end
+	if type(new.firstPerson) == "boolean" then cur.firstPerson = new.firstPerson end
 	s.dirty = true
 	s.revision += 1
 end

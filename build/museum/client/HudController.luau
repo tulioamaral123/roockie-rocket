@@ -130,6 +130,13 @@ local function settings()
 		s.arrows = v
 		game:GetService("Players").LocalPlayer:SetAttribute("GuideArrows", v)
 	end)
+	-- celular e tablet: opção de jogar em primeira pessoa
+	if UI.isTouch() then
+		pick(row(Text.get("settings.firstPerson"), 5), onOff, s.firstPerson == true, function(v)
+			s.firstPerson = v
+			UI.setFirstPerson(v)
+		end)
+	end
 end
 
 Hud.closeWindow = closeWindow

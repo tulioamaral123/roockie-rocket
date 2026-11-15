@@ -33,6 +33,20 @@ function UI.playerGui()
 	return Players.LocalPlayer:WaitForChild("PlayerGui")
 end
 
+-- Câmera em primeira pessoa (opção do Settings no celular). Ao desligar, volta para a terceira
+-- pessoa já afastada (senão a câmera continuaria colada no rosto até o jogador dar zoom).
+function UI.setFirstPerson(on)
+	local p = game:GetService("Players").LocalPlayer
+	if on then
+		p.CameraMode = Enum.CameraMode.LockFirstPerson
+	elseif p.CameraMode == Enum.CameraMode.LockFirstPerson then
+		p.CameraMode = Enum.CameraMode.Classic
+		local min = p.CameraMinZoomDistance
+		p.CameraMinZoomDistance = 10
+		task.delay(0.2, function() p.CameraMinZoomDistance = min end)
+	end
+end
+
 -- Entrada principal é toque? (PreferredInput; TouchEnabled dá falso positivo em notebook com tela de toque)
 function UI.isTouch()
 	local ok, pref = pcall(function() return UIS.PreferredInput end)

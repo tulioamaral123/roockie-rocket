@@ -33,6 +33,8 @@ if progress then
 	UI.setTextLevel(progress.settings and progress.settings.textSize or 2)
 	-- preferência salva das setas de navegação (lida pelo GuideClient)
 	game:GetService("Players").LocalPlayer:SetAttribute("GuideArrows", not (progress.settings and progress.settings.arrows == false))
+	-- primeira pessoa salva (só vale no celular/tablet, onde a opção aparece)
+	if UI.isTouch() and progress.settings and progress.settings.firstPerson == true then UI.setFirstPerson(true) end
 	if progress.noSave then UI.toast(Text.get("save.failed"), 6) end
 end
 
