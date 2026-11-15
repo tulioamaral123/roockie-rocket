@@ -301,10 +301,21 @@ function EVA:limpar()
 	for _, pr in self.prompts do pr:Destroy() end
 	table.clear(self.prompts)
 	-- todos de volta para dentro; cabos no lugar para a próxima tentativa
+	local volta = self.evaReturn.CFrame
+	local bounds = self.s.bounds
 	for _, p in self.s.tripulacao do
 		if p:GetAttribute("RookieEVA") then
 			p:SetAttribute("RookieEVA", nil)
-			task.spawn(Naves.teleportar, p, self.evaReturn.CFrame)
+			task.spawn(function()
+				Naves.teleportar(p, volta)
+				-- o personagem é do cliente: se a física dele desfez o teleporte, tenta de novo
+				for _ = 1, 3 do
+					task.wait(0.6)
+					local root = Naves.raiz(p)
+					if not root or Naves.dentro(bounds, root.Position, 2) then break end
+					Naves.teleportar(p, volta)
+				end
+			end)
 		end
 	end
 	for i, c in self.cabos do c.CFrame = self.origem[i] end
@@ -370,16 +381,16 @@ function Vazamento:iniciar()
 		self.s:marcar()
 	end))
 
-	local pf = Naves.prompt(furo, "Seal leak", "2 mm hole", { segurar = self.segurar, distancia = 8 })
+	-- tecla F: a caixa de ferramentas (E) pode ficar perto do furo
+	local pf = Naves.prompt(furo, "Seal leak", "2 mm hole", { segurar = self.segurar, distancia = 8, tecla = Enum.KeyCode.F })
 	table.insert(self.prompts, pf)
 	-- o servidor mede o próprio hold (o cliente poderia encurtar o HoldDuration)
 	self.inicioHold = {}
 	table.insert(self.conexoes, pf.PromptButtonHoldBegan:Connect(function(p)
 		self.inicioHold[p] = os.clock()
 	end))
-	table.insert(self.conexoes, pf.PromptButtonHoldEnded:Connect(function(p)
-		self.inicioHold[p] = nil
-	end))
+	-- não limpar em PromptButtonHoldEnded: no servidor ele chega ANTES do Triggered (testado
+	-- no Studio); um novo HoldBegan já reinicia a contagem se o jogador soltar e apertar de novo
 	table.insert(self.conexoes, pf.Triggered:Connect(function(p)
 		local inicio = self.inicioHold[p]
 		self.inicioHold[p] = nil

@@ -64,10 +64,12 @@ function Mira:linhaLivre(player, ponto)
 		if p.Character then table.insert(filtro, p.Character) end
 	end
 	self.params.FilterDescendantsInstances = filtro
-	local origem = head.Position
+	-- o cliente mira pela câmera; aqui basta a cabeça OU o alto do tronco enxergar o ponto
 	local destino = ponto.Position
-	local hit = workspace:Raycast(origem, destino - origem, self.params)
-	return hit == nil
+	for _, origem in { head.Position, head.Position + Vector3.new(0, 1.5, 0) } do
+		if workspace:Raycast(origem, destino - origem, self.params) == nil then return true end
+	end
+	return false
 end
 
 function Mira:acao(player, msg)

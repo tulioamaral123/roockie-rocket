@@ -138,7 +138,11 @@ if kiosk then
 		local peca = kiosk:FindFirstChild(nomePeca)
 		local s = sessoes[id]
 		if peca and s then
-			local pr = Naves.prompt(peca, "Board " .. s.missao.Chave .. " mission", s.missao.Nome, { distancia = 9 })
+			-- pedestais lado a lado: teclas diferentes para os dois prompts aparecerem juntos
+			local pr = Naves.prompt(peca, "Board " .. s.missao.Chave .. " mission", s.missao.Nome, {
+				distancia = 9,
+				tecla = id == 2 and Enum.KeyCode.F or Enum.KeyCode.E,
+			})
 			pr.Triggered:Connect(function(player)
 				local ok, motivo = s:embarcar(player)
 				if not ok and motivo then s:aviso(player, motivo) end
