@@ -152,6 +152,28 @@ if kiosk then
 end
 atualizarTela()
 
+-- Ponte para outros sistemas do servidor (GuideSystem: a Ana embarca a equipe no topo do foguete)
+-- ServerStorage.RookieBridge.Embarcar:Invoke(player, missaoId) → ok, motivo
+-- ServerStorage.RookieBridge.Perfil:Invoke(player) → { estrelas = { ["1"] = n, ... } }
+-- ServerStorage.RookieBridge.EmMissao:Invoke(player) → boolean
+do
+	local SS = game:GetService("ServerStorage")
+	local ponte = garantir(SS, "Folder", "RookieBridge")
+	garantir(ponte, "BindableFunction", "Embarcar").OnInvoke = function(player, id)
+		local s = sessoes[id]
+		if not s or typeof(player) ~= "Instance" or not player:IsA("Player") then return false, nil end
+		local ok, motivo = s:embarcar(player)
+		if not ok and motivo then s:aviso(player, motivo) end
+		return ok, motivo
+	end
+	garantir(ponte, "BindableFunction", "Perfil").OnInvoke = function(player)
+		return Dados.perfil(player)
+	end
+	garantir(ponte, "BindableFunction", "EmMissao").OnInvoke = function(player)
+		return ctx.emMissao[player] ~= nil
+	end
+end
+
 ---------------------------------------------------------------------------------
 -- Remotes (cliente → servidor), todos validados
 ---------------------------------------------------------------------------------

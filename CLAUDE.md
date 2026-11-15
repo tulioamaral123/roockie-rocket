@@ -31,12 +31,13 @@ O place (`Place1.rbxl`) é gerado por scripts Luau em `build/`. Não editar peç
 | 19 | `phase19_rookie_mercury.luau` | Rookie Rocket: cápsula Mercury navegável (−3000, 1200, 0), quiosque Mission Briefing no LCC; apaga a antiga Fase 15 |
 | 20 | `phase20_rookie_iss.luau` | Rookie Rocket: módulo da ISS, Cupola, Airlock/EVA, Unity/Zarya, Terra (3000, 1200, 0) |
 | 21 | `phase21_rookie_systems.luau` | Instala os scripts de `build/rookie/` quando o Rojo não está conectado |
+| 22 | `phase22_guides.luau` | Guias Marcos Pontes e Ana: `NASAComplex.Guides` (NPCs, NavigationPoints) + scripts de `build/guide/` sem Rojo (`docs/guias-spec.md`, `docs/guias-contrato.md`) |
 
 Reconstruir:
 
 1. Servir `build/` em segundo plano: `python3 -m http.server 8765 --bind 127.0.0.1` (parar ao terminar).
 2. Fases 1 e 2 (autônomas): carregar e executar no Edit (`loadstring(HttpService:GetAsync(...))()`).
-3. `build/run_in_studio.luau`: executa as Fases 3–6, 8–14 e 16–21 em ordem, passando `lib.luau`.
+3. `build/run_in_studio.luau`: executa as Fases 3–6, 8–14 e 16–22 em ordem, passando `lib.luau`.
 
 Regras dos geradores:
 
@@ -49,7 +50,7 @@ Regras dos geradores:
 
 ## Rojo, VS Code e GitHub
 
-- **Rojo** (fixado em `rokit.toml`) sincroniza **todos os scripts** (`default.project.json`): `build/rookie/` (missões Rookie Rocket), `build/museum/` (museu), `build/systems/server` → `ServerScriptService.Map_Systems` (AutomaticDoors, CrewAccess) e `build/systems/client` → `StarterPlayerScripts.MapClient` (PlanetOrbits, CrewClient).
+- **Rojo** (fixado em `rokit.toml`) sincroniza **todos os scripts** (`default.project.json`): `build/rookie/` (missões Rookie Rocket), `build/guide/` (guias e seta), `build/museum/` (museu), `build/systems/server` → `ServerScriptService.Map_Systems` (AutomaticDoors, CrewAccess) e `build/systems/client` → `StarterPlayerScripts.MapClient` (PlanetOrbits, CrewClient).
 - Com o Rojo conectado, as pastas têm o atributo `RojoManaged` e as fases (6, 8, 18, 21) não reinstalam os scripts; sem Rojo, `lib.installSystemScript` baixa de `build/systems/` pelo HTTP.
 - Scripts novos vão em arquivos nessas pastas, nunca como texto embutido em gerador.
 - Só o mapa (peças) continua pelo servidor HTTP. Não usar `rojo build` (o mapa não está no projeto).
@@ -63,12 +64,11 @@ Regras dos geradores:
 - Não reler arquivo que acabou de editar; respostas curtas; não repetir o plano no texto.
 - `IMPLEMENTATION.md`: só uma linha curta por mudança, no fim do arquivo.
 
-## Trabalho em paralelo (Linux + Mac)
+## Trabalho em paralelo (só no Mac)
 
-- Código é escrito no Linux (Claude Code e Codex), cada agente em seu worktree e branch; o Mac roda o Studio e o `rojo serve`. Ver `docs/colaboracao.md`.
-- Pegar a tarefa em `TASKS.md` e listar os arquivos antes de começar; Codex segue `AGENTS.md`.
-- `Place1.rbxl` só é commitado pelo Mac.
-- Pelo MCP remoto (`Roblox_Studio_Mac`), sincronizar o Mac com `ssh roockie-mac sync <branch>` antes de rodar geradores.
+- Tudo roda neste Mac: Claude Code, Codex (CLI do app ChatGPT, pela skill `codex`), Studio e `rojo serve`. Não há Linux nem acesso remoto. Ver `docs/colaboracao.md`.
+- Agente que edita código trabalha em worktree e branch próprios (`scripts/worktree-novo.sh`); pegar a tarefa em `TASKS.md` e listar os arquivos antes de começar; Codex segue `AGENTS.md`.
+- O Studio é usado só pelo Claude; o Codex roda sem o MCP do Studio.
 
 ## Validações que devem continuar passando
 

@@ -24,6 +24,8 @@ As regras do projeto estão em [`CLAUDE.md`](CLAUDE.md): gerador por fases em `b
 
 ## Quando o Claude Code te chamar
 
+Tudo roda no mesmo Mac. Você roda sem o MCP do Studio: se precisar de algo no Studio (rodar gerador, medir, capturar), peça ao Claude na resposta.
+
 O Claude Code pode mandar tarefas por `codex exec` (skill `.claude/skills/codex`). Trate a mensagem dele como tarefa do usuário: siga as regras acima e responda no fim com o que mudou, a branch e o que falta testar no Studio.
 
 ## Convenções

@@ -12,7 +12,7 @@ O Codex roda sem interface por `codex exec`. O script `codex-ask.sh` (nesta past
 - **Pastas separadas.** Tarefa que edita arquivos vai para um worktree do Codex, nunca para a pasta onde o Claude está trabalhando. Criar com `scripts/worktree-novo.sh codex <tarefa>` (resultado: `../roockie-rocket-wt/codex-<tarefa>`, branch `codex/<tarefa>`).
 - Registrar a tarefa em `TASKS.md` com responsável `codex` e os arquivos dela antes de mandar.
 - Sandbox: `read-only` para perguntas e revisões; `workspace-write` só dentro do worktree do Codex.
-- A conta usada é a do `CODEX_HOME` herdado do terminal (no Mac, o atalho `claude-valter` já aponta para a conta certa). Não mudar login nem config do Codex.
+- Roda neste Mac: o script acha o CLI do app ChatGPT se `codex` não estiver no PATH e desliga o MCP do Studio (o Studio fica com o Claude). A conta é a do `CODEX_HOME` herdado do terminal. Não mudar login nem config do Codex.
 - Cada chamada pode levar minutos: rodar em segundo plano (`run_in_background`) quando for tarefa de código, e seguir trabalhando.
 - O Codex lê `AGENTS.md`. Na mensagem, dizer a tarefa, os arquivos permitidos e o que entregar (diff, resumo, commit na branch dele).
 

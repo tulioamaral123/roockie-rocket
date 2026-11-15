@@ -38,12 +38,18 @@
             "$className": "RemoteEvent"
           }
         }
+      },
+      "GuideSystem": {
+        "$className": "Folder",
+        "$attributes": {
+          "RojoManaged": true
+        },
+        "Config": {
+          "$path": "build/guide/shared"
+        }
       }
     },
     "ServerScriptService": {
-      "IntegracaoLinux": {
-        "$path": "build/tests/IntegracaoLinux.server.luau"
-      },
       "MuseumSystem": {
         "$path": "build/museum/server"
       },
@@ -55,6 +61,9 @@
       },
       "RookieRocket": {
         "$path": "build/rookie/server"
+      },
+      "GuideSystem": {
+        "$path": "build/guide/server"
       }
     },
     "StarterPlayer": {
@@ -67,6 +76,9 @@
         },
         "RookieClient": {
           "$path": "build/rookie/client"
+        },
+        "GuideClient": {
+          "$path": "build/guide/client"
         }
       }
     }

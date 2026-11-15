@@ -6,17 +6,22 @@
 # Saída: "THREAD_ID=<id>" na primeira linha, depois a resposta final do Codex.
 set -euo pipefail
 
+# Codex do Mac: o do PATH ou o que vem dentro do app ChatGPT
+CODEX=$(command -v codex || true)
+[ -n "$CODEX" ] || CODEX=/Applications/ChatGPT.app/Contents/Resources/codex-cli/bin/codex
+[ -x "$CODEX" ] || { echo "Codex não encontrado (instale o app ChatGPT ou ponha codex no PATH)" >&2; exit 3; }
+
 tmp=$(mktemp -d)
 trap 'rm -rf "$tmp"' EXIT
 
 case "${1:-}" in
 	new)
 		[ $# -eq 4 ] || { echo "uso: $0 new <pasta> <read-only|workspace-write> \"mensagem\"" >&2; exit 1; }
-		codex exec --json -C "$2" -s "$3" -o "$tmp/resp.md" "$4" </dev/null >"$tmp/events.jsonl" 2>"$tmp/err.log" || true
+		"$CODEX" exec --json -c mcp_servers.Roblox_Studio.enabled=false -C "$2" -s "$3" -o "$tmp/resp.md" "$4" </dev/null >"$tmp/events.jsonl" 2>"$tmp/err.log" || true
 		;;
 	resume)
 		[ $# -eq 3 ] || { echo "uso: $0 resume <thread_id> \"mensagem\"" >&2; exit 1; }
-		codex exec resume --json -o "$tmp/resp.md" "$2" "$3" </dev/null >"$tmp/events.jsonl" 2>"$tmp/err.log" || true
+		"$CODEX" exec resume --json -c mcp_servers.Roblox_Studio.enabled=false -o "$tmp/resp.md" "$2" "$3" </dev/null >"$tmp/events.jsonl" 2>"$tmp/err.log" || true
 		;;
 	*)
 		echo "uso: $0 new|resume ..." >&2

@@ -314,7 +314,7 @@ Os textos ficam no proprio arquivo em portugues; para traducao, ver 9.3.
 Todo texto de UI (botoes, menus, mensagens do robo) fica em `Conteudo/Textos/ptBR.lua`, acessado por chave (`Textos.get("painel.fechar")`). EN/ES depois sao outros arquivos com as mesmas chaves.
 
 ### 9.4 Fluxo de conteudo
-O responsavel pelo conteudo (no Linux, sem Studio) escreve e confere os arquivos de `Conteudo/` no git. Fontes preferidas: nasa.gov, NASA History Office (history.nasa.gov), images.nasa.gov (fotos, com credito), Smithsonian National Air and Space Museum. Fotos precisam ser enviadas ao Roblox como imagens (Creator Hub) e passam por moderacao: **envie cedo**.
+O responsavel pelo conteudo (sem Studio) escreve e confere os arquivos de `Conteudo/` no git. Fontes preferidas: nasa.gov, NASA History Office (history.nasa.gov), images.nasa.gov (fotos, com credito), Smithsonian National Air and Space Museum. Fotos precisam ser enviadas ao Roblox como imagens (Creator Hub) e passam por moderacao: **envie cedo**.
 
 ---
 
