@@ -30,7 +30,14 @@ function NavigationClient.missionTarget(active, target, position)
 end
 
 local A = Settings.Arrow
-local state = { points = nil, idx = 1, target = nil, beacon = false, objective = nil }
+local state = { points = nil, idx = 1, target = nil, beacon = false, objective = nil, stage = nil }
+
+-- Setas desligadas perto do alvo, com histerese: apagam ao chegar (NEAR) e só voltam se o
+-- jogador se afastar além de FAR ou se surgir um objetivo novo. Vale para o Marcos e a Ana
+-- (alvo que anda) e para a estação da task nas missões.
+local NEAR = { guide = 12, mission = 6 }
+local FAR = { guide = 22, mission = 12 }
+local arrived, arrivedKey = false, nil
 local lastRepath = 0
 
 ---------------------------------------------------------------------------------
@@ -214,6 +221,7 @@ function NavigationClient.start()
 		state.idx = data.points and math.min(2, #data.points) or 1
 		state.target = data.target
 		state.beacon = data.beacon == true
+		state.stage = data.stage
 	end)
 
 	local yaw = nil
@@ -230,18 +238,33 @@ function NavigationClient.start()
 			return
 		end
 		local pos = root.Position
+		local tgt = route.target
+		-- chegou perto do alvo: apaga as duas setas até o jogador se afastar ou o objetivo mudar
+		local key = missionMode
+			and string.format("M:%d:%d:%d", math.floor(tgt.X + 0.5), math.floor(tgt.Y + 0.5), math.floor(tgt.Z + 0.5))
+			or ("G:" .. tostring(state.stage) .. ":" .. tostring(state.objective))
+		if key ~= arrivedKey then
+			arrivedKey = key
+			arrived = false
+		end
+		local kind = missionMode and "mission" or "guide"
+		local dist = (tgt - pos).Magnitude
+		if not arrived and dist < NEAR[kind] then
+			arrived = true
+		elseif arrived and dist > FAR[kind] then
+			arrived = false
+		end
+		if arrived then
+			arrow.visible(false)
+			beacon.visible(false)
+			return
+		end
 		-- seta de destino girando acima do alvo
 		local bob = math.sin(t * 2.4) * A.Bob
-		local tgt = route.target
 		local showBeacon = route.beacon and (tgt - pos).Magnitude < 260
 		beacon.visible(showBeacon)
 		if showBeacon then
 			beacon.set(CFrame.new(tgt + Vector3.new(0, A.BeaconHeight + bob * 2, 0)) * CFrame.Angles(0, t * 1.6, 0) * CFrame.Angles(-math.pi / 2, 0, 0))
-		end
-		-- seta do jogador: some ao chegar
-		if (tgt - pos).Magnitude < (missionMode and 3 or 7) then
-			arrow.visible(false)
-			return
 		end
 		local p = nextPoint(pos, route)
 		if not p then
