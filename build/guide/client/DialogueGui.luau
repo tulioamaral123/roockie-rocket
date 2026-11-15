@@ -113,7 +113,7 @@ local function build()
 		Position = UDim2.fromOffset(136, 54), Size = UDim2.new(1, -148, 1, -108),
 	})
 	local cont = UI.button(panel, {
-		Text = "Continue  ▸", TextSize = 16,
+		Text = "Continue  ›", TextSize = 16,
 		AnchorPoint = Vector2.new(1, 1), Position = UDim2.new(1, -12, 1, -10), Size = UDim2.fromOffset(150, 44),
 	})
 	local hint = UI.text(panel, {
@@ -161,7 +161,7 @@ local function showLine()
 	local text = fill(line[2])
 	ui.body.Text = text
 	ui.body.MaxVisibleGraphemes = 0
-	ui.cont.Text = c.i < #c.lines and "Continue  ▸" or "Close"
+	ui.cont.Text = c.i < #c.lines and "Continue  ›" or "Close"
 	if typing then typing:Cancel() end
 	local n = utf8.len(text) or #text
 	typing = TweenService:Create(ui.body, TweenInfo.new(n / CPS, Enum.EasingStyle.Linear), { MaxVisibleGraphemes = n })

@@ -92,8 +92,16 @@ function World.upperCabInside(): Vector3?
 end
 
 -- onde a Ana espera no braço de acesso: no início do braço, virada para a torre
+-- há quatro peças "Arm_Deck" (umbilicais 40/60, braço de serviço 100, braço da tripulação):
+-- só a do Crew_Access_Arm é o topo do foguete
+local function crewDeck()
+	local arm = find("Crew_Access_Arm", "Model")
+	local d = arm and arm:FindFirstChild("Arm_Deck")
+	return d and d:IsA("BasePart") and d or nil
+end
+
 function World.topSpot(): CFrame?
-	local deck = find("Arm_Deck", "BasePart")
+	local deck = crewDeck()
 	if not deck then return nil end
 	local pos = standOn(deck, Vector3.new(-deck.Size.X / 2 + 4, 0, 0))
 	local cab = World.upperCabInside() or pos + Vector3.new(-10, 0, 0)
@@ -101,7 +109,7 @@ function World.topSpot(): CFrame?
 end
 
 function World.armDeck(): BasePart?
-	return find("Arm_Deck", "BasePart")
+	return crewDeck()
 end
 
 function World.rootOf(player: Player): BasePart?

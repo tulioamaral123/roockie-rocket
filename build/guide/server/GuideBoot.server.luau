@@ -35,3 +35,12 @@ local NavigationService = require(script.Parent:WaitForChild("NavigationService"
 ProgressService.start()
 NPCService.start(ProgressService, remotes)
 NavigationService.start(ProgressService, remotes, NPCService)
+
+-- Só no Studio: atalho de teste para pular etapas (ServerStorage.GuideDebug.SetStage:Invoke(player, etapa))
+if game:GetService("RunService"):IsStudio() then
+	local dbg = ensure(game:GetService("ServerStorage"), "Folder", "GuideDebug")
+	ensure(dbg, "BindableFunction", "SetStage").OnInvoke = function(player, stage)
+		ProgressService.set(player, stage)
+		return ProgressService.get(player)
+	end
+end

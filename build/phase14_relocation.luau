@@ -125,6 +125,19 @@ local function overlaps(aMin, aMax, bMin, bMax)
 		and aMin.Z < bMax.Z and aMax.Z > bMin.Z
 end
 
+-- A Fase 3 recria as peças sem a marca, mas a pasta guarda a marca antiga: nesse caso
+-- limpa a marca da pasta para a estátua nova ser selecionada e movida de novo.
+if astronautFolder and astronautFolder:GetAttribute(ASTRONAUT_TAG) then
+	local tagged = false
+	for _, d in astronautFolder:GetDescendants() do
+		if d:IsA("BasePart") and d:GetAttribute(ASTRONAUT_TAG) then tagged = true break end
+	end
+	if not tagged then
+		astronautFolder:SetAttribute(ASTRONAUT_TAG, nil)
+		astronautFolder:SetAttribute("AstronautRelocationTarget", nil)
+	end
+end
+
 if astronautFolder then
 	local selected = {}
 	local function addPart(part)
