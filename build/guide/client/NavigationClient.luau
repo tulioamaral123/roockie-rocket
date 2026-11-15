@@ -1,12 +1,11 @@
 --[[
-	NavigationClient — seta vermelha 3D e objetivo no HUD (spec §6).
+	NavigationClient — setas vermelhas no chão e objetivo no HUD (spec §6).
 
 	O servidor manda o caminho (pathfinding) pelo NavigationUpdate; aqui só se desenha:
-	- seta flutuando à frente do jogador, apontada para o próximo ponto do caminho (nunca através
-	  de paredes: o caminho contorna as paredes, e a seta não entra na parede ao lado do jogador);
-	- seta de destino girando acima do alvo (Marcos, Ana, exposição, entrada do foguete);
+	- setas estáticas deitadas no chão ao longo do caminho (nunca através de paredes: o caminho
+	  contorna as paredes), até 45 studs à frente; ficam paradas até o caminho mudar;
 	- objetivo curto no canto superior esquerdo.
-	Tudo é local (peças na câmera): cada jogador vê só a própria seta.
+	Tudo é local (peças na câmera): cada jogador vê só as próprias setas.
 ]]
 
 local Players = game:GetService("Players")
@@ -26,7 +25,12 @@ local missionMode, missionRoute = false, nil
 -- Mesmo desenho/oclusão da seta dos guias; a task fornece a estação atual.
 function NavigationClient.missionTarget(active, target, position)
 	missionMode = active
-	missionRoute = target and { points = { position, target }, idx = 2, target = target, beacon = true } or nil
+	if not target then
+		missionRoute = nil
+	elseif not (missionRoute and (missionRoute.target - target).Magnitude < 0.5) then
+		-- rota nova só quando o alvo muda: as setas do chão ficam paradas
+		missionRoute = { points = { position, target }, idx = 2, target = target, beacon = true }
+	end
 end
 
 local A = Settings.Arrow
@@ -44,7 +48,7 @@ local lastRepath = 0
 -- Seta 3D (haste + ponta de duas cunhas), apontando para −Z do CFrame
 ---------------------------------------------------------------------------------
 
-local function arrowModel(name, scale)
+local function arrowModel(name, scale, semLuz)
 	local m = Instance.new("Model")
 	m.Name = name
 	local parts = {}
@@ -72,6 +76,7 @@ local function arrowModel(name, scale)
 	light.Brightness = 1.2
 	light.Shadows = false
 	light.Parent = shaft
+	if semLuz then light:Destroy() end
 	local offsets = {
 		[shaft] = CFrame.new(0, 0, shaftLen * scale / 2),
 		[headR] = CFrame.new(headW * scale / 4, 0, -headD * scale / 2) * CFrame.Angles(0, 0, -math.pi / 2),
@@ -84,7 +89,7 @@ local function arrowModel(name, scale)
 		end,
 		visible = function(v)
 			for _, p in parts do p.Transparency = v and 0 or 1 end
-			light.Enabled = v
+			if light.Parent then light.Enabled = v end
 		end,
 	}
 end
@@ -194,20 +199,28 @@ end
 
 ---------------------------------------------------------------------------------
 
+-- Setas no chão (estáticas): chevrons deitados a cada SPACING studs ao longo do caminho,
+-- mostrando até AHEAD studs à frente do jogador. As posições só mudam quando o caminho muda.
+local SPACING, AHEAD, MAXARROWS = 4.5, 45, 12
+
 function NavigationClient.start()
 	buildHud()
 	local holder = workspace.CurrentCamera
-	local arrow = arrowModel("GuideArrow", 1)
-	arrow.model.Parent = holder
-	local beacon = arrowModel("GuideBeacon", 2.2)
-	beacon.model.Parent = holder
-	arrow.visible(false)
-	beacon.visible(false)
+	local pool = {}
+	local function arrowAt(i)
+		local a = pool[i]
+		if not a then
+			a = arrowModel("GuideFloorArrow", 0.9, true)
+			a.model.Parent = holder
+			a.visible(false)
+			pool[i] = a
+		end
+		return a
+	end
 	-- a câmera pode ser trocada (cutscenes do museu/Rookie); recoloca as setas na câmera atual
 	workspace:GetPropertyChangedSignal("CurrentCamera"):Connect(function()
 		holder = workspace.CurrentCamera
-		arrow.model.Parent = holder
-		beacon.model.Parent = holder
+		for _, a in pool do a.model.Parent = holder end
 	end)
 
 	local rayParams = RaycastParams.new()
@@ -224,28 +237,71 @@ function NavigationClient.start()
 		state.stage = data.stage
 	end)
 
-	local yaw = nil
-	RunService.RenderStepped:Connect(function(dt)
+	-- amostras do caminho: { cf no chão, s = distância ao longo do caminho }
+	local layoutFor, samples, segs = nil, {}, {}
+	local function build(points)
+		samples, segs = {}, {}
+		local filter = { holder }
+		for _, pl in Players:GetPlayers() do
+			if pl.Character then table.insert(filter, pl.Character) end
+		end
+		local map = workspace:FindFirstChild("NASAComplex")
+		local npcs = map and map:FindFirstChild("Guides")
+		if npcs then table.insert(filter, npcs) end
+		rayParams.FilterDescendantsInstances = filter
+		local acc, nextS = 0, SPACING
+		for i = 2, #points do
+			local a, b = points[i - 1], points[i]
+			local d = b - a
+			local len = d.Magnitude
+			table.insert(segs, { a = a, b = b, s0 = acc, len = len })
+			local dir = Vector3.new(d.X, 0, d.Z)
+			if len > 1e-3 and dir.Magnitude > 0.05 then
+				dir = dir.Unit
+				while nextS <= acc + len do
+					local p = a + d * ((nextS - acc) / len)
+					local hit = workspace:Raycast(p + Vector3.new(0, 4, 0), Vector3.new(0, -12, 0), rayParams)
+					if hit and hit.Normal.Y > 0.6 then
+						local at = Vector3.new(p.X, hit.Position.Y + 0.17, p.Z)
+						table.insert(samples, { cf = CFrame.lookAt(at, at + dir), s = nextS })
+					end
+					nextS += SPACING
+				end
+			end
+			acc += len
+		end
+		return acc
+	end
+	local total = 0
+
+	-- distância percorrida pelo jogador ao longo do caminho (projeção no trecho mais próximo)
+	local function progress(pos)
+		local best, bd = 0, math.huge
+		for _, g in segs do
+			local ab = g.b - g.a
+			local t = g.len > 1e-3 and math.clamp((pos - g.a):Dot(ab) / (g.len * g.len), 0, 1) or 0
+			local d = (pos - (g.a + ab * t)).Magnitude
+			if d < bd then best, bd = g.s0 + g.len * t, d end
+		end
+		return best
+	end
+
+	local function hideFrom(i)
+		for k = i, #pool do pool[k].visible(false) end
+	end
+
+	RunService.RenderStepped:Connect(function()
 		local char = player.Character
 		local root = char and char:FindFirstChild("HumanoidRootPart")
-		local t = os.clock()
 		local route = state
 		if missionMode then route = missionRoute end
 		-- Settings → Navigation arrows: Off esconde as setas (o objetivo no HUD continua)
-		if player:GetAttribute("GuideArrows") == false then
-			arrow.visible(false)
-			beacon.visible(false)
-			return
-		end
+		if player:GetAttribute("GuideArrows") == false then return hideFrom(1) end
 		if missionMode then hud.frame.Visible = false end
-		if not root or not route or not route.points or not route.target then
-			arrow.visible(false)
-			beacon.visible(false)
-			return
-		end
+		if not root or not route or not route.points or not route.target or #route.points < 2 then return hideFrom(1) end
 		local pos = root.Position
 		local tgt = route.target
-		-- chegou perto do alvo: apaga as duas setas até o jogador se afastar ou o objetivo mudar
+		-- chegou perto do alvo: apaga as setas até o jogador se afastar ou o objetivo mudar
 		local key = missionMode
 			and string.format("M:%d:%d:%d", math.floor(tgt.X + 0.5), math.floor(tgt.Y + 0.5), math.floor(tgt.Z + 0.5))
 			or ("G:" .. tostring(state.stage) .. ":" .. tostring(state.objective))
@@ -260,44 +316,25 @@ function NavigationClient.start()
 		elseif arrived and dist > FAR[kind] then
 			arrived = false
 		end
-		if arrived then
-			arrow.visible(false)
-			beacon.visible(false)
-			return
+		if arrived then return hideFrom(1) end
+		-- caminho novo → recalcula as posições (fixas no mundo)
+		if layoutFor ~= route.points then
+			layoutFor = route.points
+			total = build(route.points)
 		end
-		-- seta de destino girando acima do alvo
-		local bob = math.sin(t * 2.4) * A.Bob
-		local showBeacon = route.beacon and (tgt - pos).Magnitude < 260
-		beacon.visible(showBeacon)
-		if showBeacon then
-			beacon.set(CFrame.new(tgt + Vector3.new(0, A.BeaconHeight + bob * 2, 0)) * CFrame.Angles(0, t * 1.6, 0) * CFrame.Angles(-math.pi / 2, 0, 0))
+		if not missionMode then nextPoint(pos, route) end -- pede caminho novo se sair da rota
+		local sp = progress(pos)
+		local n = 0
+		for _, smp in samples do
+			if smp.s > sp + 2 and smp.s < sp + AHEAD and smp.s < total - 1.5 then
+				n += 1
+				if n > MAXARROWS then break end
+				local a = arrowAt(n)
+				a.set(smp.cf)
+				a.visible(true)
+			end
 		end
-		local p = nextPoint(pos, route)
-		if not p then
-			arrow.visible(false)
-			return
-		end
-		local dir = flat(p - pos)
-		if dir.Magnitude < 0.5 then dir = flat(tgt - pos) end
-		if dir.Magnitude < 0.5 then return end
-		dir = dir.Unit
-		-- giro suave
-		local want = math.atan2(-dir.X, -dir.Z)
-		if not yaw then yaw = want end
-		local diff = (want - yaw + math.pi) % (2 * math.pi) - math.pi
-		yaw += diff * math.clamp(dt * 8, 0, 1)
-		local look = Vector3.new(-math.sin(yaw), 0, -math.cos(yaw))
-		local base = pos + Vector3.new(0, A.Height + bob, 0)
-		local ahead = A.Ahead
-		-- não entra em paredes: encurta até o obstáculo
-		rayParams.FilterDescendantsInstances = { char, holder }
-		local hit = workspace:Raycast(base, look * (ahead + 1), rayParams)
-		if hit then ahead = math.max(1.2, hit.Distance - 1.2) end
-		-- inclina levemente para cima/baixo em escadas
-		local pitch = math.clamp((p.Y - pos.Y) / math.max(4, (p - pos).Magnitude), -0.5, 0.5)
-		local cf = CFrame.lookAt(base + look * ahead, base + look * (ahead + 1) + Vector3.new(0, pitch, 0))
-		arrow.set(cf)
-		arrow.visible(true)
+		hideFrom(math.min(n, MAXARROWS) + 1)
 	end)
 end
 
