@@ -1,7 +1,7 @@
 --[[
-	AudioController — sons da missão pela Audio API (skill roblox-audio §3).
+	Audio — sons do Rookie Rocket pela Audio API (copiado do AudioController da missão antiga).
 	AudioPlayer → Wire → bus AudioFader (Alarm / SFX / UI) → Master → AudioDeviceOutput.
-	Tudo é criado no cliente (só o jogador da missão ouve). Ids e volumes: Config.Audio.
+	Tudo é criado no cliente (só o jogador da missão ouve). Ids e volumes: Missoes.Audio.
 ]]
 
 local SoundService = game:GetService("SoundService")
@@ -23,7 +23,7 @@ end
 function A.init(config)
 	if root then return end
 	root = Instance.new("Folder")
-	root.Name = "MissionAudio"
+	root.Name = "RookieAudio"
 	root.Parent = SoundService
 	local output = Instance.new("AudioDeviceOutput")
 	output.Parent = root
@@ -37,7 +37,7 @@ function A.init(config)
 	end
 	local master = fader("Master", 1, output)
 	local buses = { Alarm = fader("Alarm", 0.7, master), SFX = fader("SFX", 0.85, master), UI = fader("UI", 0.7, master) }
-	for event, c in config.Audio do
+	for event, c in config do
 		if c then
 			local p = Instance.new("AudioPlayer")
 			p.Name = event

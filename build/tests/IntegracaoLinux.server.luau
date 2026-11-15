@@ -33,7 +33,7 @@ table.sort(list, function(a, b)
 	return (tonumber(a) or math.huge) < (tonumber(b) or math.huge)
 end)
 
-local mission = game:GetService("ReplicatedStorage"):FindFirstChild("MissionSystem")
+local mission = game:GetService("ReplicatedStorage"):FindFirstChild("RookieRocket")
 
 print(("[integracao] script escrito em %s rodou no Studio %s"):format(ORIGEM, version()))
 print(("[integracao] NASAComplex: %s | %d peças | fases: %s"):format(
@@ -41,7 +41,7 @@ print(("[integracao] NASAComplex: %s | %d peças | fases: %s"):format(
 	parts,
 	#list > 0 and table.concat(list, ", ") or "nenhuma"
 ))
-print(("[integracao] MissionSystem pelo Rojo: %s"):format(
+print(("[integracao] RookieRocket pelo Rojo: %s"):format(
 	mission and mission:GetAttribute("RojoManaged") and "sim" or "não"
 ))
 print(root and "[integracao] OK" or "[integracao] FALHOU: abra o Place1.rbxl antes de dar Play")
