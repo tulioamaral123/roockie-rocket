@@ -80,9 +80,13 @@ local function foto(parent, image, size, legenda)
 		alinhar = Enum.TextXAlignment.Center, alinharY = Enum.TextYAlignment.Center, Size = UDim2.fromScale(1, 1),
 	})
 	aviso.TextWrapped = true
-	local function atualizar() aviso.Visible = not img.IsLoaded end
-	img:GetPropertyChangedSignal("IsLoaded"):Connect(atualizar)
-	atualizar()
+	-- IsLoaded nem sempre dispara o sinal de mudança: confere a cada 0,25 s (até 8 s)
+	aviso.Visible = not img.IsLoaded
+	task.spawn(function()
+		local t0 = os.clock()
+		while aviso.Parent and not img.IsLoaded and os.clock() - t0 < 8 do task.wait(0.25) end
+		if aviso.Parent then aviso.Visible = not img.IsLoaded end
+	end)
 	return img
 end
 

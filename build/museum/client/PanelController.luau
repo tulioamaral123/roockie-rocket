@@ -19,6 +19,7 @@ local Content = require(Shared:WaitForChild("Content"))
 
 local UI = require(script.Parent:WaitForChild("UI"))
 local Components = require(script.Parent:WaitForChild("ComponentsController"))
+local Explorer = require(script.Parent:WaitForChild("RocketExplorer"))
 local World = require(script.Parent:WaitForChild("WorldController"))
 local State = require(script.Parent:WaitForChild("State"))
 
@@ -26,9 +27,11 @@ local Panel = {}
 
 local gui, frame, titleL, subL, body, footer
 local current -- { kind = "exhibit"|"card", id, data, model, anchor }
+local exploring = false -- "Explore rocket" ativo: painel sempre à direita, foguete enquadrado à esquerda
 local distConn
 local sourcesShown = false
 local GuiService = game:GetService("GuiService")
+local UIS = game:GetService("UserInputService")
 local touchSaved -- TouchControlsEnabled antes de abrir (no celular o painel cobre o direcional e o pulo)
 Panel.onOpen = nil -- MuseumClient liga: fecha a janela do HUD quando o painel abre
 
@@ -57,6 +60,14 @@ end
 
 local function layout()
 	local vh = workspace.CurrentCamera and workspace.CurrentCamera.ViewportSize.Y or 800
+	if exploring then
+		-- exploração do foguete: coluna à direita em qualquer tela (o foguete fica na área livre)
+		local compact = UI.isCompact()
+		frame.AnchorPoint = Vector2.new(1, 0)
+		frame.Position = UDim2.new(1, compact and -8 or -12, 0, compact and 8 or 60)
+		frame.Size = UDim2.new(compact and 0.46 or 0.34, 0, 1, compact and -16 or -76)
+		return
+	end
 	if UI.isCompact() and vh < 520 then
 		-- celular deitado: quase tela cheia, senão o rodapé come o espaço do conteúdo
 		frame.AnchorPoint = Vector2.new(0.5, 0.5)
@@ -136,6 +147,7 @@ local function build()
 	layout()
 	workspace.CurrentCamera:GetPropertyChangedSignal("ViewportSize"):Connect(function()
 		if frame then layout() end
+		if exploring then task.defer(Panel.updateExploreInset) end
 	end)
 	header:GetPropertyChangedSignal("AbsoluteSize"):Connect(relayout)
 	footerList:GetPropertyChangedSignal("AbsoluteContentSize"):Connect(relayout)
@@ -143,7 +155,9 @@ local function build()
 	-- Esc (quando o Roblox entrega a tecla) e Backspace também fecham
 	game:GetService("UserInputService").InputBegan:Connect(function(input, processed)
 		if not current then return end
-		if input.KeyCode == Enum.KeyCode.Escape or (input.KeyCode == Enum.KeyCode.Backspace and not processed) then
+		if input.KeyCode == Enum.KeyCode.Backspace and not processed and exploring then
+			Explorer.exit() -- Backspace na exploração = voltar à exposição
+		elseif input.KeyCode == Enum.KeyCode.Escape or (input.KeyCode == Enum.KeyCode.Backspace and not processed) then
 			Panel.close()
 		end
 	end)
@@ -199,8 +213,18 @@ local function gallery(d)
 		BackgroundTransparency = 1, Size = UDim2.fromScale(1, 1), Text = "Loading photo…",
 		TextColor3 = UI.C.muted, FontFace = UI.font(Enum.FontWeight.Medium), TextSize = 14, Parent = frameImg,
 	})
-	local function syncLoading() loading.Visible = not pic.IsLoaded end
-	pic:GetPropertyChangedSignal("IsLoaded"):Connect(syncLoading)
+	-- IsLoaded nem sempre dispara o sinal de mudança: confere a cada 0,25 s (até 8 s)
+	local loadSeq = 0
+	local function syncLoading()
+		loadSeq += 1
+		local seq = loadSeq
+		loading.Visible = not pic.IsLoaded
+		task.spawn(function()
+			local t0 = os.clock()
+			while seq == loadSeq and loading.Parent and not pic.IsLoaded and os.clock() - t0 < 8 do task.wait(0.25) end
+			if seq == loadSeq and loading.Parent then loading.Visible = not pic.IsLoaded end
+		end)
+	end
 	local caption = UI.label(holder, "", 14, Enum.FontWeight.Medium, UI.C.text, 2)
 	local credit = UI.label(holder, "", 12, Enum.FontWeight.Medium, UI.C.muted, 3)
 	local index = 1
@@ -305,6 +329,9 @@ local function fillExhibit()
 
 	-- Botões
 	local model = current.model
+	if model and d.Explore and has(d.Interactions, "Explore") then
+		UI.button(footer, Text.get("panel.explore"), function() Panel.startExplore() end, { order = 0, color = UI.C.accent })
+	end
 	if model and d.Components and has(d.Interactions, "Components") then
 		UI.button(footer, Text.get("panel.components"), function()
 			if Components.isActive() then
@@ -377,6 +404,119 @@ function Panel.showComponent(c)
 	end, { order = 1 })
 end
 
+---------------------------------------------------------------------------------
+-- Explore rocket (RocketExplorer): lista de partes + detalhe da parte escolhida no mesmo painel
+---------------------------------------------------------------------------------
+local function isGamepad()
+	local ok, pref = pcall(function() return UIS.PreferredInput end)
+	return ok and pref == Enum.PreferredInput.Gamepad
+end
+
+-- foto da parte com estado de carregamento e substituto legível
+local function partPhoto(c)
+	local ph = c.Photo and Content.photo(c.Photo)
+	local holder = UI.new("Frame", { BackgroundTransparency = 1, Size = UDim2.new(1, 0, 0, 0), AutomaticSize = Enum.AutomaticSize.Y, LayoutOrder = nextOrder(), Parent = body })
+	UI.list(holder, 4)
+	local frameImg = UI.new("Frame", { BackgroundColor3 = Color3.new(0, 0, 0), Size = UDim2.new(1, 0, 0, 10000), LayoutOrder = 1, Parent = holder })
+	UI.new("UIAspectRatioConstraint", { AspectRatio = 4 / 3, DominantAxis = Enum.DominantAxis.Width, Parent = frameImg })
+	UI.corner(frameImg, 6)
+	local pic = UI.new("ImageLabel", { BackgroundTransparency = 1, Size = UDim2.fromScale(1, 1), ScaleType = Enum.ScaleType.Fit, Image = ph and ph.AssetId or "", Parent = frameImg })
+	local status = UI.new("TextLabel", {
+		BackgroundTransparency = 1, Size = UDim2.fromScale(1, 1), TextWrapped = true,
+		Text = ph and Text.get("explore.loading") or Text.get("explore.noPhoto"),
+		TextColor3 = UI.C.muted, FontFace = UI.font(Enum.FontWeight.Medium), TextSize = 14, Parent = frameImg,
+	})
+	-- IsLoaded nem sempre dispara o sinal de mudança: confere a cada 0,25 s (até 8 s)
+	task.spawn(function()
+		local t0 = os.clock()
+		while status.Parent and not pic.IsLoaded and os.clock() - t0 < 8 do task.wait(0.25) end
+		if not status.Parent then return end
+		status.Visible = not pic.IsLoaded
+		if ph and not pic.IsLoaded then status.Text = Text.get("explore.noPhoto") .. "\n" .. (ph.Caption or "") end
+	end)
+	if ph then
+		local kind = ph.Illustration and Text.get("explore.illustration") or Text.get("explore.photo")
+		UI.label(holder, ph.Caption or "", 14, Enum.FontWeight.Medium, UI.C.text, 2)
+		UI.label(holder, string.format("%s: %s%s  ·  NASA ID %s", kind, ph.Credit or "NASA", (ph.Date and ph.Date ~= "") and ("  ·  " .. ph.Date) or "", c.Photo), 12, Enum.FontWeight.Medium, UI.C.muted, 3)
+		if c.Overview then UI.label(holder, Text.get("explore.overview"), 12, Enum.FontWeight.Medium, UI.C.muted, 4) end
+	end
+end
+
+local function fillExplore(sel)
+	if not current then return end
+	local d = current.data
+	clear()
+	order = 0
+	titleL.Text = string.upper(d.Name)
+	subL.Text = Text.get("explore.title")
+	paragraph(isGamepad() and Text.get("explore.hintPad") or Text.get("explore.hint"), UI.C.muted)
+	if sel then
+		UI.label(body, sel.Name, 22, Enum.FontWeight.Bold, UI.C.text, nextOrder())
+		heading(Text.get("explore.function"))
+		paragraph(sel.Function)
+		partPhoto(sel)
+		if sel.Facts and #sel.Facts > 0 then
+			heading(Text.get("explore.facts"))
+			for _, f in sel.Facts do
+				local src = f.Source or ""
+				local label = src:match("^https://") and src or ("NASA " .. src)
+				paragraph(string.format('•  %s\n<font color="#8C99AB" size="12">Source: %s</font>', f.Text, label))
+			end
+		end
+	end
+	heading(Text.get("explore.list"))
+	local first, chosen
+	for _, c in d.Explore do
+		local isSel = sel and sel.Id == c.Id
+		local b = UI.button(body, (isSel and "●  " or "○  ") .. c.Name, function()
+			Explorer.select(c.Id, true)
+			fillExplore(c)
+		end, { size = UDim2.new(1, 0, 0, 44), color = isSel and UI.C.accent or UI.C.panel2, order = nextOrder() })
+		b.TextXAlignment = Enum.TextXAlignment.Left
+		b.Name = "Part_" .. c.Id
+		first = first or b
+		if isSel then chosen = b end
+	end
+	UI.button(footer, Text.get("explore.back"), function() Explorer.exit() end, { order = 1, color = UI.C.accent })
+	if isGamepad() then GuiService.SelectedObject = chosen or first end
+end
+
+function Panel.updateExploreInset()
+	if not exploring or not frame then return end
+	local vp = workspace.CurrentCamera.ViewportSize
+	-- parte da largura coberta pelo painel (com a margem à direita)
+	local covered = (vp.X - frame.AbsolutePosition.X) / math.max(vp.X, 1)
+	Explorer.setInset(covered)
+end
+
+function Panel.startExplore()
+	if not current or not current.model then return end
+	local ok = Explorer.enter(current.model, current.data, {
+		onSelect = function(c) if exploring then fillExplore(c) end end,
+		onExit = function()
+			if not exploring then return end
+			exploring = false
+			if not current then return end
+			layout()
+			if isGamepad() then GuiService.SelectedObject = nil end
+			fillExhibit()
+		end,
+		overUi = function(pos)
+			if not frame or not frame.Visible then return false end
+			local a, z = frame.AbsolutePosition, frame.AbsoluteSize
+			return pos.X >= a.X and pos.X <= a.X + z.X and pos.Y >= a.Y and pos.Y <= a.Y + z.Y
+		end,
+	})
+	if not ok then
+		paragraph(Text.get("explore.busy"), UI.C.muted)
+		return
+	end
+	exploring = true
+	layout()
+	fillExplore(nil)
+	task.defer(Panel.updateExploreInset)
+end
+
 local function watchDistance()
 	if distConn then distConn:Disconnect() end
 	local acc = 0
@@ -400,6 +540,7 @@ end
 
 function Panel.openExhibit(id)
 	if current and current.kind == "exhibit" and current.id == id then
+		if exploring then return end -- na exploração do foguete o painel fica aberto
 		Panel.close() -- acionar o mesmo prompt de novo fecha
 		return
 	end
@@ -431,6 +572,11 @@ function Panel.openCard(id)
 end
 
 function Panel.close()
+	if exploring then
+		exploring = false
+		Explorer.exit()
+		if frame then layout() end
+	end
 	if Components.isActive() then Components.exit() end
 	if current and current.model then Components.resetModel(current.model) end
 	current = nil

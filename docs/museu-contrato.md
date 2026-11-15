@@ -64,7 +64,7 @@ Saturn V: base dos motores em X 176, ponta da torre de escape em X 334; eixo em 
 - Uma peça `PromptAnchor` (invisível, sem colisão) onde o prompt deve aparecer; se faltar, usa o `PrimaryPart`.
 - IDs da demo: `saturn_v`, `mercury_capsule`, `mercury_suit`, `space_race`, `mercury_seven`, `apollo_cm`, `apollo11_timeline`, `atlantis`, `hubble`, `memorial_apollo1`, `memorial_challenger`, `memorial_columbia`, `mercury_redstone`, `mercury_atlas`, `mars_rover`, `orion_sls`.
 
-**Saturn V** (`ExhibitId = saturn_v`): sub-Models `Stage_S_IC`, `Stage_S_II`, `Stage_S_IVB`, `Stage_IU`, `Stage_Spacecraft`, cada um com atributo `StageIndex` (1..5) e uma peça `ShowLight` com `SpotLight` desligado (`Enabled = false`) que ilumina o estágio. Attachments: `s_ic`, `s_ii`, `s_ivb`, `iu`, `spacecraft`, `les`, `f1_1`..`f1_5`, `j2_ii_1`..`j2_ii_5`, `j2_ivb`. Os 5 F-1 usam a mesma geometria.
+**Saturn V** (`ExhibitId = saturn_v`; "Explore rocket" usa estes nomes e os prefixos de peça da nave, ver `docs/museu-foguete-interativo.md`): sub-Models `Stage_S_IC`, `Stage_S_II`, `Stage_S_IVB`, `Stage_IU`, `Stage_Spacecraft`, cada um com atributo `StageIndex` (1..5) e uma peça `ShowLight` com `SpotLight` desligado (`Enabled = false`) que ilumina o estágio. Attachments: `s_ic`, `s_ii`, `s_ivb`, `iu`, `spacecraft`, `les`, `f1_1`..`f1_5`, `j2_ii_1`..`j2_ii_5`, `j2_ivb`. Os 5 F-1 usam a mesma geometria.
 
 **Atlantis** (`atlantis`): sub-Models `PayloadDoor_L` e `PayloadDoor_R` com atributo `HingeOffset` (CFrame da dobradiça relativa ao pivô da porta) e `OpenAngle` (graus); o sistema anima. Attachments: `main_engines`, `tiles`, `wings`, `tail`, `cockpit`, `canadarm`.
 

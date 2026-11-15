@@ -1,10 +1,17 @@
 --[[
-	Fotos reais da NASA (images.nasa.gov, domínio público), enviadas ao Roblox em 14/11/2026.
+	Fotos reais da NASA (images.nasa.gov, domínio público), enviadas ao Roblox em 14/11/2026 (peças do Saturn V: 15/11/2026).
 	Gerado a partir dos metadados oficiais (crédito = photographer/secondary_creator; vazio = NASA).
 	Legendas resumem a descrição oficial de cada foto (Source).
 ]]
 
 return {
+	["0100983"] = { AssetId = "rbxassetid://115359478469854", Credit = "NASA", Date = "1967", Caption = "Cutaway illustration of the S-IVB third stage and its major components.", Illustration = true, Source = "https://images.nasa.gov/details/0100983" },
+	["0100984"] = { AssetId = "rbxassetid://94397447288064", Credit = "NASA", Date = "1968", Caption = "Illustration of the major components of the instrument unit.", Illustration = true, Source = "https://images.nasa.gov/details/0100984" },
+	["0100985"] = { AssetId = "rbxassetid://109197135716456", Credit = "NASA", Date = "1967", Caption = "Cutaway illustration of the Apollo spacecraft: lunar module, service module, command module and launch escape system.", Illustration = true, Source = "https://images.nasa.gov/details/0100985" },
+	["6520309"] = { AssetId = "rbxassetid://100257590637995", Credit = "NASA", Date = "1965-03-04", Caption = "A J-2 engine being processed at Marshall Space Flight Center.", Source = "https://images.nasa.gov/details/6520309" },
+	["6900547"] = { AssetId = "rbxassetid://104974056535973", Credit = "NASA", Date = "1969-07", Caption = "The launch escape tower atop the Apollo 11 spacecraft, a few days before launch.", Source = "https://images.nasa.gov/details/6900547" },
+	["7010516"] = { AssetId = "rbxassetid://109612002889429", Credit = "NASA", Date = "1970-04", Caption = "The damaged Apollo 13 service module, photographed after the crew let it go.", Source = "https://images.nasa.gov/details/7010516" },
+	["9903176"] = { AssetId = "rbxassetid://135981874714718", Credit = "NASA", Date = "", Caption = "The aft end of an S-II second stage, with its five J-2 engines, arrives at Marshall Space Flight Center for testing.", Source = "https://images.nasa.gov/details/9903176" },
 	["0300309"] = { AssetId = "rbxassetid://80825318876857", Credit = "NASA", Date = "2001-10-01", Caption = "The seven-member STS-107 crew.", Source = "https://images.nasa.gov/details/0300309" },
 	["200902190007HQ"] = { AssetId = "rbxassetid://116286324007681", Credit = "NASA/Paul E. Alers", Date = "2009-02-19", Caption = "Kepler project manager Jim Fanson holds a model of the spacecraft at a NASA briefing before its 2009 launch.", Source = "https://images.nasa.gov/details/200902190007HQ" },
 	["2013-2317"] = { AssetId = "rbxassetid://83120007183716", Credit = "NASA/Kim Shiflett", Date = "2013-05-10", Caption = "Atlantis's payload bay doors opened for the exhibit, May 2013.", Source = "https://images.nasa.gov/details/2013-2317" },
@@ -18,8 +25,8 @@ return {
 	["8772558"] = { AssetId = "rbxassetid://136161013965779", Credit = "NASA", Date = "1959-04-27", Caption = "Gus Grissom, one of the Mercury Seven. He flew Liberty Bell 7, the second U.S. suborbital flight.", Source = "https://images.nasa.gov/details/8772558" },
 	["8892072"] = { AssetId = "rbxassetid://127000363874152", Credit = "NASA", Date = "1959-04-27", Caption = "Wally Schirra, one of the Mercury Seven. His Sigma 7 flight made six orbits in 9 1/4 hours.", Source = "https://images.nasa.gov/details/8892072" },
 	["9248168"] = { AssetId = "rbxassetid://96168776329875", Credit = "NASA", Date = "1957-10-04", Caption = "Sputnik, launched by the Soviet Union on October 4, 1957, started the Space Race.", Source = "https://images.nasa.gov/details/9248168" },
-	["9903033"] = { AssetId = "rbxassetid://116647837362210", Credit = "NASA", Date = "1968-01-01", Caption = "Cutaway of the S-IC first stage and its components.", Source = "https://images.nasa.gov/details/9903033" },
-	["9903401"] = { AssetId = "rbxassetid://134138364720015", Credit = "NASA", Date = "1968-02-06", Caption = "The Saturn V, 363 ft tall.", Source = "https://images.nasa.gov/details/9903401" },
+	["9903033"] = { AssetId = "rbxassetid://116647837362210", Credit = "NASA", Date = "1968-01-01", Caption = "Cutaway drawing of the S-IC first stage, its five F-1 engines and propellant tanks.", Illustration = true, Source = "https://images.nasa.gov/details/9903033" },
+	["9903401"] = { AssetId = "rbxassetid://134138364720015", Credit = "NASA", Date = "1968-02-06", Caption = "The Apollo 6 Saturn V rolls past the Vehicle Assembly Building on its way to Launch Pad 39A.", Source = "https://images.nasa.gov/details/9903401" },
 	["GSFC_20171208_Archive_e000422"] = { AssetId = "rbxassetid://99846867342170", Credit = "NASA", Date = "2017-12-08", Caption = "The James Webb Space Telescope primary mirror, fully assembled.", Source = "https://images.nasa.gov/details/GSFC_20171208_Archive_e000422" },
 	["KSC-03pd2174"] = { AssetId = "rbxassetid://114046626925431", Credit = "NASA", Date = "2003-07-22", Caption = "The Rocket Garden at the Kennedy Space Center Visitor Complex, 2003.", Source = "https://images.nasa.gov/details/KSC-03pd2174" },
 	["KSC-07PD-0181"] = { AssetId = "rbxassetid://83614887298134", Credit = "NASA", Date = "2007-01-27", Caption = "The Space Mirror Memorial at Kennedy Space Center.", Source = "https://images.nasa.gov/details/KSC-07PD-0181" },
