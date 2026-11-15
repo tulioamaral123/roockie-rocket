@@ -616,7 +616,15 @@ local function anaToTop()
 	local cf = World.topSpot()
 	if not cf then return end
 	stop(a)
-	anaShow(cf)
+	local up = a.model:IsDescendantOf(workspace) and (a.root.Position - cf.Position).Magnitude < 25
+	if up then
+		-- subiu no elevador com o jogador: sai da cabine andando
+		task.spawn(function()
+			if walkTo(a, cf.Position, false) then a.root.CFrame = cf end
+		end)
+	else
+		anaShow(cf)
+	end
 	if a.idle then a.idle:Play() end
 	a.state = "AtTop"
 	a.topSince = os.clock()
@@ -627,16 +635,57 @@ local function anaToTop()
 	a.group = {}
 end
 
+local function nearAna(a, radius)
+	local out = {}
+	for _, p in listOf(a.group) do
+		local r = World.rootOf(p)
+		if r and (r.Position - a.root.Position).Magnitude <= radius then table.insert(out, p) end
+	end
+	return out
+end
+
 local function anaGuide()
 	local a = npcs.Ana
 	a.state = "Guiding"
-	-- da sala de comando (LCC) pelo Corredor 2 até o VAB, vestiário, escada e elevador
-	local route = {}
+	-- 1) da sala de comando (LCC) pelo Corredor 2 até o VAB e o Crew Suit-Up Room
+	local toRoom = {}
 	for _, name in { "Hangar", "RocketEntrance" } do
 		local p = World.point(name)
-		if p then table.insert(route, p) end
+		if p then table.insert(toRoom, p) end
 	end
-	for _, p in World.route("Ana_Route") do table.insert(route, p) end
+	local inRoute = World.route("Ana_Route")
+	if inRoute[2] then table.insert(toRoom, inRoute[2]) end -- dentro do vestiário, perto dos armários
+	if not walkRoute(a, toRoom, true) or a.state ~= "Guiding" then return end
+	-- 2) traje: a Ana espera até todo o grupo vestir (ou 2 min)
+	local need = {}
+	for _, p in listOf(a.group) do
+		if p:GetAttribute("SuitOn") ~= true and Progress.is(p, "FollowAna") then
+			Progress.set(p, "SuitUp")
+			table.insert(need, p)
+		end
+	end
+	if #need > 0 then
+		local lk = World.nearestLocker(a.root.Position)
+		if lk then face(a, lk) end
+		say(nearAna(a, Settings.Radius.SuitRoom), "AnaSuitUp", { wait = true, once = true })
+		local t0 = os.clock()
+		while a.state == "Guiding" and os.clock() - t0 < 120 do
+			local waiting = false
+			for _, p in listOf(a.group) do
+				if Progress.is(p, "SuitUp") then waiting = true end
+			end
+			if not waiting then break end
+			task.wait(0.5)
+		end
+		if a.state ~= "Guiding" then return end
+		local r1 = need[1] and World.rootOf(need[1])
+		if r1 then face(a, r1.Position) end
+		say(nearAna(a, Settings.Radius.SuitRoom + 8), "AnaSuited", { wait = true, once = true })
+	end
+	if a.state ~= "Guiding" then return end
+	-- 3) porta do vestiário → escada do lançador → diante do elevador
+	local route = {}
+	for i = 3, #inRoute do table.insert(route, inRoute[i]) end
 	local top = World.stairsTop()
 	if top then table.insert(route, top) end
 	local front = World.lowerCabFront()
@@ -649,19 +698,21 @@ local function anaGuide()
 		local r = World.rootOf(p)
 		if r and front and (r.Position - front).Magnitude <= 24 then table.insert(near, p) end
 	end
-	local r1 = near[1] and World.rootOf(near[1])
-	if r1 then face(a, r1.Position) end
+	-- 4) entra na cabine e espera o jogador: sobem juntos quando ele aperta o painel
+	local inside = World.lowerCabInside()
+	if inside then walkTo(a, inside + Vector3.new(0.9, 0, 1.2), false) end
+	if a.state ~= "Guiding" then return end
+	a.state = "InCab"
+	if front then face(a, front) end
 	for _, p in players do
-		if Progress.is(p, "FollowAna") then Progress.set(p, "Elevator") end
+		if Progress.is(p, "FollowAna") or Progress.is(p, "SuitUp") then Progress.set(p, "Elevator") end
 	end
 	say(near, "AnaElevator", { wait = true, once = true })
-	if a.state ~= "Guiding" then return end -- alguém chegou ao topo antes e ela já subiu
-	-- entra na cabine e "sobe pelo elevador" (aparece no braço de acesso)
-	local inside = World.lowerCabInside()
-	if inside then walkTo(a, inside, false) end
-	if a.state ~= "Guiding" then return end
-	task.wait(0.5)
-	anaToTop()
+	-- o CrewAccess leva a Ana junto (NPC com GuideNPC dentro da cabine); o tick vê o jogador no
+	-- topo e a Ana sai andando. Se ninguém subir em 3 min, ela sobe sozinha.
+	local t0 = os.clock()
+	while a.state == "InCab" and os.clock() - t0 < 180 do task.wait(0.5) end
+	if a.state == "InCab" then anaToTop() end
 end
 
 local function anaCall(players)
@@ -672,6 +723,15 @@ local function anaCall(players)
 		for _, p in players do
 			Progress.set(p, "Elevator")
 			say({ p }, "AnaBusy", { toast = true, once = true })
+		end
+		return
+	end
+	if a.state == "InCab" then
+		sound(players, "Siren")
+		for _, p in players do
+			a.group[p] = true
+			Progress.set(p, p:GetAttribute("SuitOn") == true and "Elevator" or "SuitUp")
+			say({ p }, "AnaInCab", { toast = true, once = true })
 		end
 		return
 	end
@@ -765,7 +825,9 @@ local function tick()
 			elseif stage == "Rocket" and entrance and (r.Position - entrance).Magnitude <= Settings.Radius.AnaMeet
 				and math.abs(r.Position.Y - entrance.Y) < 8 then
 				table.insert(callers, p)
-			elseif (stage == "Elevator" or stage == "FollowAna") and World.isAtTop(p) then
+			elseif stage == "SuitUp" and p:GetAttribute("SuitOn") == true then
+				Progress.set(p, "FollowAna")
+			elseif (stage == "Elevator" or stage == "FollowAna" or stage == "SuitUp") and World.isAtTop(p) then
 				local a = npcs.Ana
 				if a and a.state ~= "AtTop" then anaToTop() end
 				Progress.set(p, "TalkAna")
@@ -932,7 +994,7 @@ function NPCService.start(progress, remotes)
 	-- a Ana só mostra o prompt no topo
 	task.spawn(function()
 		while true do
-			if npcs.Ana and npcs.Ana.prompt then npcs.Ana.prompt.Enabled = npcs.Ana.state == "AtTop" or npcs.Ana.state == "Guiding" end
+			if npcs.Ana and npcs.Ana.prompt then npcs.Ana.prompt.Enabled = npcs.Ana.state == "AtTop" or npcs.Ana.state == "Guiding" end -- na cabine, só o painel do elevador usa a tecla E
 			local ok, err = pcall(tick)
 			if not ok then warn("[GuideSystem] tick:", err) end
 			task.wait(0.3)

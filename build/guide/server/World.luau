@@ -112,6 +112,26 @@ function World.armDeck(): BasePart?
 	return crewDeck()
 end
 
+-- pontos dos prompts de traje (armários do Crew Suit-Up Room, Fase 8)
+function World.lockers()
+	local out = {}
+	local hangar = map:FindFirstChild("VABHangar")
+	local room = hangar and hangar:FindFirstChild("CrewSuitUpRoom")
+	for _, d in (room and room:GetDescendants() or {}) do
+		if d:IsA("ProximityPrompt") and d.Parent:IsA("BasePart") then table.insert(out, d.Parent.Position) end
+	end
+	return out
+end
+
+function World.nearestLocker(pos: Vector3): Vector3?
+	local best, bd = nil, math.huge
+	for _, p in World.lockers() do
+		local d = (p - pos).Magnitude
+		if d < bd then best, bd = p, d end
+	end
+	return best
+end
+
 function World.rootOf(player: Player): BasePart?
 	local c = player.Character
 	local h = c and c:FindFirstChildOfClass("Humanoid")

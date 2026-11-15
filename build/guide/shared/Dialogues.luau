@@ -57,8 +57,18 @@ D.Lines = {
 		{ "Ana", "I'm Ana, operations engineer, from the command room. You must be {name}." },
 		{ "Ana", "Follow me to the rocket hangar. We're going all the way to the top of the rocket!" },
 	},
+	AnaSuitUp = {
+		{ "Ana", "This is the Crew Suit-Up Room. Nobody flies without a spacesuit!" },
+		{ "Ana", "Pick a locker and put on your suit. I'll wait right here." },
+	},
+	AnaSuited = {
+		{ "Ana", "Looking good, astronaut! Now follow me up the launcher stairs." },
+	},
 	AnaElevator = {
-		{ "Ana", "Step into the crew elevator and press the panel. I'll meet you at the top!" },
+		{ "Ana", "Step into the crew elevator with me and press the panel. We'll go up together!" },
+	},
+	AnaInCab = {
+		{ "Ana", "{name}, I'm waiting in the crew elevator on the launcher deck! Suit up at the lockers, then climb the stairs." },
 	},
 	AnaBusy = {
 		{ "Ana", "{name}, I'm up at the crew access arm! Climb the launcher stairs and take the crew elevator." },
@@ -89,7 +99,8 @@ D.Objectives = {
 	Museum = "Explore the museum and select an exhibit.",
 	Rocket = "Go to the command room at the Launch Control Center.",
 	FollowAna = "Follow Ana to the top of the rocket.",
-	Elevator = "Take the crew elevator to the top.",
+	SuitUp = "Put on your spacesuit at a locker.",
+	Elevator = "Take the crew elevator up with Ana.",
 	TalkAna = "Talk to Ana at the crew access arm.",
 	ChooseMission = "Choose your mission and trade-off.",
 }

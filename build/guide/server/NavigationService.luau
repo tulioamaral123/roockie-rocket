@@ -94,6 +94,9 @@ local function destination(player, rootPos)
 	elseif stage == "FollowAna" then
 		local p = npcPos("Ana")
 		return p and { p }, true
+	elseif stage == "SuitUp" then
+		local p = World.nearestLocker(rootPos)
+		return p and { p }, true
 	elseif stage == "Elevator" then
 		return elevatorRoute(rootPos), true
 	elseif stage == "TalkAna" or stage == "ChooseMission" then

@@ -37,7 +37,10 @@ Estrutura sugerida na spec × projeto: `Workspace.NPCs` e `Workspace.NavigationP
 
 ## Etapas (servidor, por jogador)
 
-`MeetMarcos → FollowMarcos → Museum → Rocket → FollowAna → Elevator → TalkAna → ChooseMission → InMission → Free`
+`MeetMarcos → FollowMarcos → Museum → Rocket → FollowAna → SuitUp → Elevator → TalkAna → ChooseMission → InMission → Free`
+
+- `SuitUp`: a Ana para no Crew Suit-Up Room e espera (até 2 min) o grupo vestir o traje num armário (prompt `Suit` da Fase 8); a seta aponta o armário mais próximo.
+- `Elevator`: a Ana entra na cabine de baixo e espera; o `CrewAccess` leva junto os NPCs com `GuideNPC` que estiverem na zona da cabine, então ela sobe com o jogador. Na cabine, o prompt Talk da Ana fica desligado (o E é do painel).
 
 - Museu: o primeiro ProximityPrompt com o atributo `ExhibitId` (ExhibitService) libera `Rocket`.
 - `ChooseMission`: na primeira experiência (sem estrelas na missão 1) só o Mercury fica liberado. O mesmo painel escolhe missão, veste o traje e seleciona até dois equipamentos com peso/efeitos visíveis. Cliente envia `{ action = "Suit" }` ou `{ action = "Board", id = 1|2, items = { [equipmentKey] = true } }`. O servidor valida etapa, proximidade à Ana e desbloqueio; `CrewSuit` veste o traje e `RookieBridge.Embarcar(player, id, items)` valida traje, itens, 60 kg, vaga e manifesto compartilhado antes do teleporte. Resposta `MissionSelect { kind = "Feedback", text = ... }` mantém o painel aberto em erros. Excesso de peso falha ainda na plataforma. Ao embarcar, o painel fecha por `RookieMission`; não há preparação adicional na cápsula. Co-op entra na contagem de 12 s com o mesmo manifesto.

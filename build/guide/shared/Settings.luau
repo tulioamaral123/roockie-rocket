@@ -11,6 +11,7 @@ S.Stages = {
 	"Museum", -- seta → exposição mais próxima, até selecionar uma
 	"Rocket", -- seta → entrada do foguete (via LCC e hangar)
 	"FollowAna", -- Ana guia até o elevador da tripulação
+	"SuitUp", -- vestir o traje num armário do Crew Suit-Up Room (a Ana espera)
 	"Elevator", -- subir no elevador
 	"TalkAna", -- falar com a Ana no braço de acesso
 	"ChooseMission", -- escolha da missão (o trade-off é a Preparação do Rookie Rocket)
@@ -26,6 +27,7 @@ S.Radius = {
 	MuseumArrival = 16, -- chegada ao fim do museu 1 (despedida do Marcos)
 	TourNear = 30, -- quem está a até 30 studs do Marcos ouve a fala da parada
 	FollowLeash = 28, -- o NPC espera quem ficou para trás
+	SuitRoom = 22, -- quem está a até 22 studs da Ana no vestiário recebe a instrução do traje
 	TopLevel = 40, -- distância horizontal do braço de acesso para "está no topo"
 }
 

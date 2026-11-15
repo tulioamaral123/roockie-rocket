@@ -265,7 +265,23 @@ local function ride(prompt)
 			end
 		end
 	end
+	-- NPCs guias (atributo GuideNPC) dentro da cabine sobem/descem junto com os jogadores
+	local npcRiders = {}
+	local guides = map:FindFirstChild("Guides")
+	local npcFolder = guides and guides:FindFirstChild("NPCs")
+	for _, m in (npcFolder and npcFolder:GetChildren() or {}) do
+		local root = m:IsA("Model") and m:GetAttribute("GuideNPC") and m:FindFirstChild("HumanoidRootPart")
+		if root and other then
+			local d = zoneCF(own):PointToObjectSpace(root.Position)
+			if math.abs(d.X) <= s.X / 2 and math.abs(d.Y) <= s.Y / 2 and math.abs(d.Z) <= s.Z / 2 then
+				table.insert(npcRiders, m)
+			end
+		end
+	end
 	task.wait(FADE_TIME + 0.9)
+	for _, m in npcRiders do
+		if m.Parent then m:PivotTo(zoneCF(other) * zoneCF(own):ToObjectSpace(m:GetPivot())) end
+	end
 	for _, player in riders do
 		local char = player.Character
 		if char then
