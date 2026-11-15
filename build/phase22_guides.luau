@@ -22,6 +22,9 @@ local Map = workspace:FindFirstChild("NASAComplex")
 assert(Map, "Execute as Fases 1–21 antes")
 B.clear(Map)
 
+-- celular e tablet: jogo sempre na horizontal (o GuideClient também garante no PlayerGui)
+game:GetService("StarterGui").ScreenOrientation = Enum.ScreenOrientation.LandscapeSensor
+
 local Root = B.group(Map, "Guides", "Folder")
 B.group(Root, "NPCs", "Folder")
 local Points = B.group(Root, "NavigationPoints", "Folder")

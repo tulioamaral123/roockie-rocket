@@ -4,6 +4,10 @@
 ]]
 
 local RS = game:GetService("ReplicatedStorage")
+
+-- celular e tablet: jogo sempre na horizontal (vira para os dois lados conforme o aparelho)
+local pg = game:GetService("Players").LocalPlayer:WaitForChild("PlayerGui")
+pg.ScreenOrientation = Enum.ScreenOrientation.LandscapeSensor
 RS:WaitForChild("GuideSystem"):WaitForChild("Remotes")
 
 for _, name in { "DialogueGui", "NavigationClient", "MissionSelect", "MenuMouse" } do
