@@ -60,10 +60,32 @@ local function portrait(vp, npc)
 	cam.FieldOfView = 30
 	cam.Parent = vp
 	vp.CurrentCamera = cam
-	if head then
-		local hp = head.Position + Vector3.new(0, -0.15, 0)
+	if not head then return end
+	local hp = head.Position + Vector3.new(0, -0.15, 0)
+	-- rosto desenhado em SurfaceGui (Marcos): o ViewportFrame não desenha SurfaceGuis, então o
+	-- desenho é copiado por cima do retrato, alinhado à cabeça com a câmera de frente
+	local plate = copy:FindFirstChild("Marcos_Face")
+	local faceGui = plate and plate:FindFirstChildOfClass("SurfaceGui")
+	if not faceGui then
 		cam.CFrame = CFrame.lookAt((head.CFrame * CFrame.new(0.6, 0.2, -4.2)).Position, hp)
+		return
 	end
+	local DIST = 4.2
+	cam.CFrame = CFrame.lookAt(hp + Vector3.new(0, 0, -DIST), hp)
+	local hs = head.Size
+	local depth = DIST - hs.Z / 2 - 0.012
+	local visH = 2 * depth * math.tan(math.rad(cam.FieldOfView / 2))
+	local abs = vp.AbsoluteSize
+	local aspect = (abs.X > 0 and abs.Y > 0) and abs.X / abs.Y or 112 / 126
+	local overlay = Instance.new("Frame")
+	overlay.Name = "FaceOverlay"
+	overlay.BackgroundTransparency = 1
+	overlay.AnchorPoint = Vector2.new(0.5, 0.5)
+	overlay.Size = UDim2.fromScale(hs.X * 0.96 / (visH * aspect), hs.Y * 0.96 / visH)
+	overlay.Position = UDim2.fromScale(0.5, 0.5 - (0.15 - hs.Y * 0.02) / visH)
+	overlay.ZIndex = 2
+	for _, c in faceGui:GetChildren() do c:Clone().Parent = overlay end
+	overlay.Parent = vp
 end
 
 ---------------------------------------------------------------------------------

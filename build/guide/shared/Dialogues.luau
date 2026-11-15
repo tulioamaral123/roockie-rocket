@@ -27,15 +27,35 @@ D.Lines = {
 	MarcosWait = {
 		{ "Marcos", "This way, {name}! The museum is just ahead." },
 	},
+	MarcosMuseumIntro = {
+		{ "Marcos", "This is the Space Adventure planetarium, our first museum. Stay with me, I'll show you around!" },
+	},
+	MarcosTour1 = {
+		{ "Marcos", "Science is where every mission begins. Physics, chemistry and math tell us how to leave Earth and how to come back safely." },
+	},
+	MarcosTour2 = {
+		{ "Marcos", "A rocket pushes hot gas down at high speed, and the gas pushes the rocket up. Each stage drops away to save weight." },
+	},
+	MarcosTour3 = {
+		{ "Marcos", "Look up: that's our Solar System. Every probe we send out helps us understand these worlds a little better." },
+	},
+	MarcosTour4 = {
+		{ "Marcos", "Mars is one of the next big goals. Robotic rovers already explore its surface, and one day people may walk there." },
+	},
+	MarcosTour5 = {
+		{ "Marcos", "Astronauts train for years: flying, studying and working as a team. The suit is a small spacecraft that keeps them alive." },
+	},
 	MarcosFarewell = {
-		{ "Marcos", "Here we are! Take a look around and choose an exhibit to learn more. Good luck, explorer!" },
+		{ "Marcos", "Here we are, at the end of the planetarium! The main hall is right through here." },
+		{ "Marcos", "Take a look around and choose an exhibit to learn more. Good luck, explorer!" },
 	},
 	MuseumDone = {
 		{ "Marcos", "Great choice, {name}! Now follow the red arrow to the rocket entrance, through the Launch Control Center and the hangar." },
 	},
 	AnaCall = {
 		{ "Ana", "Hey, rookie! Over here! That siren means a launch window just opened." },
-		{ "Ana", "I'm Ana, operations engineer. You must be {name}. Follow me, we're going to the top of the rocket!" },
+		{ "Ana", "I'm Ana, operations engineer, from the command room. You must be {name}." },
+		{ "Ana", "Follow me to the rocket hangar. We're going all the way to the top of the rocket!" },
 	},
 	AnaElevator = {
 		{ "Ana", "Step into the crew elevator and press the panel. I'll meet you at the top!" },
@@ -53,12 +73,21 @@ D.Lines = {
 	},
 }
 
+-- Visita guiada do Marcos pelo museu 1: ponto de parada (Fase 22) → fala
+D.Tour = {
+	{ Point = "Tour1", Key = "MarcosTour1" },
+	{ Point = "Tour2", Key = "MarcosTour2" },
+	{ Point = "Tour3", Key = "MarcosTour3" },
+	{ Point = "Tour4", Key = "MarcosTour4" },
+	{ Point = "Tour5", Key = "MarcosTour5" },
+}
+
 -- Objetivos do HUD (spec §6.4)
 D.Objectives = {
 	MeetMarcos = "Meet Marcos Pontes.",
-	FollowMarcos = "Follow Marcos to the museum.",
+	FollowMarcos = "Follow Marcos through the museum.",
 	Museum = "Explore the museum and select an exhibit.",
-	Rocket = "Go to the rocket entrance.",
+	Rocket = "Go to the command room at the Launch Control Center.",
 	FollowAna = "Follow Ana to the top of the rocket.",
 	Elevator = "Take the crew elevator to the top.",
 	TalkAna = "Talk to Ana at the crew access arm.",

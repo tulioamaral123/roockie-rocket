@@ -488,19 +488,47 @@ end
 -- Marcos Pontes
 ---------------------------------------------------------------------------------
 
+-- quem do grupo está perto do Marcos (ouve a fala da parada)
+local function nearGroup(m, radius)
+	local out = {}
+	for _, p in listOf(m.group) do
+		local r = World.rootOf(p)
+		if r and (r.Position - m.root.Position).Magnitude <= radius then table.insert(out, p) end
+	end
+	return out
+end
+
+-- visita guiada: entrada do museu 1 → uma parada por exposição → fim do museu 1 (porta sul)
 local function marcosEscort(run)
 	local m = npcs.Marcos
 	if m.run ~= run then return end
 	m.state = "Escort"
-	local museum = World.point("PrimeiroMuseu")
-	local arrived = museum and walkTo(m, museum, true)
+	local entrance = World.point("PrimeiroMuseu")
+	if entrance and walkTo(m, entrance, true) and m.run == run then
+		local near = nearGroup(m, Settings.Radius.TourNear)
+		local r1 = near[1] and World.rootOf(near[1])
+		if r1 then face(m, r1.Position) end
+		say(near, "MarcosMuseumIntro", { wait = true, once = true })
+	end
+	for _, stop in Dialogues.Tour do
+		if m.run ~= run then return end
+		local cf = World.pointCF(stop.Point)
+		if cf and walkTo(m, cf.Position, true) and m.run == run then
+			face(m, cf.Position + cf.LookVector * 6) -- virado para a exposição
+			say(nearGroup(m, Settings.Radius.TourNear), stop.Key, { wait = true, once = true })
+			task.wait(0.4)
+		end
+	end
+	if m.run ~= run then return end
+	local finish = World.point("Museum1End")
+	local arrived = finish and walkTo(m, finish, true)
 	if m.run ~= run then return end -- outro jogador começou um novo acompanhamento
 	if arrived then
 		m.state = "Arrived"
 		local near = {}
 		for _, p in listOf(m.group) do
 			local r = World.rootOf(p)
-			if r and (r.Position - museum).Magnitude <= Settings.Radius.MuseumArrival + 10 then table.insert(near, p) end
+			if r and (r.Position - finish).Magnitude <= Settings.Radius.MuseumArrival + 10 then table.insert(near, p) end
 		end
 		local r1 = near[1] and World.rootOf(near[1])
 		if r1 then face(m, r1.Position) end
@@ -602,7 +630,13 @@ end
 local function anaGuide()
 	local a = npcs.Ana
 	a.state = "Guiding"
-	local route = World.route("Ana_Route")
+	-- da sala de comando (LCC) pelo Corredor 2 até o VAB, vestiário, escada e elevador
+	local route = {}
+	for _, name in { "Hangar", "RocketEntrance" } do
+		local p = World.point(name)
+		if p then table.insert(route, p) end
+	end
+	for _, p in World.route("Ana_Route") do table.insert(route, p) end
 	local top = World.stairsTop()
 	if top then table.insert(route, top) end
 	local front = World.lowerCabFront()
@@ -649,14 +683,14 @@ local function anaCall(players)
 		end
 		return
 	end
-	-- Hidden: sirene, a Ana entra em cena pela porta do vestiário e vai até o jogador
+	-- Hidden: sirene; a Ana sai da sala de comando do LCC e vai até o jogador
 	a.state = "Calling"
 	for _, p in players do a.group[p] = true end
 	sound(players, "Siren")
-	local start = World.pointCF("Ana")
+	local start = World.pointCF("AnaStartLCC") or World.pointCF("Ana")
 	if start then anaShow(start) end
 	bubble(players, "Ana", "Hey, rookie! Over here!")
-	local entrance = World.point("RocketEntrance")
+	local entrance = World.point("AnaMeet") or World.point("RocketEntrance")
 	if entrance then walkTo(a, entrance, false) end
 	if a.state ~= "Calling" then return end
 	local group = listOf(a.group)
@@ -709,8 +743,8 @@ local tickCount = 0
 local function tick()
 	tickCount += 1
 	local checkMission = tickCount % 3 == 0 -- consulta o Rookie Rocket a cada ~1 s
-	local museum = World.point("PrimeiroMuseu")
-	local entrance = World.point("RocketEntrance")
+	local museum = World.point("Museum1End") or World.point("PrimeiroMuseu")
+	local entrance = World.point("AnaMeet") or World.point("RocketEntrance")
 	local callers = {}
 	for _, p in Players:GetPlayers() do
 		local stage = Progress.get(p)
@@ -728,7 +762,7 @@ local function tick()
 					Progress.set(p, "Museum")
 					task.spawn(say, { p }, "MarcosFarewell", { once = true })
 				end
-			elseif stage == "Rocket" and entrance and (r.Position - entrance).Magnitude <= Settings.Radius.RocketEntrance
+			elseif stage == "Rocket" and entrance and (r.Position - entrance).Magnitude <= Settings.Radius.AnaMeet
 				and math.abs(r.Position.Y - entrance.Y) < 8 then
 				table.insert(callers, p)
 			elseif (stage == "Elevator" or stage == "FollowAna") and World.isAtTop(p) then

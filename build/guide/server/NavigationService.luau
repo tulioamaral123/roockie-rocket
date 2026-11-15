@@ -8,9 +8,9 @@
 
 	Rotas por etapa (pontos da Fase 22 + pontos relativos ao lançador, ver World):
 	  MeetMarcos    → Marcos
-	  FollowMarcos  → Marcos (se ele acompanha o jogador) ou PrimeiroMuseu
+	  FollowMarcos  → Marcos (visita guiada) ou Museum1End (fim do museu 1)
 	  Museum        → exposição mais próxima
-	  Rocket        → PainelPrincipal → SalaControle → Hangar → RocketEntrance
+	  Rocket        → AnaMeet (diante da sala de comando do LCC)
 	  FollowAna     → Ana
 	  Elevator      → (pé da escada → topo da escada →) cabine do elevador
 	  TalkAna, ChooseMission → Ana no braço de acesso (ou o elevador, se o jogador não está no topo)
@@ -31,7 +31,7 @@ local NavigationService = {}
 local Progress, Remotes, NPC
 local cache = {} -- [player] = { from, to, stage, points, time }
 
-local ROCKET_VIAS = { "PainelPrincipal", "SalaControle", "Hangar", "RocketEntrance" }
+local ROCKET_VIAS = { "AnaMeet" } -- a Ana encontra o jogador diante da sala de comando do LCC
 
 local function npcPos(name)
 	local m = NPC and NPC.model(name)
@@ -69,7 +69,7 @@ local function destination(player, rootPos)
 		local p = npcPos("Marcos")
 		return p and { p }, true
 	elseif stage == "FollowMarcos" then
-		local p = NPC.isEscorting("Marcos", player) and npcPos("Marcos") or World.point("PrimeiroMuseu")
+		local p = NPC.isEscorting("Marcos", player) and npcPos("Marcos") or World.point("Museum1End")
 		return p and { p }, true
 	elseif stage == "Museum" then
 		local p = World.nearestExhibit(rootPos)

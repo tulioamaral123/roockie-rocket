@@ -21,8 +21,10 @@ S.Stages = {
 S.Radius = {
 	Talk = 10, -- ProximityPrompt dos NPCs
 	Via = 14, -- ponto intermediário da rota considerado atingido
-	RocketEntrance = 26, -- chegada à entrada do foguete (sirene + Ana)
-	MuseumArrival = 16, -- chegada com o Marcos ao museu
+	RocketEntrance = 26, -- chegada à entrada do foguete
+	AnaMeet = 16, -- diante da sala de comando do LCC: sirene + Ana
+	MuseumArrival = 16, -- chegada ao fim do museu 1 (despedida do Marcos)
+	TourNear = 30, -- quem está a até 30 studs do Marcos ouve a fala da parada
 	FollowLeash = 28, -- o NPC espera quem ficou para trás
 	TopLevel = 40, -- distância horizontal do braço de acesso para "está no topo"
 }

@@ -9,7 +9,10 @@ Workspace.NASAComplex.Guides            (Fase 22)
 ├── NPCs                                 Marcos ("MarcosPontes") e Ana, montados pelo NPCService em Play
 └── NavigationPoints                     peças invisíveis 1×1×1 na altura do HumanoidRootPart (piso + 3)
     ├── Spawn_Marcos                     ao lado do SpawnLocation, virado para ele
-    ├── PrimeiroMuseu                    entrada do planetário (ala leste), onde o Marcos se despede
+    ├── PrimeiroMuseu                    entrada do planetário (museu 1): início da visita guiada
+    ├── Tour1..5                         paradas do Marcos diante de cada exposição do museu 1 (virado para ela)
+    ├── Museum1End                       porta sul do planetário (fim do museu 1): despedida do Marcos
+    ├── AnaMeet / AnaStartLCC            diante da sala de comando do LCC / dentro dela: sirene, a Ana sai e chama o jogador
     ├── PainelPrincipal                  ReturnPoint do quiosque Mission Briefing no LCC
     ├── SalaControle                     eixo X = 0 do LCC
     ├── Hangar                           logo depois do portão frontal do VAB

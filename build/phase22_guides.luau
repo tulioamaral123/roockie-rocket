@@ -4,7 +4,8 @@
 
 	1. Cria NASAComplex.Guides com as pastas NPCs (os scripts montam Marcos e Ana em Play) e
 	   NavigationPoints (peças de marcação invisíveis, na altura do HumanoidRootPart = piso + 3):
-	   Spawn_Marcos, PrimeiroMuseu, PainelPrincipal, SalaControle, Hangar, RocketEntrance, Ana,
+	   Spawn_Marcos, PrimeiroMuseu, Tour1..5, Museum1End, PainelPrincipal, SalaControle, AnaMeet,
+	   AnaStartLCC, Hangar, RocketEntrance, Ana,
 	   Ana_Route1..5. Cada ponto é conferido: piso por raio para baixo e folga de 3 × 5 × 3 sem
 	   peças colidíveis; se o lugar estiver ocupado, procura o lugar livre mais próximo (até 10).
 	   Os pontos sobre o lançador (escada, elevador, braço de acesso) não são criados aqui: os
@@ -89,6 +90,15 @@ place("Spawn_Marcos", sp.X + 7, sp.Z + 7, sp)
 -- Primeiro museu: entrada do planetário (fim do corredor da ala leste, Fase 14)
 place("PrimeiroMuseu", 54, 27.5, Vector3.new(40, 0, 27.5))
 
+-- Visita guiada do Marcos pelo museu 1 (planetário, X 44..136, Z −13..68): uma parada diante de
+-- cada exposição, virado para ela; termina na porta sul (fim do museu 1, passagem para o salão).
+place("Tour1", 66, 4, Vector3.new(63, 0, -6)) -- Science_Exhibition
+place("Tour2", 85, 3, Vector3.new(85, 0, -11)) -- Rocket_Exhibition
+place("Tour3", 82, 26, Vector3.new(93, 0, 22)) -- Solar_System (no alto da cúpula)
+place("Tour4", 66, 54, Vector3.new(60, 0, 63)) -- Mars_Exhibition
+place("Tour5", 100, 48, Vector3.new(104, 0, 56)) -- Astronaut_Exhibition
+place("Museum1End", 90, 61, Vector3.new(90, 0, 80)) -- porta sul do planetário
+
 -- Sala de controle (LCC): eixo de passagem X = 0, no meio do saguão; painel = quiosque Mission Briefing
 local lcc = Map:FindFirstChild("LaunchControlCenter")
 local lccZ = 130
@@ -104,6 +114,11 @@ else
 	place("PainelPrincipal", 0, lccZ - 10, Vector3.new(0, 0, lccZ + 20))
 end
 place("SalaControle", 0, lccZ + 12, Vector3.new(0, 0, lccZ + 40))
+
+-- Ana encontra o jogador diante da sala de comando (Firing Room, lado oeste do saguão do LCC)
+-- e sai de dentro dela; os consoles ficam em X ≈ −28.
+place("AnaMeet", -3, lccZ - 3, Vector3.new(-28, 0, lccZ - 3))
+place("AnaStartLCC", -22, lccZ - 3, Vector3.new(0, 0, lccZ - 3))
 
 -- Hangar (VAB): logo depois do portão frontal (Z 210)
 place("Hangar", 0, 224, Vector3.new(-41, 0, 240))
