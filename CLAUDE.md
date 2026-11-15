@@ -25,6 +25,9 @@ O place (`Place1.rbxl`) é gerado por scripts Luau em `build/`. Não editar peç
 | 13 | `phase13_finishing.luau` | SafetyZones, sinalização, passe de otimização |
 | 14 | `phase14_relocation.luau` | Museu na ala leste da recepção (giro + translação) e ligações do LCC |
 | 15 | `phase15_friendship7.luau` | Missão Friendship 7 na cápsula (missaoUm.md): botões, papel, luzes + scripts de `build/mission/` |
+| 16 | `phase16_museum_hall.luau` | Salão do museu a leste do planetário, átrio, memorial rebaixado (divide a Baseplate), Parede de missões (`museuspec.md`, `docs/museu-contrato.md`) |
+| 17 | `phase17_museum_exhibits.luau` | Exposições do museu: Saturn V, Atlantis, Mercury, jardim de foguetes, diorama e console do show |
+| 18 | `phase18_museum_systems.luau` | Instala os sistemas do museu de `build/museum/` (painel, show, cards, progresso) quando o Rojo não está conectado |
 
 Reconstruir:
 

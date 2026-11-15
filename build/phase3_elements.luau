@@ -47,7 +47,7 @@ local function buildSLS(parent, name, ox, oy, oz, s, o)
 	-- 4. Estágio central laranja
 	local core = cyl(g.Core, "Core_Tank", 0, 0, 5, 80, 10, "orange", "Metal")
 	cyl(g.Core, "Intertank", 0, 0, 64, 69, 10.15, "orangeDark", "Metal")
-	cyl(g.Core, "Forward_Skirt", 0, 0, 79, 80, 10.15, "orangeDark", "Metal")
+	cyl(g.Core, "Forward_Skirt", 0, 0, 79, 80 + 0.03 / s, 10.15, "orangeDark", "Metal")
 	cyl(g.Core, "LOX_Feedline", 0, -5.3, 8, 66, 0.8, "orangeDark", "Metal")
 
 	-- 5. Dois propulsores laterais
@@ -134,14 +134,14 @@ for _, sx in { -1, 1 } do
 	for k = 1, 8 do
 		local y = DECK_TOP + k * (TOWER_TOP - DECK_TOP) / 8
 		for _, cz in { z0, z1 } do
-			B.box(tower, "Beam", x - 3, x + 3, y - 0.35, y + 0.35, cz - 0.3, cz + 0.3, "metalGray", "Metal")
+			B.box(tower, "Beam", x - 2.98, x + 2.98, y - 0.35, y + 0.35, cz - 0.3, cz + 0.3, "metalGray", "Metal")
 		end
 		for _, cx in { x - 2.6, x + 2.6 } do
 			B.box(tower, "Beam", cx - 0.3, cx + 0.3, y - 0.35, y + 0.35, z0, z1, "metalGray", "Metal")
 		end
 		-- contraventamento em X na face voltada para a entrada
 		B.beam(tower, "Brace", Vector3.new(x - 2.6, prevY, z0), Vector3.new(x + 2.6, y, z0), 0.3, 0.3, "metalGray", "Metal", DECOR)
-		B.beam(tower, "Brace", Vector3.new(x + 2.6, prevY, z0), Vector3.new(x - 2.6, y, z0), 0.3, 0.3, "metalGray", "Metal", DECOR)
+		B.beam(tower, "Brace", Vector3.new(x + 2.6, prevY, z0), Vector3.new(x - 2.6, y, z0), 0.34, 0.3, "metalGray", "Metal", DECOR)
 		prevY = y
 	end
 	B.box(tower, "Top_Cap", x - 3, x + 3, TOWER_TOP, TOWER_TOP + 1, z0 - 0.4, z1 + 0.4, "metalGray", "Metal")
@@ -162,8 +162,10 @@ for _, sx in { -1, 1 } do
 		B.box(tower, "Deck", x - 2.6, x + 2.6, arm.y - 0.5, arm.y, z0, z1, "darkGray", "DiamondPlate")
 		local xi, xt = sx * 17, sx * arm.to
 		B.box(tower, "Arm_Deck", xi, xt, arm.y - 0.5, arm.y, ROCKET_Z - 1.5, ROCKET_Z + 1.5, "darkGray", "DiamondPlate")
-		B.box(tower, "Arm_Rail", xi, xt, arm.y, arm.y + 1.1, ROCKET_Z - 1.6, ROCKET_Z - 1.4, "safety", "Metal")
-		B.box(tower, "Arm_Rail", xi, xt, arm.y, arm.y + 1.1, ROCKET_Z + 1.4, ROCKET_Z + 1.6, "safety", "Metal")
+		-- no nível 100 o guarda-corpo termina na face da White Room (sem faces coplanares)
+		local xr = (arm.y == 100) and sx * 6 or xt
+		B.box(tower, "Arm_Rail", xi, xr, arm.y, arm.y + 1.1, ROCKET_Z - 1.6, ROCKET_Z - 1.4, "safety", "Metal")
+		B.box(tower, "Arm_Rail", xi, xr, arm.y, arm.y + 1.1, ROCKET_Z + 1.4, ROCKET_Z + 1.6, "safety", "Metal")
 		if arm.y == 100 then
 			B.box(tower, "White_Room", sx * 3.1, sx * 6, arm.y, arm.y + 3.6, ROCKET_Z - 1.8, ROCKET_Z + 1.8, "white", "SmoothPlastic", DECOR)
 		end
@@ -212,9 +214,9 @@ local planets = {
 	{ "Earth", 2.2, 13, 20, 260, "#2E6FD6", 7 },
 	{ "Mars", 1.6, 15.5, 27, 80, "#C1440E", 5.5 },
 	{ "Jupiter", 5.0, 19.5, 23, 200, "#D8A876", 3.5 },
-	{ "Saturn", 4.2, 23.5, 28, 320, "#E6CF8B", 2.6 },
+	{ "Saturn", 4.2, 21, 28, 320, "#E6CF8B", 2.6 },
 	{ "Uranus", 3.0, 27, 21, 120, "#9FE3E8", 1.8 },
-	{ "Neptune", 2.9, 30, 17, 20, "#3D5EF2", 1.3 },
+	{ "Neptune", 2.9, 30, 15.5, 20, "#3D5EF2", 1.3 },
 }
 for _, p in planets do
 	local name, dia, r, y, ang, color, speed = table.unpack(p)
@@ -258,7 +260,7 @@ local function astronaut(parent, cf, scale, suit, accent)
 		p("Arm_Stripe", Vector3.new(sx * 2.7, 4.3, 0), Vector3.new(0.85, 0.3, 0.95), accent, "SmoothPlastic", nil, DECOR)
 	end
 	p("Torso", Vector3.new(0, 3.8, 0), Vector3.new(2.3, 2.5, 1.4), suit, "Fabric")
-	p("Backpack", Vector3.new(0, 3.9, 1.15), Vector3.new(2.1, 2.7, 1.0), "white", "SmoothPlastic")
+	p("Backpack", Vector3.new(0, 3.93, 1.15), Vector3.new(2.1, 2.7, 1.0), "white", "SmoothPlastic")
 	p("Chest_Unit", Vector3.new(0, 3.5, -0.85), Vector3.new(1.3, 0.7, 0.4), accent, "SmoothPlastic", nil, DECOR)
 	p("Helmet", Vector3.new(0, 5.75, 0), Vector3.new(1.9, 1.9, 1.9), "white", "SmoothPlastic", "Ball")
 	local visor = p("Visor", Vector3.new(0, 5.75, -0.3), Vector3.new(1.55, 1.55, 1.55), "gold", "Metal", "Ball", DECOR)
@@ -280,7 +282,7 @@ for _, s in suits do
 	B.cyl(human, "Pedestal", x, s.z, 0, 1.2, 4.4, "midGray", "SmoothPlastic")
 	B.ring(human, "Pedestal_Glow", Vector3.new(x, 1.25, s.z), 2.1, 0.15, 0.05, "midBlue", "Neon", DECOR_NS)
 	astronaut(human, CFrame.lookAt(Vector3.new(x, 1.2, s.z), Vector3.new(CX, 1.2, s.z)), 1.2, s.suit, s.accent)
-	wallPanel(human, -44.95, -44.75, 3, 9, s.z - 4.5, s.z + 4.5, Enum.NormalId.Right, s.title, s.body)
+	wallPanel(human, -44.95, -44.75, 9.6, 15.6, s.z - 4.5, s.z + 4.5, Enum.NormalId.Right, s.title, s.body)
 end
 -- vitrine de capacete e equipamentos
 local case = B.group(human, "Equipment_Case")
@@ -320,7 +322,7 @@ local function buildSaturnV(parent, ox, oy, oz, s)
 	cyl("S-IC_Band", 4, 9, 10.2, "black")
 	cyl("S-IC_Band", 34, 37, 10.2, "black")
 	cyl("S-II", 42, 67, 10.1, "white")
-	cyl("Interstage_Band", 42, 46, 10.2, "black")
+	cyl("Interstage_Band", 42 - 0.03 / s, 46, 10.2, "black")
 	cone("S-II_Taper", 67, 70, 10.1, 6.6, 2)
 	cyl("S-IVB", 70, 88, 6.6, "white")
 	cyl("Instrument_Unit", 88, 89, 6.7, "black")
@@ -344,18 +346,19 @@ B.cyl(orion, "Heat_Shield", 33, 130, 1, 1.5, 5.2, "#5A3A22", "SmoothPlastic")
 B.cone(orion, "Crew_Module", 33, 130, 1.5, 5.1, 5, 2, 12, "paleGray", "Metal")
 B.cyl(orion, "Docking_Hatch", 33, 130, 5.1, 5.6, 1.3, "darkGray", "Metal")
 
-wallPanel(rockets, 44.75, 44.95, 3, 9, 113.5, 122.5, Enum.NormalId.Left, "SLS",
+wallPanel(rockets, 44.75, 44.95, 10.5, 16.5, 113.5, 122.5, Enum.NormalId.Left, "SLS",
 	"NASA's Space Launch System (Block 1) is about 98 m tall. It launched Artemis I in 2022.")
 wallPanel(rockets, 44.75, 44.95, 3, 9, 125.5, 134.5, Enum.NormalId.Left, "ORION",
 	"Orion is the spacecraft designed to carry astronauts beyond low Earth orbit.")
-wallPanel(rockets, 44.75, 44.95, 3, 9, 137.5, 146.5, Enum.NormalId.Left, "SATURN V",
+wallPanel(rockets, 44.75, 44.95, 10.5, 16.5, 137.5, 146.5, Enum.NormalId.Left, "SATURN V",
 	"At 110.6 m tall, Saturn V launched the Apollo missions to the Moon.")
 
 -- D. Exploração planetária: Marte (canto sudoeste) ----------------------------------------
 local mars = Museum.Mars_Exhibition
-B.box(mars, "Ground", -44.5, -24, 0, 0.6, 91, 111, "#B5532B", "Sand")
-B.box(mars, "Curb", -24.3, -24, 0, 0.9, 91, 111, "darkGray", "Metal")
-B.box(mars, "Curb", -44.5, -24, 0, 0.9, 110.7, 111, "darkGray", "Metal")
+-- piso termina nas faces internas do meio-fio e encosta nos backdrops (alinhados na Fase 14)
+B.box(mars, "Ground", -44.8, -24.3, 0, 0.6, 90.7, 110.7, "#B5532B", "Sand")
+B.box(mars, "Curb", -24.3, -24, 0, 0.9, 90.7, 110.7, "darkGray", "Metal")
+B.box(mars, "Curb", -44.8, -24, 0, 0.9, 110.7, 111, "darkGray", "Metal")
 B.box(mars, "Backdrop_W", -44.95, -44.75, 0.6, 14, 91, 111, "#7A2E18", "SmoothPlastic", DECOR)
 B.box(mars, "Backdrop_S", -44.5, -24, 0.6, 14, 90.55, 90.75, "#7A2E18", "SmoothPlastic", DECOR)
 local rocks = {

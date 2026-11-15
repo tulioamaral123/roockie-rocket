@@ -1,0 +1,25 @@
+return {
+	Id = "orion_sls",
+	Island = "modern",
+	Name = "Orion and SLS (Artemis)",
+	Category = "Spacecraft and launch vehicle",
+	Program = "Artemis",
+	Period = "2022–today",
+	Type = "reconstrucao_digital",
+	History = "Artemis is NASA's program to return astronauts to the Moon. The Space Launch System (SLS) rocket launches the Orion spacecraft. Artemis I flew Orion around the Moon without a crew, launching from Launch Complex 39B in November 2022. The SLS model here is at reduced scale.",
+	DidYouKnow = "The SLS you saw inside the VAB is the same rocket family that launched Artemis I.",
+	Gallery = { "KSC-20220915-PH-JNP01_0001", "GSFC_20171208_Archive_e000422", "iss020e005813" },
+	KeyFacts = {
+		{ Text = "Artemis I was the first integrated test of the SLS rocket and the Orion spacecraft.", Source = "KSC-20220915-PH-JNP01_0001" },
+		{ Text = "Three lightning protection towers surround Launch Pad 39B to protect SLS and Orion.", Source = "KSC-20220915-PH-JNP01_0001" },
+	},
+	Interactions = {},
+	PromptDistance = 16,
+	Image = { NasaId = "KSC-20220915-PH-JNP01_0001", Credit = "NASA/Jason Parrish", AssetId = nil },
+	Sources = {
+		{ Title = "Orion spacecraft", Url = "https://www.nasa.gov/humans-in-space/orion-spacecraft/" },
+		{ Title = "Space Launch System", Url = "https://www.nasa.gov/humans-in-space/space-launch-system/" },
+		{ Title = "Artemis I on pad 39B (KSC-20220915-PH-JNP01_0001)", Url = "https://images.nasa.gov/details/KSC-20220915-PH-JNP01_0001" },
+	},
+	Verified = false,
+}

@@ -30,6 +30,22 @@ local Map = workspace:FindFirstChild("NASAComplex")
 assert(Map, "Execute as Fases 1–10 antes")
 B.clear(Map)
 
+-- A Fase 10 substitui a lateral oeste da Fase 1 ao abrir a saída de pedestres.
+-- Reaplica o acabamento nos extremos, sem tocar no vão Z296..302 nem nas folhas.
+local westSegments = Map.VABHangar.Structure:FindFirstChild("Left_Wall_Segments")
+if westSegments then
+	for _, name in { "Left_Wall_A", "Left_Wall_B", "Left_Wall_Lintel" } do
+		local p = westSegments:FindFirstChild(name)
+		if p and p:IsA("BasePart") then
+			local y0 = p.Position.Y - p.Size.Y / 2
+			local z0 = p.Name == "Left_Wall_A" and 210 or p.Position.Z - p.Size.Z / 2
+			local z1 = p.Name == "Left_Wall_B" and 320 or p.Position.Z + p.Size.Z / 2
+			p.Size = Vector3.new(p.Size.X, 151.98 - y0, z1 - z0)
+			p.CFrame = CFrame.new(p.Position.X, (y0 + 151.98) / 2, (z0 + z1) / 2)
+		end
+	end
+end
+
 local N = Enum.NormalId
 local DECOR = { collide = false }
 local DECOR_NS = { collide = false, shadow = false }
@@ -127,6 +143,27 @@ local function canvas(part, face, ppu)
 	return rect(gui, 0, 0, 1, 1, "#06101E")
 end
 
+-- Tampos e corpos com pontas arredondadas, dentro do envelope original.
+-- Pontas 0,03 acima/abaixo do miolo: 0,01 ainda cintilava nas faces de baixo.
+local function rounded(parent, name, x0, x1, y0, y1, z0, z1, color, material)
+	local radius = (z1 - z0) / 2
+	local p = B.box(parent, name, x0 + radius, x1 - radius, y0, y1, z0, z1, color, material)
+	for _, x in { x0 + radius, x1 - radius } do
+		B.cyl(parent, name .. "_End", x, (z0 + z1) / 2, y0 - 0.03, y1 + 0.03, radius * 2, color, material)
+	end
+	return p
+end
+
+-- A verga sobe 0,5 no centro; as cunhas nunca entram na altura livre original.
+local function header(parent, name, x0, x1, y0, y1, z0, z1, color, material)
+	B.box(parent, name, x0, x1, y0 + 0.5, y1, z0, z1, color, material)
+	-- Chanfro na profundidade da parede: uma única cunha contínua sob o miolo.
+	local alongX = x1 - x0 > z1 - z0
+	B.part(parent, name .. "_Chamfer", CFrame.new((x0 + x1) / 2, y0 + 0.25, (z0 + z1) / 2)
+		* CFrame.Angles(0, alongX and 0 or math.pi / 2, 0),
+		Vector3.new(alongX and x1 - x0 or z1 - z0, 0.5, alongX and z1 - z0 or x1 - x0), color, material, nil, "Wedge")
+end
+
 local function autoDoor(parent, name, center, radius, leaves)
 	local door = B.group(parent, name)
 	door:SetAttribute("AutoDoor", true)
@@ -138,10 +175,11 @@ local function autoDoor(parent, name, center, radius, leaves)
 		local alongX = (L.x1 - L.x0) > (L.z1 - L.z0)
 		if alongX then
 			B.box(leaf, "Window", L.x0 + 0.7, L.x1 - 0.7, 4.5, 8.5, L.z0 - 0.05, L.z1 + 0.05, "glass", "Glass", { transparency = 0.4, collide = false })
-			B.box(leaf, "Kick_Plate", L.x0, L.x1, 0, 0.8, L.z0 - 0.05, L.z1 + 0.05, "nasaBlue", "Metal", DECOR)
+			-- recuado 0,03 nas pontas da folha: sem faces coplanares com o painel
+			B.box(leaf, "Kick_Plate", L.x0 + 0.03, L.x1 - 0.03, 0, 0.8, L.z0 - 0.05, L.z1 + 0.05, "nasaBlue", "Metal", DECOR)
 		else
 			B.box(leaf, "Window", L.x0 - 0.05, L.x1 + 0.05, 4.5, 8.5, L.z0 + 0.7, L.z1 - 0.7, "glass", "Glass", { transparency = 0.4, collide = false })
-			B.box(leaf, "Kick_Plate", L.x0 - 0.05, L.x1 + 0.05, 0, 0.8, L.z0, L.z1, "nasaBlue", "Metal", DECOR)
+			B.box(leaf, "Kick_Plate", L.x0 - 0.05, L.x1 + 0.05, 0, 0.8, L.z0 + 0.03, L.z1 - 0.03, "nasaBlue", "Metal", DECOR)
 		end
 		leaf.PrimaryPart = panel
 		leaf:SetAttribute("OpenOffset", L.offset)
@@ -174,44 +212,91 @@ local walls = B.group(Arch, "Walls")
 local EXT = "lightGray"
 -- sul: porta de entrada (X −104..−98), alinhada com a porta norte. O visitante atravessa o LCC
 -- em linha reta (porta sul → corredor de fundo → saguão → porta norte) a caminho do VAB.
-B.box(walls, "South_Wall", LX0, NDX0, 0, WALL_TOP, LZ0, LZ0 + 1, EXT, "Concrete")
-B.box(walls, "South_Wall", NDX1, LX1, 0, WALL_TOP, LZ0, LZ0 + 1, EXT, "Concrete")
-B.box(walls, "South_Lintel", NDX0, NDX1, DH, WALL_TOP, LZ0, LZ0 + 1, EXT, "Concrete")
+B.box(walls, "South_Wall", LX0 + 0.5, NDX0 - 0.5, 0, WALL_TOP, LZ0, LZ0 + 1, EXT, "Concrete")
+B.box(walls, "South_Wall", NDX1 + 0.5, LX1 + 1.5, -1, WALL_TOP, LZ0, LZ0 + 1, EXT, "Concrete")
+header(walls, "South_Lintel", NDX0 - 0.5, NDX1 + 0.5, DH, WALL_TOP, LZ0, LZ0 + 1, EXT, "Concrete")
 -- oeste e leste (inteiras; a antiga porta leste foi fechada)
-B.box(walls, "West_Wall", LX0, LX0 + 1, 0, WALL_TOP, LZ0 + 1, LZ1 - 1, EXT, "Concrete")
+B.box(walls, "West_Wall", LX0, LX0 + 1, 0, WALL_TOP - 0.02, LZ0 + 0.5, LZ1 - 0.5, EXT, "Concrete")
 B.box(walls, "East_Wall", LX1 - 1, LX1, 0, WALL_TOP, LZ0 + 1, LZ1 - 1, EXT, "Concrete")
 -- norte: Firing Room com faixa de janelas (Y 4..14) voltada para a plataforma
-B.box(walls, "North_Wall_Low", LX0, FX1 + 1, 0, 4, LZ1 - 1, LZ1, EXT, "Concrete")
-B.box(walls, "North_Wall_High", LX0, FX1 + 1, 14, WALL_TOP, LZ1 - 1, LZ1, EXT, "Concrete")
-B.box(walls, "North_Window", LX0 + 1, FX1, 4, 14, LZ1 - 0.7, LZ1 - 0.3, "glass", "Glass", { transparency = 0.55 })
-B.box(walls, "Window_Jamb", LX0, LX0 + 1, 4, 14, LZ1 - 1, LZ1, EXT, "Concrete")
-B.box(walls, "Window_Jamb", FX1, FX1 + 1, 4, 14, LZ1 - 1, LZ1, EXT, "Concrete")
-for x = -142, -112, 6 do
-	B.box(walls, "Mullion", x - 0.25, x + 0.25, 4, 14, LZ1 - 1, LZ1, "darkGray", "Metal")
+-- Low/High terminam em FX1: o trecho FX1..FX1+1 é só da North_Wall_Lobby (sem sobreposição coplanar).
+B.box(walls, "North_Wall_Low", LX0 + 0.5, FX1, 0, 4, LZ1 - 1, LZ1, EXT, "Concrete")
+B.box(walls, "North_Wall_High", LX0 + 0.5, FX1, 14, WALL_TOP, LZ1 - 1, LZ1, EXT, "Concrete")
+-- O vidro termina no Link_Return (X −110); jamba e retorno são opacos de face a face.
+B.box(walls, "North_Window", LX0 + 1, FX1 - 2, 4, 14, LZ1 - 1, LZ1, "glass", "Glass", { transparency = 0.55 })
+B.box(walls, "Window_Jamb", LX0 + 0.5, LX0 + 1, 4, 14, LZ1 - 0.5, LZ1, EXT, "Concrete")
+B.box(walls, "Window_Jamb", FX1 - 1, FX1, 4, 14, LZ1 - 1, LZ1, EXT, "Concrete")
+-- Último montante coincide com a parede esquerda da ligação C2 (X mundo −9..−8).
+-- Assim a junta toca uma peça opaca em Z165, sem o vão de 0,3 do vidro recuado.
+for _, x in { -142, -136, -130, -124, -118, -109.5 } do
+	if x == -109.5 then
+		B.box(walls, "Link_Return", x - 0.5, x + 0.5, 4, 14, LZ1 - 1, LZ1, "darkGray", "Metal")
+	else
+		B.cyl(walls, "Mullion", x, LZ1 - 0.5, 4, 14, 0.5, "darkGray", "Metal")
+	end
 end
 -- norte: saguão, com a porta norte (X −104..−98)
-B.box(walls, "North_Wall_Lobby", FX1 + 1, NDX0, 0, WALL_TOP, LZ1 - 1, LZ1, EXT, "Concrete")
-B.box(walls, "North_Wall_Lobby", NDX1, LX1, 0, WALL_TOP, LZ1 - 1, LZ1, EXT, "Concrete")
-B.box(walls, "North_Lintel", NDX0, NDX1, DH, WALL_TOP, LZ1 - 1, LZ1, EXT, "Concrete")
+B.box(walls, "North_Wall_Lobby", FX1, NDX0 - 0.5, 0, WALL_TOP, LZ1 - 1, LZ1, EXT, "Concrete")
+B.box(walls, "North_Wall_Lobby", NDX1 + 0.5, LX1 + 2.5, -1, WALL_TOP, LZ1 - 1, LZ1, EXT, "Concrete")
+header(walls, "North_Lintel", NDX0 - 0.5, NDX1 + 0.5, DH, WALL_TOP, LZ1 - 1, LZ1, EXT, "Concrete")
+-- Os cantos dos retornos leste ficam em X mundo 7,5/8,5; a parede leste continua X 5..6.
+for _, c in { { LX0 + 0.5, LZ0 + 0.5 }, { LX0 + 0.5, LZ1 - 0.5 },
+	{ LX1 + 1.5, LZ0 + 0.5 }, { LX1 + 2.5, LZ1 - 0.5 } } do
+	B.cyl(walls, "Rounded_Corner", c[1], c[2], -1.02, WALL_TOP + 0.02, 1, EXT, "Concrete")
+end
+for _, z in { LZ0 + 0.5, LZ1 - 0.5 } do
+	for _, x in { NDX0 - 0.5, NDX1 + 0.5 } do
+		B.cyl(walls, "Door_Jamb", x, z, 0, DH + 0.02, 1, EXT, "Concrete")
+	end
+end
 -- faixa azul da fachada
-B.box(walls, "Facade_Band", LX1, LX1 + 0.1, 24, 26, LZ0, LZ1, "nasaBlue", "SmoothPlastic", DECOR)
+B.box(walls, "Facade_Band", LX1, LX1 + 0.1, 24, 26, LZ0 + 1, LZ1 - 1, "nasaBlue", "SmoothPlastic", DECOR)
 B.box(walls, "Facade_Band", LX0, LX1, 24, 26, LZ1, LZ1 + 0.1, "nasaBlue", "SmoothPlastic", DECOR)
 -- interna: Firing Room ↔ saguão (vão aberto Z 296..302) e fundo do saguão
 local INNER = "#2B313B"
-B.box(walls, "Inner_Wall", FX1, FX1 + 1, 0, ROOF_Y, LZ0 + 1, DOOR_Z0, INNER, "SmoothPlastic")
-B.box(walls, "Inner_Wall", FX1, FX1 + 1, 0, ROOF_Y, DOOR_Z1, LZ1 - 1, INNER, "SmoothPlastic")
-B.box(walls, "Inner_Lintel", FX1, FX1 + 1, DH, ROOF_Y, DOOR_Z0, DOOR_Z1, INNER, "SmoothPlastic")
+B.box(walls, "Inner_Wall", FX1, FX1 + 1, 0, ROOF_Y, LZ0 + 1, DOOR_Z0 - 0.5, INNER, "SmoothPlastic")
+B.box(walls, "Inner_Wall", FX1, FX1 + 1, 0, ROOF_Y, DOOR_Z1 + 0.5, LZ1 - 1, INNER, "SmoothPlastic")
+header(walls, "Inner_Lintel", FX1, FX1 + 1, DH, ROOF_Y, DOOR_Z0 - 0.5, DOOR_Z1 + 0.5, INNER, "SmoothPlastic")
+for _, z in { DOOR_Z0 - 0.5, DOOR_Z1 + 0.5 } do
+	B.cyl(walls, "Firing_Room_Jamb", FX1 + 0.5, z, 0, DH + 0.02, 1, INNER, "SmoothPlastic")
+end
 -- fundo do saguão (Z 288..289) com passagem para o corredor de fundo, que leva à porta sul
-B.box(walls, "Lobby_Back_Wall", FX1 + 1, NDX0, 0, ROOF_Y, 288, 289, "paleGray", "SmoothPlastic")
-B.box(walls, "Lobby_Back_Wall", NDX1, LX1 - 1, 0, ROOF_Y, 288, 289, "paleGray", "SmoothPlastic")
-B.box(walls, "Lobby_Back_Lintel", NDX0, NDX1, DH, ROOF_Y, 288, 289, "paleGray", "SmoothPlastic")
+B.box(walls, "Lobby_Back_Wall", FX1 + 1, NDX0 - 0.5, 0, ROOF_Y, 288, 289, "paleGray", "SmoothPlastic")
+B.box(walls, "Lobby_Back_Wall", NDX1 + 0.5, LX1 - 1, 0, ROOF_Y, 288, 289, "paleGray", "SmoothPlastic")
+header(walls, "Lobby_Back_Lintel", NDX0 - 0.5, NDX1 + 0.5, DH, ROOF_Y, 288, 289, "paleGray", "SmoothPlastic")
+for _, x in { NDX0 - 0.5, NDX1 + 0.5 } do
+	B.cyl(walls, "Lobby_Jamb", x, 288.5, 0, DH + 0.02, 1, "paleGray", "SmoothPlastic")
+end
 local frSign = B.box(walls, "Firing_Room_Sign", FX1 + 1, FX1 + 1.1, DH + 0.6, DH + 2.4, DOOR_Z0 - 1, DOOR_Z1 + 1, "space", "SmoothPlastic", DECOR)
 B.sign(frSign, "FIRING ROOM 1", nil, { face = N.Right, titleColor = "lightBlue" })
 
 -- revestimento interno da Firing Room (paredes escuras)
-B.box(walls, "Interior_Lining", LX0 + 1, LX0 + 1.1, 0, ROOF_Y, LZ0 + 1, LZ1 - 1, INNER, "SmoothPlastic", DECOR)
-B.box(walls, "Interior_Lining", LX0 + 1.1, FX1, 0, ROOF_Y, LZ0 + 1, LZ0 + 1.1, INNER, "SmoothPlastic", DECOR)
-B.box(walls, "Interior_Lining", LX0 + 1.1, FX1, 14, ROOF_Y, LZ1 - 1.1, LZ1 - 1, INNER, "SmoothPlastic", DECOR)
+B.box(walls, "Interior_Lining", LX0 + 1, LX0 + 1.1, 0, 14, LZ0 + 1, LZ1 - 1, INNER, "SmoothPlastic", DECOR)
+B.box(walls, "Interior_Lining", LX0 + 1, LX0 + 1.1, 14, ROOF_Y, LZ0 + 1, LZ1 - 1.1, INNER, "SmoothPlastic", DECOR)
+B.box(walls, "Interior_Lining", LX0 + 1, FX1, 0, ROOF_Y, LZ0 + 1, LZ0 + 1.1, INNER, "SmoothPlastic", DECOR)
+B.box(walls, "Interior_Lining", LX0 + 1, FX1, 14, ROOF_Y, LZ1 - 1.1, LZ1 - 1, INNER, "SmoothPlastic", DECOR)
+
+-- Rodapés da Firing Room e do saguão; nenhuma peça atravessa um vão.
+local skirts = B.group(walls, "Baseboards")
+for _, t in { { LZ0 + 1.22, 277, 3 }, { 277, 286, 2 }, { 286, 295, 1 }, { 295, LZ1 - 1.12, 0 } } do
+	local y = t[3] == 0 and 0.05 or t[3]
+	B.box(skirts, "West", LX0 + 1.1, LX0 + 1.22, y, y + 0.45, t[1], t[2], INNER, "Metal", DECOR)
+end
+B.box(skirts, "South_Firing", LX0 + 1.1, FX1, 3, 3.45, LZ0 + 1.1, LZ0 + 1.22, INNER, "Metal", DECOR)
+B.box(skirts, "North_Firing", LX0 + 1.1, FX1, 0.05, 0.5, LZ1 - 1.12, LZ1 - 1, INNER, "Metal", DECOR)
+for _, t in { { LZ0 + 1.22, 277, 3 }, { 277, 286, 2 }, { 286, 295, 1 }, { 295, DOOR_Z0, 0 }, { DOOR_Z1, LZ1 - 1.12, 0 } } do
+	local y = t[3] == 0 and 0.05 or t[3]
+	B.box(skirts, "Firing_East", FX1 - 0.12, FX1, y, y + 0.45, t[1], t[2], INNER, "Metal", DECOR)
+end
+B.box(skirts, "Lobby_East", LX1 - 1.12, LX1 - 1, 0.05, 0.5, LZ0 + 1.12, LZ1 - 1.12, "midGray", "Metal", DECOR)
+for _, r in { { LZ0 + 1.12, DOOR_Z0 }, { DOOR_Z1, LZ1 - 1.12 } } do
+	B.box(skirts, "Lobby_West", FX1 + 1, FX1 + 1.12, 0.05, 0.5, r[1], r[2], "midGray", "Metal", DECOR)
+end
+for _, z in { LZ0 + 1, LZ1 - 1.12, 287.88, 289 } do
+	for _, r in { { FX1 + 1.12, NDX0 }, { NDX1, LX1 - 1.12 } } do
+		B.box(skirts, "Lobby_Return", r[1], r[2], 0.05, 0.5, z, z + 0.12, "midGray", "Metal", DECOR)
+	end
+end
 
 -- degraus da Firing Room (fileiras em Y 0, 1, 2, 3; sobem em direção ao fundo, Z 251)
 local floorG = B.group(Arch, "Tiers")
@@ -220,7 +305,7 @@ B.box(floorG, "Carpet_Front", LX0 + 1, FX1, 0, 0.05, 295, LZ1 - 1, CARPET, "Fabr
 local TIERS = { { 1, 295 }, { 2, 286 }, { 3, 277 } }
 for _, t in TIERS do
 	B.box(floorG, "Tier_" .. t[1], LX0 + 1, FX1, t[1] - 1, t[1], LZ0 + 1, t[2], CARPET, "Fabric")
-	B.box(floorG, "Tier_Edge", LX0 + 1, FX1, t[1] - 0.15, t[1] + 0.02, t[2] - 0.3, t[2] + 0.02, "safety", "SmoothPlastic", DECOR_NS)
+	B.box(floorG, "Tier_Edge", LX0 + 1, FX1, t[1] - 0.15, t[1] + 0.05, t[2] - 0.3, t[2] + 0.05, "safety", "SmoothPlastic", DECOR_NS)
 end
 -- saguão
 B.box(floorG, "Lobby_Floor", FX1 + 1, LX1 - 1, 0, 0.05, 289, LZ1 - 1, "paleGray", "Marble", DECOR)
@@ -234,9 +319,11 @@ for _, p in { { -140, 270 }, { -118, 270 }, { -140, 298 }, { -118, 298 } } do
 end
 do
 	local lp = B.box(lightsG, "Lobby_Light", -104, -98, ROOF_Y - 0.1, ROOF_Y, 300, 308, "white", "Neon", DECOR_NS)
-	B.light(lp, "SurfaceLight", { Face = N.Bottom, Range = 24, Brightness = 1.2, Angle = 120, Shadows = false })
+	B.light(lp, "SurfaceLight", { Face = N.Bottom, Range = 28, Brightness = 1.6, Angle = 120, Shadows = false })
 	local hp = B.box(lightsG, "Entry_Hall_Light", -104, -98, ROOF_Y - 0.1, ROOF_Y, 264, 276, "white", "Neon", DECOR_NS)
-	B.light(hp, "SurfaceLight", { Face = N.Bottom, Range = 28, Brightness = 1.2, Angle = 120, Shadows = false })
+	B.light(hp, "SurfaceLight", { Face = N.Bottom, Range = 30, Brightness = 1.7, Angle = 120, Shadows = false })
+	-- forro claro no saguão (o teto de concreto escuro deixava o poço de 28 de altura preto)
+	B.box(lightsG, "Lobby_Ceiling", FX1 + 1, LX1 - 1, ROOF_Y - 0.05, ROOF_Y, LZ0 + 1, LZ1 - 1, "paleGray", "SmoothPlastic", DECOR_NS)
 end
 
 -- portas automáticas
@@ -260,12 +347,12 @@ B.sign(eastSign, "LAUNCH CONTROL CENTER", nil, { face = N.Right, bg = "nasaBlue"
 local northSign = B.box(ext, "LCC_Sign_North", -120, -96, 15, 20, LZ1, LZ1 + 0.1, "nasaBlue", "SmoothPlastic", DECOR)
 B.sign(northSign, "LAUNCH CONTROL CENTER", nil, { face = N.Back, bg = "nasaBlue", titleColor = "white", ppu = 20 })
 
--- placa do saguão (parede de fundo, voltada para +Z)
-local lobbyInfo = B.box(walls, "Lobby_Info", -96.1, -96, 3, 8, 262, 272, "space", "SmoothPlastic", DECOR)
+-- Placas na parede leste, fora dos futuros vãos do museu (Z mundo 113..125 e 151..163).
+local lobbyInfo = B.box(walls, "Lobby_Info", -96.1, -96, 3, 8, 255, 265, "space", "SmoothPlastic", DECOR)
 B.sign(lobbyInfo, "LAUNCH CONTROL CENTER",
 	"Launch teams in the Firing Rooms monitor the rocket, the pad and the weather before every launch. Firing Room 1 is on your left.",
 	{ face = N.Left, accent = "nasaBlue", titleScale = 0.22, maxBody = 30 })
-local lobbyDir = B.box(walls, "Lobby_Directions", -96.1, -96, 6, 8.5, 312, 318, "space", "SmoothPlastic", DECOR)
+local lobbyDir = B.box(walls, "Lobby_Directions", -96.1, -96, 6, 8.5, 291, 297, "space", "SmoothPlastic", DECOR)
 B.sign(lobbyDir, "SLS HANGAR (VAB)  ↑", "North exit · industrial corridor", { face = N.Left, accent = "safety", titleScale = 0.4 })
 
 ---------------------------------------------------------------------------------
@@ -310,7 +397,7 @@ local function station(parent, x0, x1, y, z0, z1)
 	local ch = B.group(parent, "Chair")
 	B.cyl(ch, "Base", cx, cz, y, y + 0.2, 1.4, "black", "Metal", DECOR)
 	B.cyl(ch, "Post", cx, cz, y + 0.2, y + 1.5, 0.25, "metalGray", "Metal", DECOR)
-	B.box(ch, "Seat", cx - 0.8, cx + 0.8, y + 1.5, y + 1.8, cz - 0.8, cz + 0.8, "nasaBlue", "Fabric")
+	B.cyl(ch, "Seat", cx, cz, y + 1.5, y + 1.8, 1.6, "nasaBlue", "Fabric")
 	B.box(ch, "Back", cx - 0.75, cx + 0.75, y + 1.8, y + 3.6, cz - 1, cz - 0.8, "nasaBlue", "Fabric", DECOR)
 end
 
@@ -318,9 +405,9 @@ for _, R in ROWS do
 	local row = B.group(Consoles, R.name)
 	local z0, z1 = R.z0, R.z0 + 2
 	for _, g in GROUPS do
-		B.box(row, "Console_Body", g[1], g[2], R.y, R.y + 2.6, z0, z1, CONSOLE, "SmoothPlastic")
-		B.box(row, "Console_Top", g[1] - 0.1, g[2] + 0.1, R.y + 2.6, R.y + 2.8, z0 - 0.4, z1 + 0.1, "#3B4048", "SmoothPlastic")
-		B.box(row, "Console_Stripe", g[1], g[2], R.y + 2.2, R.y + 2.4, z0 - 0.05, z0, "nasaBlue", "SmoothPlastic", DECOR)
+		rounded(row, "Console_Body", g[1], g[2], R.y, R.y + 2.6, z0, z1, CONSOLE, "SmoothPlastic")
+		rounded(row, "Console_Top", g[1] - 0.1, g[2] + 0.1, R.y + 2.6, R.y + 2.8, z0 - 0.4, z1 + 0.1, "#3B4048", "SmoothPlastic")
+		B.box(row, "Console_Stripe", g[1] + 1.25, g[2] - 1.25, R.y + 2.2, R.y + 2.4, z0 - 0.05, z0, "nasaBlue", "SmoothPlastic", DECOR)
 		local w = (g[2] - g[1]) / 4
 		for i = 0, 3 do
 			local st = B.group(row, "Station")
@@ -335,9 +422,9 @@ do
 	local Y, MZ0, MZ1, MX0, MX1 = 3, 260, 263, -134, -123
 	local mc = B.group(Consoles, "Main_Console")
 	mc:SetAttribute("FutureInteraction", "StartOperation")
-	local desk = B.box(mc, "Desk", MX0, MX1, Y, Y + 2.6, MZ0, MZ1, "#D5D9DE", "SmoothPlastic")
-	B.box(mc, "Desk_Top", MX0 - 0.2, MX1 + 0.2, Y + 2.6, Y + 2.8, MZ0 - 0.5, MZ1 + 0.1, "#2A2E35", "SmoothPlastic")
-	B.box(mc, "Desk_Stripe", MX0, MX1, Y + 2.1, Y + 2.4, MZ0 - 0.05, MZ0, "red", "SmoothPlastic", DECOR)
+	local desk = B.part(mc, "Desk", CFrame.new((MX0 + MX1) / 2, Y + 1.3, (MZ0 + MZ1) / 2) * CFrame.Angles(0, 0, math.pi / 2), Vector3.new(2.6, MX1 - MX0, MZ1 - MZ0), "#D5D9DE", "SmoothPlastic", nil, "Cylinder")
+	rounded(mc, "Desk_Top", MX0 - 0.2, MX1 + 0.2, Y + 2.6, Y + 2.8, MZ0 - 0.5, MZ1 + 0.1, "#2A2E35", "SmoothPlastic")
+	B.box(mc, "Desk_Stripe", MX0 + 1.8, MX1 - 1.8, Y + 2.1, Y + 2.4, MZ0 - 0.05, MZ0, "red", "SmoothPlastic", DECOR)
 	mc.PrimaryPart = desk
 	local MON = {
 		{ "COUNTDOWN", { "T-  00:00:00", "STATUS  HOLD", "AWAITING START" }, "#E5B52E" },
@@ -365,7 +452,7 @@ do
 	local ch = B.group(mc, "Chair")
 	B.cyl(ch, "Base", -128.5, 258.2, Y, Y + 0.2, 1.6, "black", "Metal", DECOR)
 	B.cyl(ch, "Post", -128.5, 258.2, Y + 0.2, Y + 1.5, 0.3, "metalGray", "Metal", DECOR)
-	B.box(ch, "Seat", -129.4, -127.6, Y + 1.5, Y + 1.85, 257.3, 259.1, "red", "Fabric")
+	B.cyl(ch, "Seat", -128.5, 258.2, Y + 1.5, Y + 1.85, 1.8, "red", "Fabric")
 	B.box(ch, "Back", -129.3, -127.7, Y + 1.85, Y + 4.2, 256.9, 257.2, "red", "Fabric", DECOR)
 	local tag = B.box(mc, "Name_Plate", -131, -126, Y + 1.2, Y + 2, MZ1, MZ1 + 0.05, "space", "SmoothPlastic", DECOR)
 	B.sign(tag, "LAUNCH DIRECTOR", nil, { face = N.Back, titleColor = "safety" })
@@ -375,7 +462,8 @@ end
 do
 	local racks = B.group(Consoles, "Comms_Racks")
 	for _, x in { -148, -145, -142, -115, -112 } do
-		B.box(racks, "Rack", x, x + 2.6, 3, 10, 251.1, 253.5, "#24282E", "Metal")
+		-- 0,02 à frente do revestimento: o fundo não coincide com o do rodapé South_Firing
+		B.box(racks, "Rack", x, x + 2.6, 3, 10, 251.12, 253.5, "#24282E", "Metal")
 		for j = 0, 4 do
 			local col = (j % 3 == 0) and "#3CCB5A" or ((j % 3 == 1) and "#E5B52E" or "#8ECDFB")
 			B.box(racks, "Rack_Led", x + 0.4, x + 2.2, 4 + j * 1.2, 4.15 + j * 1.2, 253.5, 253.55, col, "Neon", DECOR_NS)
@@ -405,7 +493,7 @@ do
 		label(cell, 0.05, 0.55, 0.9, 0.38, "NOMINAL", "#3CCB5A", Font.fromEnum(Enum.Font.Code))
 	end
 	-- telão lateral esquerdo: trajetória
-	local left = B.box(Screens, "Side_Screen_Trajectory", -148.5, -139.5, 16, 24.5, SZ0, SZ1, "black", "SmoothPlastic", DECOR)
+	local left = B.box(Screens, "Side_Screen_Trajectory", LX0 + 1.1, -139.5, 16, 24.5, SZ0, SZ1, "black", "SmoothPlastic", DECOR)
 	local lf = canvas(left, N.Front, 24)
 	label(lf, 0.04, 0.02, 0.92, 0.1, "ASCENT TRAJECTORY", "#8ECDFB")
 	rect(lf, 0.08, 0.88, 0.86, 0.01, "#397EC4")
@@ -416,7 +504,7 @@ do
 	end
 	label(lf, 0.1, 0.9, 0.8, 0.08, "ALTITUDE vs DOWNRANGE (ILLUSTRATIVE)", "#AAB3BB", Font.fromEnum(Enum.Font.Code))
 	-- telão lateral direito: clima e área
-	local right = B.box(Screens, "Side_Screen_Weather", -117.5, -108.5, 16, 24.5, SZ0, SZ1, "black", "SmoothPlastic", DECOR)
+	local right = B.box(Screens, "Side_Screen_Weather", -117.5, FX1, 16, 24.5, SZ0, SZ1, "black", "SmoothPlastic", DECOR)
 	local rf = canvas(right, N.Front, 24)
 	label(rf, 0.04, 0.02, 0.92, 0.1, "WEATHER · RANGE", "#8ECDFB")
 	local wx = { { "WIND", "9 KT  E" }, { "CEILING", "6000 FT" }, { "VISIBILITY", "7 MI" }, { "LIGHTNING", "NONE" }, { "UPPER WINDS", "GO" }, { "RANGE", "CLEAR" } }
@@ -426,8 +514,8 @@ do
 		label(rf, 0.55, y, 0.4, 0.1, w[2], "#3CCB5A", Font.fromEnum(Enum.Font.Code)).TextXAlignment = Enum.TextXAlignment.Right
 	end
 	-- moldura dos telões
-	B.box(Screens, "Screen_Frame", -149, -108, 14.4, 15, SZ0 - 0.1, SZ1 + 0.1, "darkGray", "Metal", DECOR)
-	B.box(Screens, "Screen_Frame", -149, -108, 25.5, 26.1, SZ0 - 0.1, SZ1 + 0.1, "darkGray", "Metal", DECOR)
+	B.box(Screens, "Screen_Frame", LX0 + 1.1, -108, 14.4, 15, SZ0, SZ1, "darkGray", "Metal", DECOR)
+	B.box(Screens, "Screen_Frame", LX0 + 1.1, -108, 25.5, 26.1, SZ0, SZ1, "darkGray", "Metal", DECOR)
 end
 
 -- diagramas nas paredes laterais
@@ -480,9 +568,10 @@ local p3 = B.group(VP, "Walk_to_Observation")
 local PX0, PX1, PZ0, PZ1 = -105, -97, 295, 640
 B.box(p3, "Walkway", PX0, PX1, -1, 0, PZ0, PZ1, WALK, "Concrete")
 B.box(p3, "Curb", PX0 - 0.5, PX0, -1, 0.25, PZ0, PZ1, CURB, "Concrete", DECOR)
-B.box(p3, "Curb", PX1, PX1 + 0.5, -1, 0.25, PZ0, PZ1, CURB, "Concrete", DECOR)
+-- meio-fio leste começa depois da junção com o VAB_Exit_Link (Z 295..303), sem cruzar o caminho
+B.box(p3, "Curb", PX1, PX1 + 0.5, -1, 0.25, 303, PZ1, CURB, "Concrete", DECOR)
 for z = PZ0 + 20, PZ1 - 10, 20 do
-	B.box(p3, "Expansion_Joint", PX0, PX1, 0, 0.02, z - 0.1, z + 0.1, "#9A958A", "SmoothPlastic", DECOR_NS)
+	B.box(p3, "Expansion_Joint", PX0, PX1, 0, 0.05, z - 0.1, z + 0.1, "#9A958A", "SmoothPlastic", DECOR_NS)
 end
 
 -- postes de luz (lado oeste do passeio; poucas luzes, sem sombra)
@@ -503,9 +592,12 @@ for z = 380, 620, 60 do lamp(PX0 - 1.5, z, true) end -- 5 postes: Z 380, 440, 50
 -- sinalização de direção
 local signs = B.group(VP, "Wayfinding")
 -- axis "X": painel no plano YZ (faces Right/Left); axis "Z": plano XY (faces Front/Back)
-local function signPost(name, x, z, axis, panels, base)
+-- posts: deslocamentos {dx, dz} dos postes em relação ao centro (padrão: um poste no centro)
+local function signPost(name, x, z, axis, panels, base, posts)
 	local s = B.group(signs, name)
-	B.cyl(s, "Post", x, z, base or 0, 8.6, 0.35, "darkGray", "Metal")
+	for _, o in posts or { { 0, 0 } } do
+		B.cyl(s, "Post", x + o[1], z + o[2], base or 0, 8.6, 0.35, "darkGray", "Metal")
+	end
 	for _, P in panels do
 		local part, fa, fb
 		if axis == "X" then
@@ -526,14 +618,17 @@ local GREEN = "#2E7D4F"
 -- ao sair do VAB (olhando para −X): passeio da observação à frente, virando ao norte (+Z)
 signPost("Sign_VAB_Exit", -86.5, 307, "X", {
 	{ y = 6.6, a = { "↖  PAD OBSERVATION", GREEN } },
-})
+}, nil, { { -0.27, 0 } }) -- poste atrás da face Left (a placa só tem texto na face Right)
 signPost("Sign_Midway", -95.5, 490, "Z", {
 	{ y = 6.6, a = { "PAD OBSERVATION  ↑", GREEN }, b = { "VEHICLE ASSEMBLY BUILDING  ↑" } },
-}, -1)
+}, -1, { { -2.75, 0 }, { 2.75, 0 } }) -- dupla face: dois postes nas bordas, fora do texto
 -- aviso da zona de exclusão (voltado para o leste, visto de quem anda pelo passeio)
 for _, z in { 400, 560 } do
 	local w = B.group(signs, "Exclusion_Notice")
-	B.cyl(w, "Post", -96, z, -1, 5, 0.3, "darkGray", "Metal")
+	-- placa de dupla face: dois postes nas bordas, fora do texto
+	for _, dz in { -1.75, 1.75 } do
+		B.cyl(w, "Post", -96, z + dz, -1, 5, 0.3, "darkGray", "Metal")
+	end
 	local p = B.box(w, "Panel", -96.1, -95.9, 3, 5, z - 1.6, z + 1.6, "#B32D2D", "SmoothPlastic", DECOR)
 	B.sign(p, "CRAWLERWAY — NO ENTRY", nil, { face = N.Left, bg = "#B32D2D", titleColor = "white", ppu = 40 })
 	B.sign(p, "CRAWLERWAY — NO ENTRY", nil, { face = N.Right, bg = "#B32D2D", titleColor = "white", ppu = 40 })
@@ -543,20 +638,22 @@ end
 local obs = B.group(VP, "Pad_Observation")
 local OX0, OX1, OZ0, OZ1 = -140, -95, 640, 720
 B.box(obs, "Deck", OX0, OX1, -1, 0, OZ0, OZ1, WALK, "Concrete")
-B.box(obs, "Deck_Inlay", -110, -97, 0, 0.03, 650, 710, "#B9B3A6", "SmoothPlastic", DECOR_NS)
+B.box(obs, "Deck_Inlay", -110, -97, 0, 0.05, 650, 710, "#B9B3A6", "SmoothPlastic", DECOR_NS)
 -- arquibancada: 5 degraus de 1 stud, subindo para −X
 local stands = B.group(obs, "Grandstand")
 for k = 1, 5 do
 	local xf = -110 - 3 * (k - 1)
 	B.box(stands, "Step_" .. k, -125, xf, k - 1, k, 650, 710, "#D5D7D8", "Concrete")
-	B.box(stands, "Step_Edge", xf - 0.3, xf + 0.02, k - 0.12, k + 0.02, 650, 710, "safety", "SmoothPlastic", DECOR_NS)
+	B.box(stands, "Step_Edge", xf - 0.3, xf + 0.05, k - 0.12, k + 0.05, 649.95, 710.05, "safety", "SmoothPlastic", DECOR_NS)
 end
 -- cobertura sobre a arquibancada
 for _, z in { 651, 680, 709 } do
-	B.box(stands, "Roof_Column", -126, -125.2, 0, 14, z - 0.4, z + 0.4, "darkGray", "Metal")
+	B.cyl(stands, "Roof_Column", -125.6, z, 0, 14, 0.8, "darkGray", "Metal")
 end
-B.box(stands, "Roof", -127, -108, 14, 14.6, 648, 712, "white", "SmoothPlastic")
-B.box(stands, "Roof_Fascia", -108.4, -108, 13.6, 14.6, 648, 712, "nasaBlue", "SmoothPlastic", DECOR)
+-- cobertura só sobre os degraus altos (X −127..−117): não corta mais a vista da 39B
+B.box(stands, "Roof", -127, -117, 14, 14.6, 648, 712, "white", "SmoothPlastic")
+-- testeira envolve a ponta do telhado (0,05 para fora em X, Y e Z): sem faces coplanares
+B.box(stands, "Roof_Fascia", -117.4, -116.95, 13.6, 14.65, 647.95, 712.05, "nasaBlue", "SmoothPlastic", DECOR)
 -- guarda-corpos: frente (X −95.5, voltado para a plataforma), fundo, laterais
 local rails = B.group(obs, "Railings")
 local function rail(x0, x1, z0, z1, posts)
@@ -564,7 +661,7 @@ local function rail(x0, x1, z0, z1, posts)
 		B.box(rails, "Rail", x0, x1, ry, ry + 0.25, z0, z1, "safety", "Metal")
 	end
 	for _, p in posts do
-		B.box(rails, "Rail_Post", p[1] - 0.12, p[1] + 0.12, 0, 3.65, p[2] - 0.12, p[2] + 0.12, "safety", "Metal")
+		B.cyl(rails, "Rail_Post", p[1], p[2], 0, 3.65, 0.24, "safety", "Metal")
 	end
 end
 do
@@ -592,20 +689,21 @@ end
 -- luzes da área de observação (2)
 for _, z in { 655, 705 } do
 	local L = B.group(lamps, "Lamp_Post")
-	B.cyl(L, "Base", -100, z, 0, 0.4, 1, "darkGray", "Metal")
-	B.cyl(L, "Pole", -100, z, 0.4, 10, 0.35, "darkGray", "Metal", DECOR)
-	local head = B.box(L, "Head", -100.6, -99.4, 10, 10.4, z - 0.6, z + 0.6, "#FFF4E0", "Neon", DECOR_NS)
+	-- no fundo do deck (X −137), fora da faixa de visão para a plataforma
+	B.cyl(L, "Base", -137, z, 0, 0.4, 1, "darkGray", "Metal")
+	B.cyl(L, "Pole", -137, z, 0.4, 10, 0.35, "darkGray", "Metal", DECOR)
+	local head = B.box(L, "Head", -137.6, -136.4, 10, 10.4, z - 0.6, z + 0.6, "#FFF4E0", "Neon", DECOR_NS)
 	B.light(head, "PointLight", { Range = 16, Brightness = 0.8, Shadows = false, Color = Color3.fromRGB(255, 236, 205) })
 end
 -- placas: portal de entrada (voltado para −Z, para quem chega) e painéis junto ao guarda-corpo
 do
 	local gate = B.group(obs, "Entrance_Arch")
 	for _, x in { PX0 - 1, PX1 + 1 } do
-		B.box(gate, "Arch_Post", x - 0.4, x + 0.4, 0, 11, OZ0 - 2.4, OZ0 - 1.6, "darkGray", "Metal")
+		B.box(gate, "Arch_Post", x - 0.4, x + 0.4, 0, 11.05, OZ0 - 2.4, OZ0 - 1.6, "darkGray", "Metal")
 	end
 	local top = B.box(gate, "Arch_Sign", PX0 - 1, PX1 + 1, 8.5, 11, OZ0 - 2.2, OZ0 - 1.8, "nasaBlue", "SmoothPlastic", DECOR)
 	B.sign(top, "PAD OBSERVATION", nil, { face = N.Front, bg = "nasaBlue", titleColor = "white", ppu = 30 })
-	B.sign(top, "TO LAUNCH CONTROL CENTER", nil, { face = N.Back, bg = "nasaBlue", titleColor = "white", ppu = 30 })
+	B.sign(top, "TO VEHICLE ASSEMBLY BUILDING", nil, { face = N.Back, bg = "nasaBlue", titleColor = "white", ppu = 30 })
 end
 local function lectern(z, title, body, accent)
 	local l = B.group(obs, "Info_Panel")

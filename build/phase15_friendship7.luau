@@ -113,11 +113,13 @@ for _, d in cab:GetChildren() do
 end
 table.sort(panels, function(a, b) return a.Position.Z < b.Position.Z end)
 for _, sp in panels do
-	local cf = sp.CFrame * CFrame.new(0.55, -0.05, 0.075) * CFrame.Angles(0, 0, math.rad(-2.5))
+	-- Abaixo do painel (centro 2,305 abaixo, Y ≈ −56,8), a 0,05 da parede: não cobre o título nem as leituras do Switch_Panel.
+	local PAPER_DY = -2.305
+	local cf = sp.CFrame * CFrame.new(0.55, PAPER_DY, -0.03) * CFrame.Angles(0, 0, math.rad(-2.5))
 	local paper = B.part(doc, "Paper", cf, Vector3.new(1.9, 2.15, 0.02), "#F3EEDC", "SmoothPlastic", DECOR_NS)
 	B.sign(paper, "EMERGENCY PROCEDURE", "RESTORATION CODE: issued during a communication blackout.\n\nENTER THE CODE AT THE RADIO TERMINAL.",
 		{ face = N.Back, bg = "#F3EEDC", titleColor = "#B3261E", bodyColor = "#1D2330", titleScale = 0.22, ppu = 150, maxBody = 22 })
-	B.part(doc, "Clip", sp.CFrame * CFrame.new(0.55, 1.05, 0.1), Vector3.new(0.7, 0.2, 0.07), "metalGray", "Metal", DECOR_NS)
+	B.part(doc, "Clip", sp.CFrame * CFrame.new(0.55, PAPER_DY + 1.1, 0.005), Vector3.new(0.7, 0.2, 0.07), "metalGray", "Metal", DECOR_NS)
 end
 
 ---------------------------------------------------------------------------------

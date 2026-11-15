@@ -21,8 +21,8 @@ door:SetAttribute("SensorRadius", 13)
 for _, side in { -1, 1 } do
 	local leaf = B.group(door, side < 0 and "Leaf_L" or "Leaf_R")
 	local x0, x1 = (side < 0) and -7 or 0, (side < 0) and 0 or 7
-	local glass = B.box(leaf, "Glass", x0, x1, 0, 11.8, 54.85, 55.15, "glass", "Glass", { transparency = 0.45 })
-	B.box(leaf, "Frame_Edge", side < 0 and -0.25 or 0, side < 0 and 0 or 0.25, 0, 11.8, 54.8, 55.2, "midGray", "Metal")
+	local glass = B.box(leaf, "Glass", (side < 0) and x0 or 0.02, (side < 0) and -0.02 or x1, 0, 11.8, 54.85, 55.15, "glass", "Glass", { transparency = 0.45 })
+	B.box(leaf, "Frame_Edge", side < 0 and -0.25 or 0, side < 0 and 0 or 0.25, 0, 11.82, 54.8, 55.2, "midGray", "Metal")
 	B.box(leaf, "Handle_Strip", x0, x1, 5.6, 6, 54.78, 55.22, "nasaBlue", "SmoothPlastic", { collide = false })
 	leaf.PrimaryPart = glass
 	-- deslocamento de abertura: cada folha recolhe para dentro da parede

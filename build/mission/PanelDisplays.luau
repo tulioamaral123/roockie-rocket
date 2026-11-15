@@ -261,7 +261,7 @@ local function buildPaper(part, i)
 	local pw, ph = s.X * ppu, s.Y * ppu
 	local g = surface(part, Enum.NormalId.Back, ppu, "F7_Paper_" .. i)
 	local bg = box(g, 0, 0, pw, ph, C.paper)
-	label(bg, "EMERGENCY PROCEDURE", 14, 12, pw - 28, 34, 24, Color3.fromHex("#B3261E"), FONT_H, Enum.TextXAlignment.Center)
+	label(bg, "EMERGENCY PROCEDURE", 14, 12, pw - 28, 34, 21, Color3.fromHex("#B3261E"), FONT_H, Enum.TextXAlignment.Center)
 	label(bg, "MERCURY CONTROL · FRIENDSHIP 7", 14, 48, pw - 28, 20, 13, C.ink, FONT_M, Enum.TextXAlignment.Center)
 	box(bg, 14, 74, pw - 28, 2, C.ink)
 	label(bg, "RESTORATION CODE:", 14, 90, pw - 28, 26, 20, C.ink, FONT_H, Enum.TextXAlignment.Center)
@@ -335,6 +335,12 @@ local function buildHud()
 	ui.reticle = round(new("Frame", { AnchorPoint = Vector2.new(0.5, 0.5), Position = UDim2.fromScale(0.5, 0.5), Size = UDim2.fromOffset(6, 6), BackgroundColor3 = Color3.new(1, 1, 1), BorderSizePixel = 0 }, g))
 	stroke(ui.reticle, Color3.new(0, 0, 0), 1)
 	ui.hud = g
+	-- os botões Diary/Settings do museu ficam no topo à direita e batem na faixa de aviso no celular
+	local mh = Players.LocalPlayer.PlayerGui:FindFirstChild("MuseumHud")
+	if mh and mh.Enabled then
+		mh.Enabled = false
+		ui.museumHud = mh
+	end
 end
 
 function D.setBanner(title, detail, color)
@@ -378,6 +384,7 @@ function D.create(config, p)
 end
 
 function D.destroy()
+	if ui.museumHud and ui.museumHud.Parent then ui.museumHud.Enabled = true end
 	for _, g in guis do g:Destroy() end
 	table.clear(guis)
 	for _, g in hidden do
@@ -533,7 +540,8 @@ end
 
 -- resumo final
 function D.showSummary(s, onClose)
-	local g = new("ScreenGui", { Name = "F7_Summary", IgnoreGuiInset = true, ResetOnSpawn = false, DisplayOrder = 30 }, Players.LocalPlayer:WaitForChild("PlayerGui"))
+	-- área segura padrão (abaixo da barra do Roblox): o cartão não fica sob os botões do topo
+	local g = new("ScreenGui", { Name = "F7_Summary", ResetOnSpawn = false, DisplayOrder = 30 }, Players.LocalPlayer:WaitForChild("PlayerGui"))
 	local card = new("Frame", {
 		AnchorPoint = Vector2.new(0.5, 0.5), Position = UDim2.fromScale(0.5, 0.5), Size = UDim2.new(0.8, 0, 0, 0),
 		AutomaticSize = Enum.AutomaticSize.Y, BackgroundColor3 = C.bg, BackgroundTransparency = 0.05, BorderSizePixel = 0,
@@ -552,14 +560,27 @@ function D.showSummary(s, onClose)
 	for i, r in s.results or cfg.Text.results do
 		local row = new("Frame", { Size = UDim2.new(1, 0, 0, 34), BackgroundColor3 = C.panel, BorderSizePixel = 0, LayoutOrder = 2 + i }, card)
 		round(row, UDim.new(0, 6))
-		label(row, r[1], 12, 0, 260, 34, 17, C.text, FONT).TextYAlignment = Enum.TextYAlignment.Center
+		local k = label(row, r[1], 12, 0, 0, 34, 17, C.text, FONT)
+		k.Size = UDim2.new(0.6, -12, 1, 0)
+		k.TextYAlignment = Enum.TextYAlignment.Center
 		local v = label(row, r[2], 0, 0, 0, 34, 17, C.green, FONT_H, Enum.TextXAlignment.Right)
-		v.Size = UDim2.new(1, -12, 1, 0)
+		v.Position = UDim2.fromScale(0.6, 0)
+		v.Size = UDim2.new(0.4, -12, 1, 0)
 		v.TextYAlignment = Enum.TextYAlignment.Center
 	end
 	line(s.note or cfg.Text.note, 12, C.sub, FONT_M, 10)
 	local btn = new("TextButton", { Size = UDim2.new(0, 180, 0, 46), BackgroundColor3 = C.green, Text = "CLOSE", TextSize = 18, FontFace = FONT_H, TextColor3 = C.bg, LayoutOrder = 11, AutoButtonColor = true, Modal = true }, card)
 	round(btn, UDim.new(0, 8))
+	-- celular deitado: o cartão pode passar da altura da tela; reduz por inteiro até caber
+	local fit = new("UIScale", {}, card)
+	local function refit()
+		local avail = g.AbsoluteSize.Y - 16
+		local h = card.AbsoluteSize.Y / fit.Scale
+		fit.Scale = (h > avail and avail > 0) and avail / h or 1
+	end
+	card:GetPropertyChangedSignal("AbsoluteSize"):Connect(refit)
+	g:GetPropertyChangedSignal("AbsoluteSize"):Connect(refit)
+	task.defer(refit)
 	btn.Activated:Connect(function()
 		g:Destroy()
 		if onClose then onClose() end

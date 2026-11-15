@@ -1,0 +1,26 @@
+return {
+	Id = "hubble",
+	Island = "atlantis",
+	Name = "Hubble Space Telescope",
+	Category = "Space telescope",
+	Program = "Hubble",
+	Period = "1990–today",
+	Type = "reconstrucao_digital",
+	History = "Hubble was launched in 1990 and is the only telescope designed to be serviced by astronauts in orbit. In May 2009, the crew of STS-125 used Atlantis's robotic arm during spacewalks to upgrade it.",
+	DidYouKnow = "The Atlantis exhibit in Florida includes a full-size Hubble model.",
+	Gallery = { "s125e009990" },
+	KeyFacts = {
+		{ Text = "On May 18, 2009, STS-125 astronauts John Grunsfeld and Andrew Feustel made the mission's fifth and final spacewalk, lasting 7 hours and 2 minutes.", Source = "s125e009990" },
+		{ Text = "They installed a replacement battery group, replaced a Fine Guidance Sensor and three thermal blankets protecting Hubble's electronics.", Source = "s125e009990" },
+		{ Text = "Grunsfeld worked from a foot restraint at the end of Atlantis's robotic arm.", Source = "s125e009990" },
+	},
+	Interactions = {},
+	PromptDistance = 16,
+	Image = { NasaId = "s125e009990", Credit = "NASA", AssetId = nil },
+	Sources = {
+		{ Title = "Hubble mission page", Url = "https://science.nasa.gov/mission/hubble/" },
+		{ Title = "STS-125 spacewalk (s125e009990)", Url = "https://images.nasa.gov/details/s125e009990" },
+		{ Title = "Atlantis exhibit (KSC-2012-6314)", Url = "https://images.nasa.gov/details/KSC-2012-6314" },
+	},
+	Verified = false,
+}

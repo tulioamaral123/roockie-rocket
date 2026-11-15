@@ -5,31 +5,65 @@
     "ReplicatedStorage": {
       "MissionSystem": {
         "$className": "Folder",
-        "$attributes": { "RojoManaged": true },
+        "$attributes": {
+          "RojoManaged": true
+        },
         "Remotes": {
           "$className": "Folder",
-          "StartMission": { "$className": "RemoteEvent" },
-          "MissionUpdate": { "$className": "RemoteEvent" },
-          "MissionAction": { "$className": "RemoteEvent" },
-          "SubmitCode": { "$className": "RemoteEvent" },
-          "SubmitChoice": { "$className": "RemoteEvent" }
+          "StartMission": {
+            "$className": "RemoteEvent"
+          },
+          "MissionUpdate": {
+            "$className": "RemoteEvent"
+          },
+          "MissionAction": {
+            "$className": "RemoteEvent"
+          },
+          "SubmitCode": {
+            "$className": "RemoteEvent"
+          },
+          "SubmitChoice": {
+            "$className": "RemoteEvent"
+          }
         },
         "Config": {
           "$className": "Folder",
-          "Friendship7Config": { "$path": "build/mission/Friendship7Config.luau" }
+          "Friendship7Config": {
+            "$path": "build/mission/Friendship7Config.luau"
+          }
+        }
+      },
+      "MuseumSystem": {
+        "$className": "Folder",
+        "$attributes": {
+          "RojoManaged": true
+        },
+        "Shared": {
+          "$path": "build/museum/shared"
         }
       }
     },
     "ServerScriptService": {
-      "IntegracaoLinux": { "$path": "build/tests/IntegracaoLinux.server.luau" },
+      "IntegracaoLinux": {
+        "$path": "build/tests/IntegracaoLinux.server.luau"
+      },
       "MissionSystem": {
         "$className": "Folder",
         "Friendship7MissionService": {
           "$path": "build/mission/Friendship7MissionService.server.luau",
-          "Task1ControlService": { "$path": "build/mission/Task1ControlService.luau" },
-          "Task2CommunicationService": { "$path": "build/mission/Task2CommunicationService.luau" },
-          "Task3ReentryService": { "$path": "build/mission/Task3ReentryService.luau" }
+          "Task1ControlService": {
+            "$path": "build/mission/Task1ControlService.luau"
+          },
+          "Task2CommunicationService": {
+            "$path": "build/mission/Task2CommunicationService.luau"
+          },
+          "Task3ReentryService": {
+            "$path": "build/mission/Task3ReentryService.luau"
+          }
         }
+      },
+      "MuseumSystem": {
+        "$path": "build/museum/server"
       }
     },
     "StarterPlayer": {
@@ -38,13 +72,28 @@
           "$className": "Folder",
           "MissionController": {
             "$path": "build/mission/MissionController.client.luau",
-            "FirstPersonController": { "$path": "build/mission/FirstPersonController.luau" },
-            "CameraShakeController": { "$path": "build/mission/CameraShakeController.luau" },
-            "GazeInteractionController": { "$path": "build/mission/GazeInteractionController.luau" },
-            "PanelInteractionController": { "$path": "build/mission/PanelInteractionController.luau" },
-            "AudioController": { "$path": "build/mission/AudioController.luau" },
-            "PanelDisplays": { "$path": "build/mission/PanelDisplays.luau" }
+            "FirstPersonController": {
+              "$path": "build/mission/FirstPersonController.luau"
+            },
+            "CameraShakeController": {
+              "$path": "build/mission/CameraShakeController.luau"
+            },
+            "GazeInteractionController": {
+              "$path": "build/mission/GazeInteractionController.luau"
+            },
+            "PanelInteractionController": {
+              "$path": "build/mission/PanelInteractionController.luau"
+            },
+            "AudioController": {
+              "$path": "build/mission/AudioController.luau"
+            },
+            "PanelDisplays": {
+              "$path": "build/mission/PanelDisplays.luau"
+            }
           }
+        },
+        "MuseumClient": {
+          "$path": "build/museum/client"
         }
       }
     }

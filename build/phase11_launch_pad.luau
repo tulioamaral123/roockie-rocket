@@ -83,19 +83,21 @@ task.wait()
 local park = B.group(Root, "CrawlerParking")
 B.box(park, "Spur", SPUR_X0, PARK_X0, -1, 0, SPUR_Z0, PARK_Z1, CONCRETE, "Concrete")
 -- Chanfro a 45° na junção rota/ramal (curva suave), mesmo concreto do acostamento
-B.part(park, "Spur_Fillet", CFrame.new(SPUR_X0, -0.5, SPUR_Z0) * CFrame.Angles(0, math.rad(45), 0),
+-- topo em Y −0,05: onde cruza o acostamento e o ramal fica por baixo (sem disputar a face)
+B.part(park, "Spur_Fillet", CFrame.new(SPUR_X0, -0.55, SPUR_Z0) * CFrame.Angles(0, math.rad(45), 0),
 	V(15, 1, 15), CONCRETE, "Concrete")
 B.box(park, "Parking_Slab", PARK_X0, PARK_X1, -1, 0, PARK_Z0, PARK_Z1, PAVE, "Concrete")
 -- Contorno da vaga (crawler 38 × 44, folga ≥ 4 em cada lado): só tinta no piso
 local px0, px1, pz0, pz1 = PARK.X - 23, PARK.X + 23, PARK.Z - 26, PARK.Z + 26
 B.box(park, "Bay_Line", px0, px1, 0, 0.04, pz0, pz0 + 0.6, "safety", "SmoothPlastic", DECOR_NS)
 B.box(park, "Bay_Line", px0, px1, 0, 0.04, pz1 - 0.6, pz1, "safety", "SmoothPlastic", DECOR_NS)
-B.box(park, "Bay_Line", px0, px0 + 0.6, 0, 0.04, pz0, pz1, "safety", "SmoothPlastic", DECOR_NS)
-B.box(park, "Bay_Line", px1 - 0.6, px1, 0, 0.04, pz0, pz1, "safety", "SmoothPlastic", DECOR_NS)
+B.box(park, "Bay_Line", px0, px0 + 0.6, 0, 0.04, pz0 + 0.6, pz1 - 0.6, "safety", "SmoothPlastic", DECOR_NS)
+B.box(park, "Bay_Line", px1 - 0.6, px1, 0, 0.04, pz0 + 0.6, pz1 - 0.6, "safety", "SmoothPlastic", DECOR_NS)
 B.box(park, "Center_Mark", PARK.X - 3, PARK.X + 3, 0, 0.04, PARK.Z - 0.3, PARK.Z + 0.3, "white", "SmoothPlastic", DECOR_NS)
-B.box(park, "Center_Mark", PARK.X - 0.3, PARK.X + 0.3, 0, 0.04, PARK.Z - 3, PARK.Z + 3, "white", "SmoothPlastic", DECOR_NS)
--- Faixa de guia do ramal (do eixo da rota até o centro da vaga)
-B.box(park, "Guide_Line", 26, px0, 0, 0.04, PARK.Z - 0.3, PARK.Z + 0.3, "safety", "SmoothPlastic", DECOR_NS)
+B.box(park, "Center_Mark", PARK.X - 0.3, PARK.X + 0.3, 0, 0.06, PARK.Z - 3, PARK.Z + 3, "white", "SmoothPlastic", DECOR_NS)
+-- Faixa de guia do ramal (do eixo da rota até o centro da vaga); 0,06 de altura: cruza a linha
+-- de borda e os traços da zona de exclusão (0,04) sem disputar a face
+B.box(park, "Guide_Line", 26, px0, 0, 0.06, PARK.Z - 0.3, PARK.Z + 0.3, "safety", "SmoothPlastic", DECOR_NS)
 task.wait()
 
 ---------------------------------------------------------------------------------
@@ -113,8 +115,8 @@ local pm = B.group(arch, "Markings")
 local mlx, mlz0, mlz1 = 24.1, PAD.Z - 20, PAD.Z + 20 -- pegada da base do ML
 B.box(pm, "ML_Footprint", -mlx, mlx, 0, 0.04, mlz0, mlz0 + 0.6, "safety", "SmoothPlastic", DECOR_NS)
 B.box(pm, "ML_Footprint", -mlx, mlx, 0, 0.04, mlz1 - 0.6, mlz1, "safety", "SmoothPlastic", DECOR_NS)
-B.box(pm, "ML_Footprint", -mlx, -mlx + 0.6, 0, 0.04, mlz0, mlz1, "safety", "SmoothPlastic", DECOR_NS)
-B.box(pm, "ML_Footprint", mlx - 0.6, mlx, 0, 0.04, mlz0, mlz1, "safety", "SmoothPlastic", DECOR_NS)
+B.box(pm, "ML_Footprint", -mlx, -mlx + 0.6, 0, 0.04, mlz0 + 0.6, mlz1 - 0.6, "safety", "SmoothPlastic", DECOR_NS)
+B.box(pm, "ML_Footprint", mlx - 0.6, mlx, 0, 0.04, mlz0 + 0.6, mlz1 - 0.6, "safety", "SmoothPlastic", DECOR_NS)
 B.box(pm, "Pad_Centerline", -0.3, 0.3, 0, 0.04, ROUTE_Z1, mlz0, "white", "SmoothPlastic", DECOR_NS)
 for _, x in { -34, 34 } do -- envelope de 68 na plataforma
 	for z = ROUTE_Z1 + 2, 720, 12 do
@@ -228,7 +230,7 @@ B.cyl(wt, "Tank_Skirt", WT.X, WT.Z, WT_LEG_TOP - 1, WT_LEG_TOP + 1, 14, "paleGra
 local wtBall = B.ball(wt, "Tank", V(WT.X, 105 - WT_DIA / 2, WT.Z), WT_DIA, "white", "Metal")
 B.cyl(wt, "Tank_Band", WT.X, WT.Z, 93.6, 94.4, WT_DIA + 0.3, "nasaBlue", "Metal", DECOR)
 -- Adutora até a parede da trincheira (+X)
-pipeRun("Water_Main", { V(WT.X - 6, 1.4, WT.Z - 4), V(19.5, 1.4, 790) }, 2.4, "metalGray")
+pipeRun("Water_Main", { V(WT.X - 6, 1.4, WT.Z - 4), V(18.9, 1.4, 790) }, 2.4, "metalGray") -- entra 0,1 na berma (X 19)
 task.wait()
 
 ---------------------------------------------------------------------------------
@@ -289,11 +291,12 @@ task.wait()
 -- Cercas (painéis de alambrado translúcidos + postes)
 ---------------------------------------------------------------------------------
 local fences = B.group(Root, "Fences")
-local function fence(name, x0, z0, x1, z1)
+-- skip0/skip1: não cria o poste da ponta inicial/final (a cerca vizinha já tem um no mesmo ponto)
+local function fence(name, x0, z0, x1, z1, skip0, skip1)
 	local m = B.group(fences, name)
 	local len = math.max(math.abs(x1 - x0), math.abs(z1 - z0))
 	local n = math.max(1, math.ceil(len / 24))
-	for i = 0, n do
+	for i = skip0 and 1 or 0, skip1 and n - 1 or n do
 		local t = i / n
 		local x, z = x0 + (x1 - x0) * t, z0 + (z1 - z0) * t
 		B.box(m, "Post", x - 0.25, x + 0.25, -1, 8, z - 0.25, z + 0.25, "metalGray", "Metal")
@@ -309,33 +312,37 @@ end
 fence("Crawlerway_Fence_W", -48, 321.5, -48, 652) -- encosta na parede dos fundos do VAB (Z 321)
 fence("Crawlerway_Fence_E", 48, 321.5, 48, 562)
 fence("Pad_Fence_W", -83, 652, -83, 878)
-fence("Pad_Fence_N", -83, 878, 96, 878)
-fence("Pad_Fence_E", 96, 664, 96, 878)
-fence("Pad_Fence_S_W", -83, 652, -48, 652)
-fence("Parking_Fence_E", 126, 582, 126, 664)
-fence("Parking_Fence_S", 66, 582, 126, 582)
-fence("Pad_Fence_S_E", 96, 664, 126, 664)
+fence("Pad_Fence_N", -83, 878, 96, 878, true, false)
+fence("Pad_Fence_E", 96, 664, 96, 878, false, true)
+fence("Pad_Fence_S_W", -83, 652, -48, 652, true, true)
+fence("Parking_Fence_E", 126, 582, 126, 664, false, true)
+fence("Parking_Fence_S", 66, 582, 126, 582, false, true)
+fence("Pad_Fence_S_E", 96, 664, 126, 664, true, false)
 -- fecha a brecha entre a cerca leste da rota e a do estacionamento (fora do caminho do crawler, Z ≥ 598)
-fence("Parking_Fence_Link_W", 48, 562, 48, 582)
-fence("Parking_Fence_Link_S", 48, 582, 66, 582)
+fence("Parking_Fence_Link_W", 48, 562, 48, 582, true, true)
+fence("Parking_Fence_Link_S", 48, 582, 66, 582, false, true)
 task.wait()
 
 ---------------------------------------------------------------------------------
 -- 5. Placas e iluminação
 ---------------------------------------------------------------------------------
 local signs = B.group(Root, "Signage")
--- Placa em dois postes; face Front (−Z) ou a face indicada
+-- Placa em dois postes; face Front (−Z) ou a face indicada. Os postes ficam atrás do painel
+-- (encostados na face oposta à do texto), sem atravessar a face lida.
 local function board(name, cx, cz, w, h, y0, title, body, opts, axis)
 	local m = B.group(signs, name)
 	local p
+	local face = opts.face or N.Front
 	if axis == "X" then -- painel paralelo ao eixo Z (lido de ±X)
+		local px = cx + ((face == N.Right) and -0.35 or 0.35)
 		for _, dz in { -w / 2 + 0.4, w / 2 - 0.4 } do
-			B.box(m, "Post", cx - 0.2, cx + 0.2, 0, y0 + h, cz + dz - 0.2, cz + dz + 0.2, "darkGray", "Metal")
+			B.box(m, "Post", px - 0.2, px + 0.2, 0, y0 + h, cz + dz - 0.2, cz + dz + 0.2, "darkGray", "Metal")
 		end
 		p = B.box(m, "Panel", cx - 0.15, cx + 0.15, y0, y0 + h, cz - w / 2, cz + w / 2, "space", "SmoothPlastic")
 	else
+		local pz = cz + ((face == N.Back) and -0.35 or 0.35)
 		for _, dx in { -w / 2 + 0.4, w / 2 - 0.4 } do
-			B.box(m, "Post", cx + dx - 0.2, cx + dx + 0.2, 0, y0 + h, cz - 0.2, cz + 0.2, "darkGray", "Metal")
+			B.box(m, "Post", cx + dx - 0.2, cx + dx + 0.2, 0, y0 + h, pz - 0.2, pz + 0.2, "darkGray", "Metal")
 		end
 		p = B.box(m, "Panel", cx - w / 2, cx + w / 2, y0, y0 + h, cz - 0.15, cz + 0.15, "space", "SmoothPlastic")
 	end

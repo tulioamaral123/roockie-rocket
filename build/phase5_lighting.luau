@@ -84,6 +84,11 @@ for _, a in { 45, 135, 225, 315 } do
 	local p = B.box(lm, "Dome_Cove_Light", math.cos(r) * 30 - 0.5, math.cos(r) * 30 + 0.5, 19, 20, 130 + math.sin(r) * 30 - 0.5, 130 + math.sin(r) * 30 + 0.5, "midBlue", "SmoothPlastic", HIDDEN)
 	B.light(p, "PointLight", { Range = 30, Brightness = 1.3, Color = rgb("midBlue"), Shadows = false })
 end
+-- preenchimento suave: o piso escuro do planetário sumia na penumbra
+for _, q in { { -22, 110 }, { 22, 110 }, { -22, 150 }, { 22, 150 } } do
+	local p = B.box(lm, "Floor_Fill", q[1] - 0.5, q[1] + 0.5, 12, 13, q[2] - 0.5, q[2] + 0.5, "white", "SmoothPlastic", HIDDEN)
+	B.light(p, "PointLight", { Range = 30, Brightness = 0.7, Color = Color3.fromRGB(200, 215, 255), Shadows = false })
+end
 -- óculo luminoso
 local oculus = Museum.Dome:FindFirstChild("Oculus")
 if oculus then
@@ -189,6 +194,10 @@ for _, sx in { -1, 1 } do
 	local p = B.part(lh, "Tower_Flood", CFrame.lookAt(pos, ROCKET + Vector3.new(0, 112, 0)), Vector3.new(1.4, 1, 0.8), "white", "Neon", FIX)
 	B.light(p, "SpotLight", { Face = N.Front, Range = 30, Angle = 55, Brightness = 3, Color = COOL, Shadows = false })
 end
+
+-- canto noroeste (saída de pedestres): estava escuro demais
+local nw = B.box(lh, "Exit_Corner_Light", -62.5, -61.5, 19.5, 20.5, 299.5, 300.5, "white", "SmoothPlastic", HIDDEN)
+B.light(nw, "PointLight", { Range = 30, Brightness = 2, Color = COOL, Shadows = false })
 
 -- Partículas de poeira no hangar (Atmosphere_Objects) --------------------------------------
 local dustSrc = B.box(AO, "Hangar_Dust", -60, 60, 40, 41, 220, 310, "white", "SmoothPlastic", HIDDEN)

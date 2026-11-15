@@ -16,6 +16,27 @@ local DECOR = { collide = false }
 local FLOOR_MARK = { collide = false, shadow = false }
 local N = Enum.NormalId
 
+-- Cápsula horizontal: retângulo e pontas cilíndricas. Tampas 0,03 acima/abaixo
+-- evitam superfícies coplanares entre o miolo e os cilindros (0,01 ainda cintilava).
+local function rounded(parent, name, x0, x1, y0, y1, z0, z1, color, material, o)
+	local alongX = x1 - x0 >= z1 - z0
+	local diameter = alongX and z1 - z0 or x1 - x0
+	local radius = diameter / 2
+	local p
+	if alongX then
+		p = B.box(parent, name, x0 + radius, x1 - radius, y0, y1, z0, z1, color, material, o)
+		for _, x in { x0 + radius, x1 - radius } do
+			B.cyl(parent, name .. "_End", x, (z0 + z1) / 2, y0 - 0.03, y1 + 0.03, diameter, color, material, o)
+		end
+	else
+		p = B.box(parent, name, x0, x1, y0, y1, z0 + radius, z1 - radius, color, material, o)
+		for _, z in { z0 + radius, z1 - radius } do
+			B.cyl(parent, name .. "_End", (x0 + x1) / 2, z, y0 - 0.03, y1 + 0.03, diameter, color, material, o)
+		end
+	end
+	return p
+end
+
 local function panel(parent, x0, x1, y0, y1, z0, z1, face, title, body, opts)
 	local p = B.box(parent, "Sign", x0, x1, y0, y1, z0, z1, "space", "SmoothPlastic", DECOR)
 	opts = opts or {}
@@ -71,7 +92,8 @@ local function artwork(part, face, title, caption, planetColor, top, bottom)
 		local t = Instance.new("TextLabel")
 		t.BackgroundTransparency = 1
 		t.Position = UDim2.fromScale(0.06, i == 1 and 0.72 or 0.86)
-		t.Size = UDim2.fromScale(0.88, i == 1 and 0.13 or 0.08)
+		-- legenda mais estreita (0,8): não encosta na borda direita do quadro
+		t.Size = UDim2.fromScale(i == 1 and 0.88 or 0.8, i == 1 and 0.13 or 0.08)
 		t.Text = txt
 		t.TextScaled = true
 		t.FontFace = i == 1 and Font.new("rbxasset://fonts/families/Montserrat.json", Enum.FontWeight.Heavy) or Font.new("rbxasset://fonts/families/Montserrat.json", Enum.FontWeight.Medium)
@@ -90,26 +112,29 @@ local rec, furn = Base.Front_Desk, Base.Furniture
 local inst = B.box(rec, "Institutional_Panel", -12, 12, 4.5, 11.5, 2.7, 3.3, "nasaBlue", "SmoothPlastic")
 B.sign(inst, "NASA SPACE ADVENTURE", "Explore  •  Discover  •  Inspire",
 	{ face = N.Back, bg = "nasaBlue", accent = "red", titleColor = "white", bodyColor = "lightGray", titleScale = 0.45, maxBody = 70, ppu = 40 })
+-- mesma identidade na face −Z, visível da rua pela fachada de vidro
+B.sign(inst, "NASA SPACE ADVENTURE", "Explore  •  Discover  •  Inspire",
+	{ face = N.Front, bg = "nasaBlue", accent = "red", titleColor = "white", bodyColor = "lightGray", titleScale = 0.45, maxBody = 70, ppu = 40 })
 for _, x in { -10, 10 } do
 	B.cyl(rec, "Hanger_Cable", x, 3, 11.5, 24, 0.12, "midGray", "Metal", DECOR)
 end
 
 -- Balcão de recepção (-20, 0, 15), atendimento voltado para o centro do saguão
 local desk = B.group(rec, "Reception_Desk")
-B.box(desk, "Front", -16.6, -16, 0, 3.8, 9, 21, "white", "SmoothPlastic")
-B.box(desk, "Accent", -16.1, -15.95, 2.4, 2.9, 9, 21, "red", "SmoothPlastic", DECOR)
-B.box(desk, "Return_N", -22, -16, 0, 3.8, 20.4, 21, "white", "SmoothPlastic")
-B.box(desk, "Return_S", -22, -16, 0, 3.8, 9, 9.6, "white", "SmoothPlastic")
-B.box(desk, "Counter_Top", -17.4, -15.7, 3.8, 4.1, 8.8, 21.2, "lightGray", "SmoothPlastic")
-B.box(desk, "Work_Surface", -21, -16.6, 2.6, 2.8, 9.6, 20.4, "midGray", "SmoothPlastic")
+rounded(desk, "Front", -16.6, -16, 0, 3.8, 9, 21, "white", "SmoothPlastic")
+B.box(desk, "Accent", -16.1, -15.95, 2.4, 2.9, 9.33, 20.67, "red", "SmoothPlastic", DECOR)
+rounded(desk, "Return_N", -22, -16.6, 0, 3.8, 20.4, 21, "white", "SmoothPlastic")
+rounded(desk, "Return_S", -22, -16.6, 0, 3.8, 9, 9.6, "white", "SmoothPlastic")
+rounded(desk, "Counter_Top", -17.4, -15.7, 3.8, 4.1, 8.8, 21.2, "lightGray", "SmoothPlastic")
+rounded(desk, "Work_Surface", -21, -16.6, 2.6, 2.8, 9.6, 20.4, "midGray", "SmoothPlastic")
 for _, z in { 12, 18 } do
 	B.box(desk, "Monitor", -17.5, -17.3, 2.9, 4.4, z - 1.1, z + 1.1, "black", "SmoothPlastic")
 	B.box(desk, "Monitor_Stand", -17.7, -17.3, 2.8, 2.9, z - 0.4, z + 0.4, "darkGray", "Metal")
 	B.box(desk, "Keyboard", -18.6, -17.9, 2.8, 2.9, z - 0.8, z + 0.8, "darkGray", "SmoothPlastic", DECOR)
 	-- cadeira do atendente
-	B.cyl(desk, "Chair_Base", -19.8, z, 0, 1.6, 0.4, "darkGray", "Metal")
-	B.box(desk, "Chair_Seat", -20.6, -19, 1.6, 2, z - 0.8, z + 0.8, "nasaBlue", "Fabric")
-	B.box(desk, "Chair_Back", -21, -20.6, 2, 3.6, z - 0.8, z + 0.8, "nasaBlue", "Fabric")
+	B.cyl(desk, "Chair_Base", -20.4, z, 0, 1.6, 0.4, "darkGray", "Metal")
+	B.cyl(desk, "Chair_Seat", -20.4, z, 1.6, 2, 1.6, "nasaBlue", "Fabric")
+	B.box(desk, "Chair_Back", -21.6, -21.2, 2, 3.6, z - 0.8, z + 0.8, "nasaBlue", "Fabric")
 end
 panel(rec, -34.95, -34.75, 7, 13, 7, 23, N.Right, "RECEPTION", "Welcome to the NASA Space Adventure base",
 	{ bg = "white", titleColor = "nasaBlue", bodyColor = "darkGray", accent = "red", titleScale = 0.45, maxBody = 50 })
@@ -125,19 +150,19 @@ panel(info, 21.85, 22, 2.5, 6.8, 15.3, 20.5, N.Left, "YOUR ROUTE",
 -- Área de espera (15, 0, 35)
 local function sofa(parent, x0, x1, z0, z1, backAtLowZ)
 	local g = B.group(parent, "Sofa")
-	B.box(g, "Seat", x0, x1, 0, 1.6, z0, z1, "nasaBlue", "Fabric")
+	rounded(g, "Seat", x0, x1, 0, 1.6, z0, z1, "nasaBlue", "Fabric")
 	if backAtLowZ then
-		B.box(g, "Back", x0, x1, 1.6, 3.6, z0, z0 + 0.8, "nasaBlue", "Fabric")
+		rounded(g, "Back", x0, x1, 1.6, 3.6, z0, z0 + 0.8, "nasaBlue", "Fabric")
 	else
-		B.box(g, "Back", x0, x1, 1.6, 3.6, z1 - 0.8, z1, "nasaBlue", "Fabric")
+		rounded(g, "Back", x0, x1, 1.6, 3.6, z1 - 0.8, z1, "nasaBlue", "Fabric")
 	end
-	B.box(g, "Arm", x0 - 0.6, x0, 0, 2.4, z0, z1, "nasaBlue", "Fabric")
-	B.box(g, "Arm", x1, x1 + 0.6, 0, 2.4, z0, z1, "nasaBlue", "Fabric")
+	B.part(g, "Arm", CFrame.new(x0 - 0.3, 1.2, (z0 + z1) / 2) * CFrame.Angles(0, 0, math.pi / 2), Vector3.new(2.4, 0.6, z1 - z0), "nasaBlue", "Fabric", nil, "Cylinder")
+	B.part(g, "Arm", CFrame.new(x1 + 0.3, 1.2, (z0 + z1) / 2) * CFrame.Angles(0, 0, math.pi / 2), Vector3.new(2.4, 0.6, z1 - z0), "nasaBlue", "Fabric", nil, "Cylinder")
 end
 sofa(furn, 11, 19, 29.5, 32.5, true)
 sofa(furn, 11, 19, 37.5, 40.5, false)
-B.box(furn, "Table_Base", 14, 16, 0, 1.2, 34.5, 35.5, "midGray", "Metal")
-B.box(furn, "Table_Top", 13, 17, 1.2, 1.4, 33.6, 36.4, "glass", "Glass", { transparency = 0.4 })
+B.cyl(furn, "Table_Base", 15, 35, 0, 1.2, 1, "midGray", "Metal")
+B.part(furn, "Table_Top", CFrame.new(15, 1.3, 35) * CFrame.Angles(0, 0, math.pi / 2), Vector3.new(0.2, 4, 2.8), "glass", "Glass", { transparency = 0.4 }, "Cylinder")
 
 local function plant(parent, x, z)
 	local g = B.group(parent, "Plant")
@@ -181,8 +206,9 @@ panel(deco1, -4, 4, 9.3, 11.2, 61.9, 62.1, N.Front, "CONTROL CENTER AHEAD", nil,
 ---------------------------------------------------------------------------------
 local pipes, ind = C2.Pipes, C2.Industrial_Structure
 for _, sx in { -1, 1 } do
-	B.cylBetween(pipes, "Pipe", Vector3.new(sx * 7.3, 10.6, 171), Vector3.new(sx * 7.3, 10.6, 207.5), 0.9, sx < 0 and "rust" or "metalGray", "Metal", DECOR)
-	B.cylBetween(pipes, "Pipe", Vector3.new(sx * 7.4, 11.9, 171), Vector3.new(sx * 7.4, 11.9, 207.5), 0.6, sx < 0 and "safety" or "darkGray", "Metal", DECOR)
+	-- começam dentro da parede norte do LCC (Z 164..165): sem ponta aberta na entrada do corredor
+	B.cylBetween(pipes, "Pipe", Vector3.new(sx * 7.3, 10.6, 164.6), Vector3.new(sx * 7.3, 10.6, 207.5), 0.9, sx < 0 and "rust" or "metalGray", "Metal", DECOR)
+	B.cylBetween(pipes, "Pipe", Vector3.new(sx * 7.4, 11.9, 164.6), Vector3.new(sx * 7.4, 11.9, 207.5), 0.6, sx < 0 and "safety" or "darkGray", "Metal", DECOR)
 	for z = 180, 205, 8 do
 		B.box(pipes, "Bracket", sx * 7.95, sx * 6.7, 10, 12.4, z - 0.15, z + 0.15, "darkGray", "Metal", DECOR)
 	end
@@ -190,9 +216,13 @@ for _, sx in { -1, 1 } do
 end
 B.box(pipes, "Duct", -3, 3, 12.2, 13.6, 178, 207.5, "metalGray", "Metal", DECOR)
 for _, z in { 186, 197 } do
-	B.box(ind, "Frame_Column", -8, -7.2, 0, 14, z - 0.4, z + 0.4, "darkGray", "Metal")
-	B.box(ind, "Frame_Column", 7.2, 8, 0, 14, z - 0.4, z + 0.4, "darkGray", "Metal")
+	B.cyl(ind, "Frame_Column", -7.6, z, 0, 14, 0.8, "darkGray", "Metal")
+	B.cyl(ind, "Frame_Column", 7.6, z, 0, 14, 0.8, "darkGray", "Metal")
 	B.box(ind, "Frame_Header", -8, 8, 13.6, 14, z - 0.4, z + 0.4, "darkGray", "Metal")
+end
+-- Rodapés contínuos até as faces do LCC e da fachada do VAB, fora do eixo de passagem.
+for _, x in { -8, 7.88 } do
+	B.box(ind, "Baseboard", x, x + 0.12, 0, 0.45, 165, 209, "darkGray", "Metal", DECOR)
 end
 panel(ind, -7.95, -7.8, 5, 8.5, 189, 195, N.Right, "RESTRICTED AREA", "Authorized personnel only",
 	{ bg = "black", accent = "safety", titleColor = "safety", bodyColor = "white", titleScale = 0.4 })
@@ -206,7 +236,7 @@ local hs = Hangar.Structure
 local TRUSS_Z = { 222, 244, 266, 288, 310 }
 for _, z in TRUSS_Z do
 	for _, sx in { -1, 1 } do
-		B.box(hs, "Pilaster", sx * 70, sx * 68.6, 0, 150, z - 1, z + 1, "darkGray", "Metal")
+		B.part(hs, "Pilaster", CFrame.new(sx * 69.3, 75, z) * CFrame.Angles(0, 0, math.pi / 2), Vector3.new(150, 1.4, 2), "darkGray", "Metal", nil, "Cylinder")
 	end
 	B.box(hs, "Roof_Truss", -68.6, 68.6, 143, 146, z - 0.8, z + 0.8, "darkGray", "Metal")
 end
@@ -233,7 +263,8 @@ for _, x in { -12.6, 12 } do
 end
 
 -- faixa "SPACE LAUNCH SYSTEM" na parede dos fundos, acima do portão de 140 (spec-v3 §3.2)
-panel(hs, -30, 30, 142, 151, 318.7, 318.9, N.Front, "SPACE LAUNCH SYSTEM", nil,
+-- Y 142,2..149,5: abaixo do Roof (Y 150) e acima da verga do portão (Y 140..142, Z 317,5..319)
+panel(hs, -30, 30, 142.2, 149.5, 318.7, 318.9, N.Front, "SPACE LAUNCH SYSTEM", nil,
 	{ bg = "darkGray", titleColor = "white", accent = "safety", ppu = 8 })
 
 -- veículos de manutenção
@@ -251,27 +282,32 @@ do -- caminhão utilitário
 		wheel(t, -48.3, 1, z, 2)
 		wheel(t, -41.7, 1, z, 2)
 	end
+	-- estacionado em X −61..−55, Z 225..239: antes a cabine encostava na porta do vestiário
+	-- (X −44..−38, Z 243,8) e ocupava a rota principal
+	t:PivotTo(t:GetPivot() + Vector3.new(-13, 0, -3))
 end
 do -- plataforma elevatória (tesoura)
 	local s = B.group(veh, "Scissor_Lift")
 	B.box(s, "Base", 42, 48, 0.6, 1.6, 282, 288, "safety", "Metal")
 	for _, x in { 42.3, 47.7 } do
 		for _, zz in { 282.6, 287.4 } do wheel(s, x, 0.6, zz, 1.2, 0.5) end
-		B.beam(s, "Scissor", Vector3.new(x, 1.6, 282.4), Vector3.new(x, 10, 287.6), 0.3, 0.3, "darkGray", "Metal")
-		B.beam(s, "Scissor", Vector3.new(x, 1.6, 287.6), Vector3.new(x, 10, 282.4), 0.3, 0.3, "darkGray", "Metal")
+		-- braços lado a lado (X ±0,16), como numa tesoura real: sem faces coplanares no cruzamento
+		B.beam(s, "Scissor", Vector3.new(x - 0.16, 1.6, 282.4), Vector3.new(x - 0.16, 10, 287.6), 0.3, 0.3, "darkGray", "Metal")
+		B.beam(s, "Scissor", Vector3.new(x + 0.16, 1.6, 287.6), Vector3.new(x + 0.16, 10, 282.4), 0.3, 0.3, "darkGray", "Metal")
 	end
 	B.box(s, "Platform", 42, 48, 10, 10.5, 282, 288, "darkGray", "DiamondPlate")
-	B.box(s, "Rail", 42, 48, 10.5, 11.6, 281.9, 282.1, "safety", "Metal")
-	B.box(s, "Rail", 42, 48, 10.5, 11.6, 287.9, 288.1, "safety", "Metal")
-	B.box(s, "Rail", 41.9, 42.1, 10.5, 11.6, 282, 288, "safety", "Metal")
-	B.box(s, "Rail", 47.9, 48.1, 10.5, 11.6, 282, 288, "safety", "Metal")
+	-- trilhos em X cobrem as quinas; os laterais encostam neles (sem sobreposição coplanar)
+	B.box(s, "Rail", 41.9, 48.1, 10.5, 11.6, 281.9, 282.1, "safety", "Metal")
+	B.box(s, "Rail", 41.9, 48.1, 10.5, 11.6, 287.9, 288.1, "safety", "Metal")
+	B.box(s, "Rail", 41.9, 42.1, 10.5, 11.6, 282.1, 287.9, "safety", "Metal")
+	B.box(s, "Rail", 47.9, 48.1, 10.5, 11.6, 282.1, 287.9, "safety", "Metal")
 	-- deslocada para X 52..58, liberando o pé da torre de plataformas direita (Fase 10)
 	s:PivotTo(s:GetPivot() + Vector3.new(10, 0, 0))
 end
 do -- trator de reboque
 	local t = B.group(veh, "Tow_Tractor")
 	B.box(t, "Body", -53, -48, 0.8, 2.8, 292, 297, "white", "SmoothPlastic")
-	B.box(t, "Stripe", -53.05, -47.95, 2.2, 2.5, 292, 297, "red", "SmoothPlastic", DECOR)
+	B.box(t, "Stripe", -53.05, -47.95, 2.2, 2.5, 291.95, 297.05, "red", "SmoothPlastic", DECOR)
 	for _, p in { { -52.8, 292.3 }, { -48.2, 292.3 }, { -52.8, 296.7 }, { -48.2, 296.7 } } do
 		B.box(t, "Roof_Post", p[1] - 0.15, p[1] + 0.15, 2.8, 5.4, p[2] - 0.15, p[2] + 0.15, "darkGray", "Metal")
 	end
@@ -286,7 +322,7 @@ do -- trator de reboque
 end
 do -- caixas de equipamento
 	local c = B.group(veh, "Equipment_Crates")
-	B.box(c, "Crate", -60, -55, 0, 4, 300, 305, "rust", "WoodPlanks")
+	B.box(c, "Crate", -60, -55, 0, 4, 300, 305, "#A0805A", "WoodPlanks") -- mesmo tom das caixas da Fase 10
 	B.box(c, "Crate", -60, -56, 4, 7, 300.5, 304.5, "metalGray", "Metal")
 	B.box(c, "Crate", -54, -50, 0, 3, 302, 306, "darkGray", "Metal")
 end
@@ -294,7 +330,7 @@ end
 -- console da sala de observação + placa de acesso
 local obs = Hangar.Observation_Room
 local console = B.group(obs, "Console")
-B.box(console, "Desk", 45.2, 47.2, 35, 37.4, 241, 259, "darkGray", "Metal")
+rounded(console, "Desk", 45.2, 47.2, 35, 37.4, 241, 259, "darkGray", "Metal")
 for i, z in { 244.5, 250, 255.5 } do
 	local scr = B.part(console, "Screen", CFrame.new(46.6, 38.6, z) * CFrame.Angles(0, 0, math.rad(-15)), Vector3.new(0.2, 2, 4), "black", "SmoothPlastic", DECOR)
 	local titles = { "SLS STATUS", "ORION", "HANGAR" }

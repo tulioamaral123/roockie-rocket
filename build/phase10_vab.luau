@@ -57,10 +57,10 @@ B.box(lw, "Left_Wall_B", -72, -70, -1, 152, DZ1, 319, "metalGray", "Metal")
 B.box(lw, "Left_Wall_Lintel", -72, -70, DH, 152, DZ0, DZ1, "metalGray", "Metal")
 
 local exit = B.group(Hangar.Structure, "Pedestrian_Exit")
-B.box(exit, "Jamb", -70, -69.6, 0, DH + 0.4, DZ0 - 0.4, DZ0, "darkGray", "Metal")
-B.box(exit, "Jamb", -70, -69.6, 0, DH + 0.4, DZ1, DZ1 + 0.4, "darkGray", "Metal")
+B.box(exit, "Jamb", -70, -69.6, 0, DH, DZ0 - 0.4, DZ0, "darkGray", "Metal")
+B.box(exit, "Jamb", -70, -69.6, 0, DH, DZ1, DZ1 + 0.4, "darkGray", "Metal")
 B.box(exit, "Header", -70, -69.6, DH, DH + 0.4, DZ0 - 0.4, DZ1 + 0.4, "darkGray", "Metal")
-local exitSign = B.box(exit, "Exit_Sign", -69.6, -69.5, DH + 0.8, DH + 2.2, DZ0, DZ1, "#2E9E4F", "SmoothPlastic", DECOR)
+local exitSign = B.box(exit, "Exit_Sign", -70, -69.6, DH + 0.8, DH + 2.2, DZ0, DZ1, "#2E9E4F", "SmoothPlastic", DECOR)
 B.sign(exitSign, "EXIT — LAUNCH COMPLEX", nil, { face = N.Right, bg = "#2E9E4F", titleColor = "white" })
 B.box(exit, "Landing", -82, -72, -1, 0, DZ0 - 2, DZ1 + 2, "midGray", "Concrete")
 B.box(exit, "Landing_Stripe", -72.6, -72, 0, 0.05, DZ0 - 2, DZ1 + 2, "safety", "SmoothPlastic", DECOR)
@@ -74,7 +74,7 @@ for _, side in { -1, 1 } do
 	local z0, z1 = (side < 0) and DZ0 or (DZ0 + DZ1) / 2, (side < 0) and (DZ0 + DZ1) / 2 or DZ1
 	local panel = B.box(leaf, "Panel", -71.2, -70.8, 0, DH - 0.2, z0, z1, "paleGray", "Metal")
 	B.box(leaf, "Window", -71.25, -70.75, 5, 8.5, z0 + 0.7, z1 - 0.7, "glass", "Glass", { transparency = 0.4, collide = false })
-	B.box(leaf, "Kick_Plate", -71.25, -70.75, 0, 0.8, z0, z1, "safety", "Metal", DECOR)
+	B.box(leaf, "Kick_Plate", -71.25, -70.75, 0, 0.8, z0 + 0.03, z1 - 0.03, "safety", "Metal", DECOR)
 	leaf.PrimaryPart = panel
 	leaf:SetAttribute("OpenOffset", Vector3.new(0, 0, side * 3))
 end
@@ -94,18 +94,19 @@ for _, S in { -1, 1 } do
 	-- colunas
 	for _, x in { S * 36.4, S * 45.6 } do
 		for _, z in { TZ0 + 0.4, (TZ0 + TZ1) / 2, TZ1 - 0.4 } do
-			B.box(t, "Column", x - 0.4, x + 0.4, 0, TOP, z - 0.4, z + 0.4, "darkGray", "Metal")
+			B.box(t, "Column", x - 0.43, x + 0.43, 0, TOP, z - 0.43, z + 0.43, "darkGray", "Metal")
 		end
 	end
 	B.box(t, "Top_Beam", xi, xo, TOP, TOP + 0.8, TZ0, TZ0 + 0.8, "darkGray", "Metal")
 	B.box(t, "Top_Beam", xi, xo, TOP, TOP + 0.8, TZ1 - 0.8, TZ1, "darkGray", "Metal")
-	B.box(t, "Top_Beam", xi, xi + S * 0.8, TOP, TOP + 0.8, TZ0, TZ1, "darkGray", "Metal")
-	B.box(t, "Top_Beam", xo - S * 0.8, xo, TOP, TOP + 0.8, TZ0, TZ1, "darkGray", "Metal")
+	B.box(t, "Top_Beam", xi, xi + S * 0.8, TOP, TOP + 0.8, TZ0 + 0.8, TZ1 - 0.8, "darkGray", "Metal")
+	B.box(t, "Top_Beam", xo - S * 0.8, xo, TOP, TOP + 0.8, TZ0 + 0.8, TZ1 - 0.8, "darkGray", "Metal")
 	-- contraventamento na face externa
 	local prevY = 0
 	for _, y in { 30, 45, 60, 75, 90, 105, TOP } do
-		B.beam(t, "Brace", Vector3.new(xo - S * 0.4, prevY, TZ0 + 0.4), Vector3.new(xo - S * 0.4, y, (TZ0 + TZ1) / 2), 0.3, 0.3, "metalGray", "Metal", DECOR)
-		B.beam(t, "Brace", Vector3.new(xo - S * 0.4, prevY, TZ1 - 0.4), Vector3.new(xo - S * 0.4, y, (TZ0 + TZ1) / 2), 0.3, 0.3, "metalGray", "Metal", DECOR)
+		-- eixo a 0,345 da face e larguras 0,29/0,35: faces em 0,20/0,49/0,17/0,52 da face externa, fora dos planos de Edge_Beam, postes do poço e Rail
+		B.beam(t, "Brace", Vector3.new(xo - S * 0.345, prevY, TZ0 + 0.4), Vector3.new(xo - S * 0.345, y, (TZ0 + TZ1) / 2), 0.29, 0.3, "metalGray", "Metal", DECOR)
+		B.beam(t, "Brace", Vector3.new(xo - S * 0.345, prevY, TZ1 - 0.4), Vector3.new(xo - S * 0.345, y, (TZ0 + TZ1) / 2), 0.35, 0.3, "metalGray", "Metal", DECOR)
 		prevY = y
 	end
 	for _, y in LEVELS do
@@ -121,16 +122,16 @@ for _, S in { -1, 1 } do
 				B.box(lvl, "Rail", x - 0.12, x + 0.12, ry, ry + 0.25, z0, TZ1, "safety", "Metal")
 			end
 			for _, pz in { z0 + 0.3, (z0 + TZ1) / 2, TZ1 - 0.3 } do
-				B.box(lvl, "Rail_Post", x - 0.12, x + 0.12, y, y + 3.65, pz - 0.12, pz + 0.12, "safety", "Metal")
+				B.box(lvl, "Rail_Post", x - 0.14, x + 0.14, y, y + 3.68, pz - 0.12, pz + 0.12, "safety", "Metal")
 			end
 		end
 		for _, z in { z0 + 0.15, TZ1 - 0.15 } do
-			B.box(lvl, "Rail", xi, xo, y + 3.4, y + 3.65, z - 0.12, z + 0.12, "safety", "Metal")
+			B.box(lvl, "Rail", xi, xo, y + 3.42, y + 3.63, z - 0.12, z + 0.12, "safety", "Metal")
 		end
 		-- plataforma retrátil recolhida sob o deck (estende em direção ao foguete)
 		local wp = B.group(lvl, "Work_Platform")
 		local slab = B.box(wp, "Slab", xi, xi + S * 4, y - 2.2, y - 1.6, TZ0 + 4, TZ1 - 4, "paleGray", "DiamondPlate")
-		B.box(wp, "Safety_Edge", xi, xi + S * 0.3, y - 2.25, y - 1.55, TZ0 + 4, TZ1 - 4, "safety", "SmoothPlastic", DECOR)
+		B.box(wp, "Safety_Edge", xi - S * 0.06, xi + S * 0.3, y - 2.25, y - 1.55, TZ0 + 3.97, TZ1 - 3.97, "safety", "SmoothPlastic", DECOR)
 		wp.PrimaryPart = slab
 		wp:SetAttribute("WorkPlatform", true)
 		wp:SetAttribute("ExtendOffset", Vector3.new(-S * 22, 0, 0)) -- estendida: borda a ±14 do eixo
@@ -156,13 +157,13 @@ local ZONE = Vector3.new(4.4, 7.4, ZC1 - ZC0 + 0.6)
 local function cab(name, floorY)
 	local c = B.group(elev, name)
 	local y1 = floorY + 7.4
-	local floor = B.box(c, "Floor", EX0, EX1, floorY - 0.5, floorY + 0.15, ZC0 - 0.4, ZC1 + 0.4, "darkGray", "DiamondPlate")
+	local floor = B.box(c, "Floor", EX0, EX1, floorY - 0.48, floorY + 0.15, ZC0 - 0.4, ZC1 + 0.4, "darkGray", "DiamondPlate")
 	c.PrimaryPart = floor
 	c:SetAttribute("ZoneOffset", floor.CFrame:PointToObjectSpace(Vector3.new((EX0 + EX1) / 2, floorY + 3.7, (ZC0 + ZC1) / 2)))
 	c:SetAttribute("ZoneSize", ZONE)
-	B.box(c, "Wall_Side", EX0, EX0 + 0.6, floorY, y1, ZC0 - 0.4, ZC1 + 0.4, "metalGray", "Metal")
-	B.box(c, "Wall_Side", EX1 - 0.6, EX1, floorY, y1, ZC0 - 0.4, ZC1 + 0.4, "metalGray", "Metal")
-	B.box(c, "Wall_Back", EX0 + 0.6, EX1 - 0.6, floorY, y1, ZC0 - 0.4, ZC0, "metalGray", "Metal")
+	B.box(c, "Wall_Side", EX0, EX0 + 0.6, floorY + 0.15, y1, ZC0 - 0.4, ZC1 + 0.4, "metalGray", "Metal")
+	B.box(c, "Wall_Side", EX1 - 0.6, EX1, floorY + 0.15, y1, ZC0 - 0.4, ZC1 + 0.4, "metalGray", "Metal")
+	B.box(c, "Wall_Back", EX0 + 0.6, EX1 - 0.6, floorY + 0.15, y1, ZC0 - 0.4, ZC0, "metalGray", "Metal")
 	B.box(c, "Roof", EX0, EX1, y1, y1 + 0.4, ZC0 - 0.4, ZC1 + 0.4, "metalGray", "Metal")
 	local lp = B.box(c, "Cab_Light", EX0 + 1.6, EX1 - 1.6, y1 - 0.08, y1, ZC0 + 1.2, ZC1 - 1.2, "white", "Neon", DECOR_NS)
 	B.light(lp, "SurfaceLight", { Face = N.Bottom, Brightness = 1.4, Range = 9, Shadows = false })
@@ -195,7 +196,7 @@ for _, px in { EX0 - 0.3, EX1 + 0.3 } do
 	end
 end
 for y = 12, SERVICE_LEVEL - 4, 12 do
-	B.box(shaft, "Band", EX0 - 0.55, EX1 + 0.55, y - 0.2, y + 0.2, SHAFT.z0 - 0.05, SHAFT.z0 + 0.45, "metalGray", "Metal")
+	B.box(shaft, "Band", EX0 - 0.58, EX1 + 0.58, y - 0.2, y + 0.2, SHAFT.z0 - 0.08, SHAFT.z0 + 0.48, "metalGray", "Metal")
 end
 
 ---------------------------------------------------------------------------------
@@ -227,9 +228,9 @@ for _, S in { -1, 1 } do
 	for _, z in { 216, 226.5 } do
 		local face = S * 69
 		B.box(eq, "Electrical_Panel", S * 70, face, 2, 7, z - 1.5, z + 1.5, "midGray", "Metal")
-		B.box(eq, "Panel_Door_Line", face - S * 0.03, face - S * 0.06, 2.3, 6.7, z - 0.02, z + 0.02, "darkGray", "SmoothPlastic", DECOR)
+		B.box(eq, "Panel_Door_Line", face + S * 0.01, face - S * 0.04, 2.3, 6.7, z - 0.02, z + 0.02, "darkGray", "SmoothPlastic", DECOR)
 		for i, col in { "#3CCB5A", "#E5B52E", "#D33D32" } do
-			B.box(eq, "Indicator", face - S * 0.02, face - S * 0.12, 6.2, 6.5, z - 1.1 + i * 0.5, z - 0.8 + i * 0.5, col, "Neon", DECOR_NS)
+			B.box(eq, "Indicator", face + S * 0.01, face - S * 0.12, 6.2, 6.5, z - 1.1 + i * 0.5, z - 0.8 + i * 0.5, col, "Neon", DECOR_NS)
 		end
 	end
 	-- bancada com ferramentas
@@ -242,7 +243,7 @@ for _, S in { -1, 1 } do
 	end
 	B.box(eq, "Tool_Chest", bx0, bx0 - S * 1.6, 3.4, 5, 229, 231.5, "red", "Metal")
 	B.box(eq, "Toolbox", bx1 + S * 0.4, bx1 + S * 1.6, 3.4, 4.2, 233, 235, "safety", "Metal", DECOR)
-	B.box(eq, "Pegboard", S * 69.9, S * 69.7, 4.5, 8, 228.5, 236, "darkGray", "Metal", DECOR)
+	B.box(eq, "Pegboard", S * 70, S * 69.8, 4.5, 8, 228.5, 236, "darkGray", "Metal", DECOR)
 	-- dutos de ventilação junto ao teto
 	B.box(eq, "Vent_Duct", S * 60, S * 64, 118, 122, 214, 318, "paleGray", "Metal", DECOR)
 	for z = 224, 314, 18 do
@@ -257,13 +258,13 @@ for _, S in { -1, 1 } do
 end
 -- caixas técnicas
 for _, c in { { -64, -58, 270, 276 }, { 50, 56, 300, 306 } } do
-	B.box(eq, "Crate", c[1], c[2], 0, 3, c[3], c[4], "#6B7A5A", "WoodPlanks")
-	B.box(eq, "Crate", c[1] + 0.5, c[2] - 2.5, 3, 5.5, c[3] + 0.5, c[4] - 0.5, "#6B7A5A", "WoodPlanks")
+	B.box(eq, "Crate", c[1], c[2], 0, 3, c[3], c[4], "#A0805A", "WoodPlanks")
+	B.box(eq, "Crate", c[1] + 0.5, c[2] - 2.5, 3, 5.5, c[3] + 0.5, c[4] - 0.5, "#A0805A", "WoodPlanks")
 	B.box(eq, "Crate_Label", c[1] + 1, c[2] - 1, 1, 2, c[3] - 0.05, c[3], "white", "SmoothPlastic", DECOR)
 end
 -- barreira em frente ao pé da torre direita
 for _, z in { 262.5, 269.5, 276, 282.5, 289.5 } do
-	B.box(eq, "Barrier_Post", 35.3, 35.7, 0, 3.4, z - 0.2, z + 0.2, "safety", "Metal")
+	B.box(eq, "Barrier_Post", 35.3, 35.7, 0, 3.45, z - 0.2, z + 0.2, "safety", "Metal")
 end
 for _, y in { 1.6, 3.1 } do
 	B.box(eq, "Barrier_Rail", 35.35, 35.65, y, y + 0.3, 262.5, 289.5, "safety", "Metal")

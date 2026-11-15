@@ -14,6 +14,9 @@ local C = {
 }
 local GLASS = { transparency = 0.55, shadow = false }
 local DECOR = { collide = false }
+-- vidro da sala de observação mais transparente e menos leitoso (vista do SLS)
+local OBS_GLASS = { transparency = 0.8, shadow = false }
+local OBS_GLASS_COLOR = "#99BFD9"
 
 local Map = workspace:FindFirstChild("NASAComplex")
 assert(Map, "Execute phase1_structure.luau antes")
@@ -74,10 +77,34 @@ local function oriented(parent, name, cf, size, color, material, o)
 	return finish(p, parent, name, color, material, o)
 end
 
-local function wallWithOpening(parent, name, z0, z1, x0, x1, top, ox0, ox1, otop, color, material)
+-- Eixo longitudinal dos cilindros Roblox = X local.
+local function cylinder(parent, name, x, z, y0, y1, diameter, color, material, o)
+	local p = oriented(parent, name, CFrame.new(x, (y0 + y1) / 2, z) * CFrame.Angles(0, 0, math.pi / 2),
+		Vector3.new(y1 - y0, diameter, diameter), color, material, o)
+	p.Shape = Enum.PartType.Cylinder
+	return p
+end
+
+-- Verga mais alta no miolo; chanfros ficam dentro da altura original, sem reduzir o vão.
+local function header(parent, name, x0, x1, y0, y1, z0, z1, color, material)
+	box(parent, name, x0, x1, y0 + 0.5, y1, z0, z1, color, material)
+	for _, side in { -1, 1 } do
+		local p = Instance.new("WedgePart")
+		p.Size = Vector3.new(z1 - z0, 0.5, 1)
+		p.CFrame = CFrame.new(side < 0 and x0 + 0.5 or x1 - 0.5, y0 + 0.25, (z0 + z1) / 2)
+			* CFrame.Angles(0, side * math.pi / 2, 0)
+		finish(p, parent, name .. "_Chamfer", color, material)
+	end
+end
+
+local function wallWithOpening(parent, name, z0, z1, x0, x1, top, ox0, ox1, otop, color, material, bevel)
 	box(parent, name .. "_L", x0, ox0, -1, top, z0, z1, color, material)
 	box(parent, name .. "_R", ox1, x1, -1, top, z0, z1, color, material)
-	box(parent, name .. "_Lintel", ox0, ox1, otop, top, z0, z1, color, material)
+	if bevel then
+		header(parent, name .. "_Lintel", ox0, ox1, otop, top, z0, z1, color, material)
+	else
+		box(parent, name .. "_Lintel", ox0, ox1, otop, top, z0, z1, color, material)
+	end
 end
 
 local function group(parent, name)
@@ -90,18 +117,29 @@ end
 
 -- 1. Base NASA: fachada de vidro na entrada + moldura da saída --------------------
 local facade = group(Base.Walls, "Front_Facade")
-wallWithOpening(facade, "Front_Wall", -1, 0, -36, 36, 25, -20, 20, 16, C.white, "SmoothPlastic")
+wallWithOpening(facade, "Front_Wall", -1, 0, -35.5, 35.5, 25, -20, 20, 16, C.white, "SmoothPlastic")
 box(facade, "Glass", -20, 20, -1, 16, -0.7, -0.3, C.glass, "Glass", GLASS)
 for _, x in { -12, -4, 4, 12 } do
-	box(facade, "Mullion", x - 0.3, x + 0.3, -1, 16, -0.9, -0.1, C.midGray, "Metal")
+	cylinder(facade, "Mullion", x, -0.5, -1, 16, 0.6, C.midGray, "Metal")
 end
 box(facade, "Transom", -20, 20, 10, 10.6, -0.9, -0.1, C.midGray, "Metal")
 box(facade, "Entrance_Canopy", -8, 8, 11, 11.8, -6, -1, C.nasaBlue, "SmoothPlastic")
+-- pilares da marquise (antes ela ficava em balanço, sem apoio aparente)
+for _, x in { -7.4, 7.4 } do
+	cylinder(facade, "Canopy_Column", x, -5.4, -1, 11, 0.5, C.midGray, "Metal")
+end
 
 local exitFrame = group(Base.Walls, "Exit_Frame")
-box(exitFrame, "Jamb_L", -8, -7, 0, 12, 53.8, 54.5, C.nasaBlue, "SmoothPlastic")
-box(exitFrame, "Jamb_R", 7, 8, 0, 12, 53.8, 54.5, C.nasaBlue, "SmoothPlastic")
-box(exitFrame, "Header", -8, 8, 12, 13, 53.8, 54.5, C.nasaBlue, "SmoothPlastic")
+cylinder(exitFrame, "Jamb_L", -7.5, 54.15, 0, 12, 1, C.nasaBlue, "SmoothPlastic")
+cylinder(exitFrame, "Jamb_R", 7.5, 54.15, 0, 12, 1, C.nasaBlue, "SmoothPlastic")
+header(exitFrame, "Header", -8, 8, 12, 13, 53.8, 54.5, C.nasaBlue, "SmoothPlastic")
+
+-- Chanfro da verga na face interna do vão leste da recepção (estrutura na Fase 14).
+-- Fica acima de Y12: não reduz a altura livre da galeria.
+local museumHeader = Instance.new("WedgePart")
+museumHeader.Size = Vector3.new(14, 0.25, 0.3)
+museumHeader.CFrame = CFrame.new(34.85, 12.125, 27.5) * CFrame.Angles(0, -math.pi / 2, 0)
+finish(museumHeader, Base.Walls, "Museum_Header_Chamfer", C.white, "SmoothPlastic")
 
 -- 2. Corredor 1: paredes com trechos de vidro -------------------------------------
 for _, s in { -1, 1 } do
@@ -120,9 +158,9 @@ end
 
 -- 3. Museu: portal de entrada com letreiro ------------------------------------------
 local entrance = group(Museum.Walls, "Front_Wall")
-wallWithOpening(entrance, "Front_Wall", 89.5, 90.5, -46, 46, 19, -6, 6, 9, C.darkBlue, "SmoothPlastic")
-box(entrance, "Trim_L", -6.3, -6, 0, 9, 89.2, 89.5, C.midBlue, "Neon", DECOR)
-box(entrance, "Trim_R", 6, 6.3, 0, 9, 89.2, 89.5, C.midBlue, "Neon", DECOR)
+wallWithOpening(entrance, "Front_Wall", 89.5, 90.5, -45.5, 45.5, 19, -6, 6, 9, C.darkBlue, "SmoothPlastic", true)
+cylinder(entrance, "Trim_L", -6.15, 89.35, 0, 9, 0.3, C.midBlue, "Neon", DECOR)
+cylinder(entrance, "Trim_R", 6.15, 89.35, 0, 9, 0.3, C.midBlue, "Neon", DECOR)
 box(entrance, "Trim_Top", -6.3, 6.3, 9, 9.3, 89.2, 89.5, C.midBlue, "Neon", DECOR)
 
 local sign = box(C1.Decorations, "Museum_Sign", -6.8, 6.8, 9.5, 11.8, 89.2, 89.5, C.space, "SmoothPlastic", DECOR)
@@ -146,12 +184,59 @@ end
 label("SPACE ADVENTURE", 0.06, 0.56, Font.new("rbxasset://fonts/families/Montserrat.json", Enum.FontWeight.Heavy), C.lightBlue)
 label("EXPLORE THE UNIVERSE", 0.66, 0.26, Font.new("rbxasset://fonts/families/Montserrat.json", Enum.FontWeight.Medium), C.white)
 
--- Moldura industrial na saída do museu (transição para o Corredor 2)
-local exitM = group(Museum.Walls, "Exit_Frame")
-box(exitM, "Jamb_L", -9.5, -8, 0, 14, 168.8, 169.5, C.darkGray, "Metal")
-box(exitM, "Jamb_R", 8, 9.5, 0, 14, 168.8, 169.5, C.darkGray, "Metal")
-box(exitM, "Header", -9.5, 9.5, 14, 15.5, 168.8, 169.5, C.darkGray, "Metal")
-box(exitM, "Hazard", -8, 8, 14.3, 15.2, 168.6, 168.8, C.safety, "SmoothPlastic", DECOR)
+-- (A antiga moldura industrial da saída dos fundos foi retirada: a Fase 14 sela esse vão
+-- com o Back_Seal, e a moldura ficava emoldurando uma parede lisa.)
+
+-- Encontros nos eixos X ±45,5 / Z 90 e 170; só as extremidades mudam.
+for _, name in { "Left_Wall", "Right_Wall" } do
+	local wall = Museum.Walls[name]
+	wall.Size = Vector3.new(1, 19.98, 80)
+	wall.CFrame = CFrame.new(wall.Position.X, 8.99, 130)
+end
+for _, name in { "Back_Wall_L", "Back_Wall_R" } do
+	local wall = Museum.Walls[name]
+	local x0 = name == "Back_Wall_L" and -45.5 or 8
+	local x1 = name == "Back_Wall_L" and -8 or 45.5
+	wall.Size = Vector3.new(x1 - x0, 20, 1)
+	wall.CFrame = CFrame.new((x0 + x1) / 2, 9, 170)
+end
+for _, x in { -45.5, 45.5 } do
+	for _, z in { 90, 170 } do
+		cylinder(Museum.Walls, "Rounded_Corner", x, z, -1.02, 19.02, 1, C.darkBlue, "SmoothPlastic")
+	end
+end
+
+-- Rodapés sem sobreposição: trechos encostam nas faces, interrompidos nos vãos.
+local skirts = group(Base.Walls, "Baseboards")
+box(skirts, "Front", -35, 35, 0, 0.45, 0, 0.12, C.midGray, "Metal", DECOR)
+box(skirts, "West", -35, -34.88, 0, 0.45, 0.12, 54.38, C.midGray, "Metal", DECOR)
+for _, r in { { 0.12, 20 }, { 35, 54.38 } } do
+	box(skirts, "East", 34.88, 35, 0, 0.45, r[1], r[2], C.midGray, "Metal", DECOR)
+end
+-- Colarinhos acompanham a curva dos batentes do corredor do museu (Fase 14).
+for _, z in { 20, 35 } do
+	cylinder(skirts, "Museum_Jamb_Base", 35.5, z, 0, 0.46, 1.24, C.midGray, "Metal", DECOR)
+end
+for _, r in { { -35, -7 }, { 7, 35 } } do
+	box(skirts, "Back", r[1], r[2], 0, 0.45, 54.38, 54.5, C.midGray, "Metal", DECOR)
+end
+for _, x in { -7, 6.88 } do
+	box(C1.Walls, "Baseboard", x, x + 0.12, 0, 0.45, 55.5, 95, C.midGray, "Metal", DECOR)
+end
+for _, x in { -45, 44.88 } do
+	box(Museum.Walls, "Baseboard_Side", x, x + 0.12, 0, 0.45, 90.62, 169.38, C.deepBlue, "Metal", DECOR)
+end
+for _, r in { { -45, -5.88 }, { 5.88, 45 } } do
+	box(Museum.Walls, "Baseboard_Front", r[1], r[2], 0, 0.45, 90.5, 90.62, C.deepBlue, "Metal", DECOR)
+end
+-- Rodapé contorna a espessura do portal, ligando a galeria externa ao salão.
+for _, side in { -1, 1 } do
+	local x0, x1 = side < 0 and -6 or 5.88, side < 0 and -5.88 or 6
+	box(Museum.Walls, "Baseboard_Jamb", x0, x1, 0, 0.45, 89.5, 90.5, C.deepBlue, "Metal", DECOR)
+	local a, b = side < 0 and -7 or 5.88, side < 0 and -5.88 or 7
+	box(Museum.Walls, "Baseboard_Portal", a, b, 0, 0.45, 89.38, 89.5, C.deepBlue, "Metal", DECOR)
+end
+box(Museum.Walls, "Baseboard_Back", -45, 45, 0, 0.45, 169.38, 169.5, C.deepBlue, "Metal", DECOR)
 
 -- 4. Museu: cúpula de planetário (polígono de 16 lados, Y 18 → 42) --------------------
 local CX, CZ = 0, 130
@@ -193,15 +278,18 @@ for j = 0, N - 1 do
 		local p1, p2 = ringPoint(rings[i], th, false), ringPoint(rings[i + 1], th, false)
 		local up = (p2 - p1).Unit
 		local out = up:Cross(t)
+		-- O trecho do meio é 0,04 mais largo: nas emendas sobrepostas as faces laterais
+		-- das nervuras vizinhas ficam a 0,02 uma da outra, sem z-fighting.
 		oriented(ribs, "Rib", CFrame.fromMatrix((p1 + p2) / 2 - out * 0.2, t, up),
-			Vector3.new(1.4, (p2 - p1).Magnitude + 0.6, 1.2), C.metalGray, "Metal")
+			Vector3.new(i == 2 and 1.44 or 1.4, (p2 - p1).Magnitude + 0.6, 1.2), C.metalGray, "Metal")
 	end
 	-- anel de base (na borda do polígono, logo abaixo do teto do salão)
 	local thc = (j + 0.5) * 2 * HALF
 	local radial = Vector3.new(math.cos(thc), 0, math.sin(thc))
 	local p = ringPoint(rings[1], thc, true) - radial * 0.3
 	oriented(ribs, "Base_Ring", CFrame.fromMatrix(p, tangent(thc), Vector3.yAxis),
-		Vector3.new(chord(rings[1]) + 0.6, 1.4, 1.4), C.metalGray, "Metal")
+		-- Segmentos alternados 0,04 mais altos: as quinas sobrepostas não têm topo/base coplanares.
+		Vector3.new(chord(rings[1]) + 0.6, j % 2 == 0 and 1.44 or 1.4, 1.4), C.metalGray, "Metal")
 end
 
 local topY = CY + R * math.sin(rings[4])
@@ -232,9 +320,9 @@ finish(roof, Museum.Walls, "Roof", C.space, "SmoothPlastic")
 
 -- 5. Corredor 2: porta industrial deslizante (aberta) -------------------------------
 local door = group(C2.Doors, "Sliding_Door")
-box(door, "Jamb_L", -8, -6.5, 0, 14, 175, 177, C.darkGray, "Metal")
-box(door, "Jamb_R", 6.5, 8, 0, 14, 175, 177, C.darkGray, "Metal")
-box(door, "Header", -6.5, 6.5, 12, 14, 175, 177, C.darkGray, "Metal")
+cylinder(door, "Jamb_L", -7.25, 176, 0, 14, 1.5, C.darkGray, "Metal")
+cylinder(door, "Jamb_R", 7.25, 176, 0, 14, 1.5, C.darkGray, "Metal")
+header(door, "Header", -6.5, 6.5, 12, 14, 175, 177, C.darkGray, "Metal")
 box(door, "Hazard_Front", -6.5, 6.5, 12.3, 13.7, 174.8, 175, C.safety, "SmoothPlastic", DECOR)
 box(door, "Hazard_Back", -6.5, 6.5, 12.3, 13.7, 177, 177.2, C.safety, "SmoothPlastic", DECOR)
 box(door, "Leaf_L", -7.9, -5.5, 0, 12, 177.2, 177.6, C.metalGray, "DiamondPlate")
@@ -242,8 +330,9 @@ box(door, "Leaf_R", 5.5, 7.9, 0, 12, 177.2, 177.6, C.metalGray, "DiamondPlate")
 
 -- 6. Hangar: portão frontal 24 × 30 (aberto, folhas segmentadas recolhidas) -----------
 local fg = group(Hangar.Gates, "Front_Gate")
-box(fg, "Jamb_L", -14, -12, 0, 32, 211, 212.5, C.darkGray, "Metal")
-box(fg, "Jamb_R", 12, 14, 0, 32, 211, 212.5, C.darkGray, "Metal")
+-- Batentes terminam sob a verga (Y 30), sem faces coplanares com ela.
+box(fg, "Jamb_L", -14, -12, 0, 30, 211, 212.5, C.darkGray, "Metal")
+box(fg, "Jamb_R", 12, 14, 0, 30, 211, 212.5, C.darkGray, "Metal")
 box(fg, "Header", -14, 14, 30, 32, 211, 212.5, C.darkGray, "Metal")
 box(fg, "Track_Beam", -28, 28, 32, 33.5, 211, 213.5, C.darkGray, "Metal")
 box(fg, "Hazard_L", -13.7, -12.3, 0, 30, 212.5, 212.7, C.safety, "SmoothPlastic", DECOR)
@@ -257,16 +346,23 @@ end
 -- 7. Hangar: portão dos fundos 80 × 140 (fechado) -------------------------------------
 -- Saída do conjunto de transporte (spec-v3 §3.2): envelope de 68 × 134 passa com folga.
 local backWall = group(Hangar.Structure, "Back_Wall")
-wallWithOpening(backWall, "Back_Wall", 319, 321, -72, 72, 152, -40, 40, 140, C.metalGray, "Metal")
+wallWithOpening(backWall, "Back_Wall", 319, 321, -71, 71, 152, -40, 40, 140, C.metalGray, "Metal")
 local bg = group(Hangar.Gates, "Maintenance_Gate")
 for k = 0, 6 do
 	local z0 = (k % 2 == 0) and 319.2 or 319.7
 	box(bg, "Segment_" .. (k + 1), -40, 40, (k == 0) and -1 or k * 20, (k + 1) * 20, z0, z0 + 1, C.paleGray, "Metal")
 end
-box(bg, "Jamb_L", -42, -40, 0, 142, 317.5, 319, C.darkGray, "Metal")
-box(bg, "Jamb_R", 40, 42, 0, 142, 317.5, 319, C.darkGray, "Metal")
+box(bg, "Jamb_L", -42, -40, 0, 140, 317.5, 319, C.darkGray, "Metal")
+box(bg, "Jamb_R", 40, 42, 0, 140, 317.5, 319, C.darkGray, "Metal")
 box(bg, "Header", -42, 42, 140, 142, 317.5, 319, C.darkGray, "Metal")
 box(bg, "Hazard_Band", -40, 40, 0, 3, 318.9, 319.2, C.safety, "SmoothPlastic", DECOR)
+
+-- Cantos do VAB continuam X ±70..72, sem avançar sobre X −34..34 ou sobre o portão.
+for _, x in { -71, 71 } do
+	for _, z in { 210, 320 } do
+		cylinder(Hangar.Structure, "Rounded_Corner", x, z, -1.02, 152.02, 2, C.metalGray, "Metal")
+	end
+end
 
 -- 8. Hangar: sala de observação elevada (~(45, 35, 250)) + escada --------------------
 local obs = Hangar.Observation_Room
@@ -274,18 +370,19 @@ local room = group(obs, "Room")
 box(room, "Floor", 44, 70, 34, 35, 238, 262, C.darkGray, "DiamondPlate")
 box(room, "Ceiling", 44, 70, 45, 46, 238, 262, C.darkGray, "Metal")
 -- janela voltada para o foguete (face X = 44)
-box(room, "Kick_Plate", 44, 44.6, 35, 36, 238, 262, C.metalGray, "Metal")
-box(room, "Top_Beam", 44, 44.6, 44.4, 45, 238, 262, C.metalGray, "Metal")
-box(room, "Window", 44.15, 44.45, 36, 44.4, 238, 262, C.glass, "Glass", GLASS)
+-- terminam na face interna da parede dos fundos (Z 261,6), que fecha a quina sozinha
+box(room, "Kick_Plate", 44, 44.6, 35, 36, 238, 261.6, C.metalGray, "Metal")
+box(room, "Top_Beam", 44, 44.6, 44.4, 45, 238, 261.6, C.metalGray, "Metal")
+box(room, "Window", 44.15, 44.45, 36, 44.4, 238, 261.6, OBS_GLASS_COLOR, "Glass", OBS_GLASS)
 for _, z in { 244, 250, 256 } do
-	box(room, "Mullion", 44, 44.6, 36, 44.4, z - 0.3, z + 0.3, C.metalGray, "Metal")
+	cylinder(room, "Mullion", 44.3, z, 36, 44.4, 0.6, C.metalGray, "Metal")
 end
 -- janela voltada para o portão frontal (face Z = 238)
 box(room, "Kick_Plate_Front", 44.6, 70, 35, 36, 238, 238.6, C.metalGray, "Metal")
 box(room, "Top_Beam_Front", 44.6, 70, 44.4, 45, 238, 238.6, C.metalGray, "Metal")
-box(room, "Window_Front", 44.6, 70, 36, 44.4, 238.15, 238.45, C.glass, "Glass", GLASS)
+box(room, "Window_Front", 44.6, 70, 36, 44.4, 238.15, 238.45, OBS_GLASS_COLOR, "Glass", OBS_GLASS)
 for _, x in { 53, 62 } do
-	box(room, "Mullion", x - 0.3, x + 0.3, 36, 44.4, 238, 238.6, C.metalGray, "Metal")
+	cylinder(room, "Mullion", x, 238.3, 36, 44.4, 0.6, C.metalGray, "Metal")
 end
 -- parede dos fundos com porta para a passarela
 box(room, "Back_Wall_L", 44, 63, 35, 45, 261.6, 262, C.metalGray, "Metal")
@@ -293,14 +390,14 @@ box(room, "Back_Wall_R", 69, 70, 35, 45, 261.6, 262, C.metalGray, "Metal")
 box(room, "Back_Wall_Header", 63, 69, 43, 45, 261.6, 262, C.metalGray, "Metal")
 -- estrutura de apoio
 for _, z in { { 239, 240.5 }, { 259.5, 261 } } do
-	box(room, "Column", 45, 46.5, 0, 34, z[1], z[2], C.darkGray, "Metal")
+	cylinder(room, "Column", 45.75, (z[1] + z[2]) / 2, 0, 34, 1.5, C.darkGray, "Metal")
 	box(room, "Beam", 44, 70, 33, 34, z[1], z[2], C.darkGray, "Metal")
 end
 
 local walkway = group(obs, "Walkway")
 box(walkway, "Deck", 62, 70, 34, 35, 262, 277, C.darkGray, "DiamondPlate")
 box(walkway, "Rail", 62, 62.3, 35, 38.5, 262, 277, C.metalGray, "Metal")
-box(walkway, "Column", 62, 63.5, 0, 34, 269.5, 271, C.darkGray, "Metal")
+cylinder(walkway, "Column", 62.75, 270.25, 0, 34, 1.5, C.darkGray, "Metal")
 
 local stairs = group(obs, "Stairs")
 for i = 1, 35 do
@@ -309,7 +406,8 @@ end
 do
 	-- corrimão inclinado acompanhando a linha dos degraus (Z 312, Y 1) → (Z 278, Y 35)
 	local up = Vector3.new(0, 1, 1).Unit
-	local mid = Vector3.new(62.15, 18, 295) + up * 1.75
+	-- X 61,97..62,27: a face externa fica 0,03 fora da face X 62 dos degraus (sem z-fighting)
+	local mid = Vector3.new(62.12, 18, 295) + up * 1.75
 	oriented(stairs, "Rail", CFrame.fromMatrix(mid, Vector3.xAxis, up),
 		Vector3.new(0.3, 3.5, 34 * math.sqrt(2) + 2), C.metalGray, "Metal")
 end

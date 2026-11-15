@@ -78,7 +78,10 @@ for _, zz in { { RZ0 - 0.4, DZ0 }, { DZ1, RZ1 + 0.4 } } do
 	B.box(room, "Front_Glass", RX1 + 0.1, RX1 + 0.3, 3.6, RH, zz[1], zz[2], "glass", "Glass", { transparency = 0.5 })
 end
 B.box(room, "Lintel", RX1, RX1 + 0.4, 11, RH, DZ0, DZ1, "white", "SmoothPlastic")
-B.box(room, "Accent_Stripe", RX1 - 0.05, RX1 + 0.45, 3.2, 3.6, RZ0 - 0.4, RZ1 + 0.4, "nasaBlue", "SmoothPlastic", DECOR)
+-- faixa em dois trechos (não atravessa o vão da porta), 0,02 acima da mureta e além das pontas
+for _, zz in { { RZ0 - 0.42, DZ0 }, { DZ1, RZ1 + 0.42 } } do
+	B.box(room, "Accent_Stripe", RX1 - 0.05, RX1 + 0.45, 3.2, 3.62, zz[1], zz[2], "nasaBlue", "SmoothPlastic", DECOR)
+end
 B.box(room, "Roof", RX0 - 0.6, RX1 + 0.6, RH, RH + 0.4, RZ0 - 0.6, RZ1 + 0.6, "white", "Plaster")
 for _, lx in { { -55, -50 }, { -46, -41 } } do
 	local panel = B.box(room, "Ceiling_Light", lx[1], lx[2], RH - 0.1, RH, 248, 254, "white", "Neon", DECOR_NS)
@@ -94,13 +97,20 @@ B.sign(s2, "NASA CREW SPACESUITS",
 	{ face = Enum.NormalId.Right, accent = "orange", titleScale = 0.32 })
 local s3 = B.box(room, "Sign_Launcher", RX1 + 0.45, RX1 + 0.55, 11.4, 12.8, DZ0, DZ1, "space", "SmoothPlastic", DECOR)
 B.sign(s3, "TO MOBILE LAUNCHER", nil, { face = Enum.NormalId.Right, titleColor = "safety" })
+-- a porta dá para a lateral do patamar; o pé da escada fica em Z 234 (à esquerda de quem sai)
+local s4 = B.box(room, "Sign_Stairs", RX1 - 0.08, RX1 - 0.02, 11.4, 12.8, DZ0, DZ1, "space", "SmoothPlastic", DECOR)
+B.sign(s4, "← LAUNCHER STAIRS", nil, { face = Enum.NormalId.Left, titleColor = "safety" })
+-- faixa de piso fixa no VAB: da porta até o pé da escada (X < −30, fora da escada do conjunto)
+B.box(room, "Stairs_Guide", RX1 + 0.4, -31, 0, 0.06, 250.5, 251.5, "lightBlue", "SmoothPlastic", DECOR)
+B.box(room, "Stairs_Guide", -32, -31, 0, 0.06, 232, 250.5, "lightBlue", "SmoothPlastic", DECOR)
+B.box(room, "Stairs_Guide", -31, -27, 0, 0.06, 232, 233, "lightBlue", "SmoothPlastic", DECOR)
 
 -- 4 armários com trajes, na parede do fundo (frente voltada para +X)
 local LX0, LX1 = RX0 + 0.4, RX0 + 2.4   -- −59,6..−57,6
 for i, cz in { 247, 249.9, 252.8, 255.7 } do
 	local lk = B.group(room, "Suit_Locker_" .. i)
-	B.box(lk, "Side", LX0, LX1, 0, 6.9, cz - 1.1, cz - 1.0, "nasaBlue", "Metal")
-	B.box(lk, "Side", LX0, LX1, 0, 6.9, cz + 1.0, cz + 1.1, "nasaBlue", "Metal")
+	B.box(lk, "Side", LX0, LX1, 0, 6.8, cz - 1.1, cz - 1.0, "nasaBlue", "Metal")
+	B.box(lk, "Side", LX0, LX1, 0, 6.8, cz + 1.0, cz + 1.1, "nasaBlue", "Metal")
 	B.box(lk, "Top", LX0, LX1, 6.8, 7.0, cz - 1.1, cz + 1.1, "nasaBlue", "Metal")
 	B.box(lk, "Base", LX0, LX1, 0, 0.7, cz - 1.0, cz + 1.0, "darkGray", "Metal")
 	B.box(lk, "Back", LX0, LX0 + 0.15, 0.7, 6.8, cz - 1.0, cz + 1.0, "midGray", "Metal", DECOR)
@@ -139,12 +149,13 @@ local function cab(name, floorY, doorAtLowZ)
 	c.PrimaryPart = floor
 	c:SetAttribute("ZoneOffset", floor.CFrame:PointToObjectSpace(zoneCenter(floorY)))
 	c:SetAttribute("ZoneSize", ZONE)
-	B.box(c, "Wall_Side", -22.6, -22, floorY, y1, ZC0 - 0.4, ZC1 + 0.4, "metalGray", "Metal")
-	B.box(c, "Wall_Side", -18, -17.4, floorY, y1, ZC0 - 0.4, ZC1 + 0.4, "metalGray", "Metal")
+	-- paredes apoiadas no topo do piso (floorY + 0,15): sem faces coplanares com o piso
+	B.box(c, "Wall_Side", -22.6, -22, floorY + 0.15, y1, ZC0 - 0.4, ZC1 + 0.4, "metalGray", "Metal")
+	B.box(c, "Wall_Side", -18, -17.4, floorY + 0.15, y1, ZC0 - 0.4, ZC1 + 0.4, "metalGray", "Metal")
 	if doorAtLowZ then
-		B.box(c, "Wall_Back", -22, -18, floorY, y1, ZC1, ZC1 + 0.4, "metalGray", "Metal")
+		B.box(c, "Wall_Back", -22, -18, floorY + 0.15, y1, ZC1, ZC1 + 0.4, "metalGray", "Metal")
 	else
-		B.box(c, "Wall_Back", -22, -18, floorY, y1, ZC0 - 0.4, ZC0, "metalGray", "Metal")
+		B.box(c, "Wall_Back", -22, -18, floorY + 0.15, y1, ZC0 - 0.4, ZC0, "metalGray", "Metal")
 	end
 	B.box(c, "Roof", -22.6, -17.4, y1, y1 + 0.4, ZC0 - 0.4, ZC1 + 0.4, "metalGray", "Metal")
 	local lp = B.box(c, "Cab_Light", -21, -19, y1 - 0.08, y1, ZC0 + 1.5, ZC1 - 1.5, "white", "Neon", DECOR_NS)
@@ -175,14 +186,15 @@ B.sign(tag, "CREW ACCESS ARM", nil, { face = Enum.NormalId.Back, titleColor = "s
 -- poço: pilares de canto e cintas horizontais entre as cabines
 local shaft = B.group(elev, "Shaft")
 for _, px in { { -23, -22.5 }, { -17.5, -17 } } do
-	for _, pz in { { 255.2, 255.7 }, { 261.9, 262.0 } } do
+	for _, pz in { { 255.2, 255.7 }, { 261.88, 261.98 } } do
 		B.box(shaft, "Post", px[1], px[2], DECK, TOP + 8, pz[1], pz[2], "darkGray", "Metal")
 	end
 end
 for y = 22, 106, 12 do
-	B.box(shaft, "Band", -23, -17, y - 0.25, y + 0.25, 255.2, 255.7, "metalGray", "Metal")
-	B.box(shaft, "Band", -23, -22.5, y - 0.25, y + 0.25, 255.2, 262.0, "metalGray", "Metal")
-	B.box(shaft, "Band", -17.5, -17, y - 0.25, y + 0.25, 255.2, 262.0, "metalGray", "Metal")
+	-- cintas 0,02 mais largas que os pilares; as laterais começam atrás da cinta frontal
+	B.box(shaft, "Band", -23.02, -16.98, y - 0.25, y + 0.25, 255.18, 255.72, "metalGray", "Metal")
+	B.box(shaft, "Band", -23.02, -22.48, y - 0.25, y + 0.25, 255.72, 262.0, "metalGray", "Metal")
+	B.box(shaft, "Band", -17.52, -16.98, y - 0.25, y + 0.25, 255.72, 262.0, "metalGray", "Metal")
 end
 B.box(shaft, "Counterweight_Rail", -22.9, -22.6, DECK, TOP, 258.6, 258.9, "safety", "Metal", DECOR)
 
@@ -196,11 +208,12 @@ for _, cx in { -22.6, -17.4 } do
 		B.box(arm, "Column_Ext", cx - 0.4, cx + 0.4, 105, TOP + 8, cz - 0.4, cz + 0.4, "darkGray", "Metal")
 	end
 end
-B.box(arm, "Tower_Deck", -23, -17, TOP - 0.5, TOP, 262, 268, "darkGray", "DiamondPlate")
-B.box(arm, "Rail", -23, -22.8, TOP, TOP + 1.2, 262, 268, "safety", "Metal")
-B.box(arm, "Rail", -23, -17, TOP, TOP + 1.2, 267.8, 268, "safety", "Metal")
-B.box(arm, "Rail", -17.2, -17, TOP, TOP + 1.2, 262, 263.5, "safety", "Metal")
-B.box(arm, "Rail", -17.2, -17, TOP, TOP + 1.2, 266.5, 268, "safety", "Metal")
+-- deck e guarda-corpos recuados 0,02 das faces externas das colunas (sem faces coplanares)
+B.box(arm, "Tower_Deck", -22.98, -16.98, TOP - 0.5, TOP, 262.02, 267.98, "darkGray", "DiamondPlate")
+B.box(arm, "Rail", -22.98, -22.78, TOP, TOP + 1.2, 262.02, 267.98, "safety", "Metal")
+B.box(arm, "Rail", -22.98, -17.02, TOP, TOP + 1.2, 267.78, 267.98, "safety", "Metal")
+B.box(arm, "Rail", -17.22, -17.02, TOP, TOP + 1.2, 262.02, 263.5, "safety", "Metal")
+B.box(arm, "Rail", -17.22, -17.02, TOP, TOP + 1.2, 266.5, 267.98, "safety", "Metal")
 B.box(arm, "Roof", -23.2, -16.8, TOP + 8, TOP + 8.4, 255.2, 268.2, "metalGray", "Metal")
 -- braço
 B.box(arm, "Arm_Deck", -17, -3.2, TOP - 0.5, TOP, RZ - 1.5, RZ + 1.5, "darkGray", "DiamondPlate")
@@ -363,7 +376,7 @@ for _, s in SEATS do
 	seat:SetAttribute("BuildPhase", 8)
 	seat.Parent = g
 	local back = B.part(g, "Seat_Back", scf * CFrame.new(0, 1.8, 1.35) * CFrame.Angles(math.rad(12), 0, 0),
-		Vector3.new(2.4, 3.4, 0.4), "black", "Fabric")
+		Vector3.new(2.36, 3.4, 0.4), "black", "Fabric")
 	B.sign(back, label, nil, { face = Enum.NormalId.Back, bg = "nasaBlue", titleColor = "white", ppu = 60 })
 	B.part(g, "Headrest", scf * CFrame.new(0, 3.75, 1.85) * CFrame.Angles(math.rad(12), 0, 0),
 		Vector3.new(1.4, 0.8, 0.5), "darkGray", "Fabric", DECOR)
@@ -396,7 +409,7 @@ B.sign(hdoor, "HYGIENE BAY", nil, { face = Enum.NormalId.Right, bg = "midGray", 
 -- estiva lateral e bolsas de carga
 for _, k in { 5, 11 } do
 	local st = B.part(cabin, "Stowage_Lockers", wallCF(k, 3.2, 0.2), Vector3.new(5.4, 4.2, 0.4), "white", "SmoothPlastic")
-	B.sign(st, "STOWAGE", "FOOD · WATER · MEDICAL KIT", { face = IN, bg = "lightGray", titleColor = "nasaBlue", bodyColor = "darkGray", titleScale = 0.35 })
+	B.sign(st, "STOWAGE", "FOOD · WATER\nMEDICAL KIT", { face = IN, bg = "lightGray", titleColor = "nasaBlue", bodyColor = "darkGray", titleScale = 0.35 })
 end
 local cargo = B.group(cabin, "Cargo_Bags")
 for i, b in { { -9.5, -7, 0, 2.2 }, { -9.3, -7.2, 2.2, 4.2 }, { -6.8, -4.6, 0, 1.8 } } do

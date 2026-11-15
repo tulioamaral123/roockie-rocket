@@ -119,14 +119,14 @@ B.box(stairs, "Landing", SX0, SX1, 0, PLATE_TOP, SZ1, SZ1 + 3, "darkGray", "Diam
 B.beam(stairs, "Rail", Vector3.new(SX0 + 0.15, PLATE_TOP / STEPS + 3, SZ0 + 0.5), Vector3.new(SX0 + 0.15, PLATE_TOP + 3, SZ1), 0.25, 0.25, "safety", "Metal", DECOR)
 B.beam(stairs, "Rail", Vector3.new(SX1 - 0.15, PLATE_TOP / STEPS + 3, SZ0 + 0.5), Vector3.new(SX1 - 0.15, 11.4 + 3, 245), 0.25, 0.25, "safety", "Metal", DECOR)
 B.box(stairs, "Rail", SX0, SX0 + 0.3, PLATE_TOP, PLATE_TOP + 3.3, SZ1, SZ1 + 3, "safety", "Metal")
-B.box(stairs, "Rail", SX0, SX1, PLATE_TOP + 3, PLATE_TOP + 3.3, SZ1 + 2.85, SZ1 + 3, "safety", "Metal")
+B.box(stairs, "Rail", SX0 + 0.3, SX1, PLATE_TOP + 3, PLATE_TOP + 3.3, SZ1 + 2.85, SZ1 + 3, "safety", "Metal")
 -- faixa de piso do patamar até a porta da cabine inferior do elevador da tripulação:
 -- leva o visitante até o eixo da porta (X −20) antes de virar, longe da quina da folha aberta
 local guide = B.group(base, "Crew_Walkway_Guide")
 local GY = PLATE_TOP
 B.box(guide, "Stripe", SX1, -19.4, GY, GY + 0.05, SZ1 + 1, SZ1 + 2, "lightBlue", "SmoothPlastic", DECOR)
 B.box(guide, "Stripe", -20.6, -19.4, GY, GY + 0.05, SZ1 + 2, 255.4, "lightBlue", "SmoothPlastic", DECOR)
-B.box(guide, "Arrow", -20.9, -19.1, GY, GY + 0.06, 254.2, 254.8, "lightBlue", "SmoothPlastic", DECOR)
+B.box(guide, "Arrow", -20.9, -19.1, GY, GY + 0.09, 254.2, 254.8, "lightBlue", "SmoothPlastic", DECOR)
 -- luzes do deck (Fase 5)
 local lights = workspace:FindFirstChild("Lighting_Objects")
 local hangarLights = lights and lights:FindFirstChild("Hangar")

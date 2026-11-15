@@ -1,0 +1,25 @@
+return {
+	Id = "mars_rover",
+	Island = "mars",
+	Name = "Curiosity rover",
+	Category = "Rover",
+	Program = "Mars Science Laboratory",
+	Period = "2012–today",
+	Type = "reconstrucao_digital",
+	History = "Curiosity is a car-sized rover that landed in Gale Crater on Mars in 2012. It studies rocks and soil to learn whether Mars once had conditions that could support microbial life. Its official self-portrait was taken at a drill site called Buckskin.",
+	DidYouKnow = "Radio signals take minutes to travel between Earth and Mars, so rovers have to make some decisions on their own.",
+	Gallery = { "PIA19808", "PIA24745", "PIA23882" },
+	KeyFacts = {
+		{ Text = "Curiosity's wheels are 20 inches (50 cm) in diameter and about 16 inches (40 cm) wide.", Source = "PIA19808" },
+		{ Text = "The Buckskin self-portrait combines images from the Mars Hand Lens Imager taken on Aug. 5, 2015, the rover's 1,065th Martian day.", Source = "PIA19808" },
+		{ Text = "Buckskin is a rock target on lower Mount Sharp, where Curiosity drilled.", Source = "PIA19808" },
+	},
+	Interactions = {},
+	PromptDistance = 14,
+	Image = { NasaId = "PIA19808", Credit = "NASA/JPL-Caltech/MSSS", AssetId = nil },
+	Sources = {
+		{ Title = "Curiosity mission page", Url = "https://science.nasa.gov/mission/msl-curiosity/" },
+		{ Title = "Curiosity self-portrait at Buckskin (PIA19808)", Url = "https://images.nasa.gov/details/PIA19808" },
+	},
+	Verified = false,
+}
