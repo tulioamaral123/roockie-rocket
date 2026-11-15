@@ -132,43 +132,54 @@ end
 B.box(room, "Bench", -44, -38, 0, 1.6, RZ1 - 1.6, RZ1 - 0.3, "metalGray", "Metal")
 
 ---------------------------------------------------------------------------------
--- 2. Elevador da tripulação (frente da torre esquerda, X −22.6..−17.4, Z 255.6..262)
+-- 2. Elevador da tripulação (frente da torre esquerda, X −24..−15, Z 254,1..262)
 --    Cabine de baixo no deck (Y 10.1) e de cima no braço de acesso (Y 111.5).
+--    Cabines ampliadas (interior 7,8 × 7,1 × 8,4) para caberem 4 tripulantes + a Ana.
 --    Os ocupantes são levados entre as duas preservando a posição relativa.
 ---------------------------------------------------------------------------------
 local elev = B.group(root, "Crew_Elevator")
-local ZC0, ZC1 = 256, 261.6       -- interior das cabines (Z)
-local zoneCenter = function(floorY) return Vector3.new(-20, floorY + 3.7, (ZC0 + ZC1) / 2) end
-local ZONE = Vector3.new(4.4, 7.4, ZC1 - ZC0 + 0.6)
+local CX0, CX1 = -24, -15          -- faces externas das paredes laterais (X); deck vai até X −24
+local WT = 0.6                     -- espessura das paredes
+local XI0, XI1 = CX0 + WT, CX1 - WT -- interior (X)
+local CXC = (CX0 + CX1) / 2
+local ZC0, ZC1 = 254.5, 261.6       -- interior das cabines (Z)
+local CH = 8.4                      -- altura interna
+local zoneCenter = function(floorY) return Vector3.new(CXC, floorY + CH / 2, (ZC0 + ZC1) / 2) end
+local ZONE = Vector3.new(XI1 - XI0 - 0.2, CH, ZC1 - ZC0 + 0.6)
 
 local function cab(name, floorY, doorAtLowZ)
 	local c = B.group(elev, name)
-	local y1 = floorY + 7.4
-	local floor = B.box(c, "Floor", -22.6, -17.4, floorY - 0.5, floorY + 0.15, ZC0 - 0.4, ZC1 + 0.4, "darkGray", "DiamondPlate")
+	local y1 = floorY + CH
+	local floor = B.box(c, "Floor", CX0, CX1, floorY - 0.5, floorY + 0.15, ZC0 - 0.4, ZC1 + 0.4, "darkGray", "DiamondPlate")
 	-- referência da cabine: zona de passageiros relativa ao piso (acompanha o lançador)
 	c.PrimaryPart = floor
 	c:SetAttribute("ZoneOffset", floor.CFrame:PointToObjectSpace(zoneCenter(floorY)))
 	c:SetAttribute("ZoneSize", ZONE)
 	-- paredes apoiadas no topo do piso (floorY + 0,15): sem faces coplanares com o piso
-	B.box(c, "Wall_Side", -22.6, -22, floorY + 0.15, y1, ZC0 - 0.4, ZC1 + 0.4, "metalGray", "Metal")
-	B.box(c, "Wall_Side", -18, -17.4, floorY + 0.15, y1, ZC0 - 0.4, ZC1 + 0.4, "metalGray", "Metal")
+	B.box(c, "Wall_Side", CX0, XI0, floorY + 0.15, y1, ZC0 - 0.4, ZC1 + 0.4, "metalGray", "Metal")
+	B.box(c, "Wall_Side", XI1, CX1, floorY + 0.15, y1, ZC0 - 0.4, ZC1 + 0.4, "metalGray", "Metal")
 	if doorAtLowZ then
-		B.box(c, "Wall_Back", -22, -18, floorY + 0.15, y1, ZC1, ZC1 + 0.4, "metalGray", "Metal")
+		B.box(c, "Wall_Back", XI0, XI1, floorY + 0.15, y1, ZC1, ZC1 + 0.4, "metalGray", "Metal")
 	else
-		B.box(c, "Wall_Back", -22, -18, floorY + 0.15, y1, ZC0 - 0.4, ZC0, "metalGray", "Metal")
+		B.box(c, "Wall_Back", XI0, XI1, floorY + 0.15, y1, ZC0 - 0.4, ZC0, "metalGray", "Metal")
 	end
-	B.box(c, "Roof", -22.6, -17.4, y1, y1 + 0.4, ZC0 - 0.4, ZC1 + 0.4, "metalGray", "Metal")
-	local lp = B.box(c, "Cab_Light", -21, -19, y1 - 0.08, y1, ZC0 + 1.5, ZC1 - 1.5, "white", "Neon", DECOR_NS)
-	B.light(lp, "SurfaceLight", { Face = Enum.NormalId.Bottom, Brightness = 1.4, Range = 9, Shadows = false })
-	local panelP = B.box(c, "Call_Panel", -18.05, -17.98, floorY + 2.9, floorY + 4.4, 258.3, 259.3, "darkGray", "Metal")
-	local lamp = B.box(c, "Status_Lamp", -18.06, -17.97, floorY + 4.7, floorY + 5.1, 258.6, 259, "#3CCB5A", "Neon", DECOR_NS)
+	B.box(c, "Roof", CX0, CX1, y1, y1 + 0.4, ZC0 - 0.4, ZC1 + 0.4, "metalGray", "Metal")
+	local lp = B.box(c, "Cab_Light", CXC - 2, CXC + 2, y1 - 0.08, y1, ZC0 + 1.5, ZC1 - 1.5, "white", "Neon", DECOR_NS)
+	B.light(lp, "SurfaceLight", { Face = Enum.NormalId.Bottom, Brightness = 1.6, Range = 11, Shadows = false })
+	-- corrimão nas três paredes internas (detalhe; sem colisão)
+	B.box(c, "Handrail", XI1 - 0.15, XI1 - 0.05, floorY + 3.2, floorY + 3.35, ZC0 + 0.6, ZC1 - 0.6, "metalGray", "Metal", DECOR)
+	B.box(c, "Handrail", XI0 + 0.05, XI0 + 0.15, floorY + 3.2, floorY + 3.35, ZC0 + 0.6, ZC1 - 0.6, "metalGray", "Metal", DECOR)
+	local pz = (ZC0 + ZC1) / 2
+	local panelP = B.box(c, "Call_Panel", XI1 - 0.05, XI1 + 0.02, floorY + 2.9, floorY + 4.4, pz - 0.5, pz + 0.5, "darkGray", "Metal")
+	local lamp = B.box(c, "Status_Lamp", XI1 - 0.06, XI1 + 0.03, floorY + 4.7, floorY + 5.1, pz - 0.2, pz + 0.2, "#3CCB5A", "Neon", DECOR_NS)
 	-- portas deslizantes (montadas fechadas; o script abre ao iniciar e fecha durante a viagem)
 	local dz0 = doorAtLowZ and (ZC0 - 0.35) or (ZC1 + 0.05)
+	local half = (XI1 - XI0) / 2
 	for _, side in { -1, 1 } do
-		local x0, x1 = (side < 0) and -22 or -20, (side < 0) and -20 or -18
-		local leaf = B.box(c, side < 0 and "Door_L" or "Door_R", x0, x1, floorY + 0.15, floorY + 7, dz0, dz0 + 0.3, "metalGray", "Metal")
-		leaf:SetAttribute("OpenOffset", Vector3.new(side * 2, 0, 0))
-		B.box(c, "Door_Window", x0 + 0.6, x1 - 0.6, floorY + 4, floorY + 6, dz0 - 0.03, dz0 + 0.33, "glass", "Glass",
+		local x0, x1 = (side < 0) and XI0 or CXC, (side < 0) and CXC or XI1
+		local leaf = B.box(c, side < 0 and "Door_L" or "Door_R", x0, x1, floorY + 0.15, floorY + CH - 0.4, dz0, dz0 + 0.3, "metalGray", "Metal")
+		leaf:SetAttribute("OpenOffset", Vector3.new(side * half, 0, 0))
+		B.box(c, "Door_Window", x0 + 0.8, x1 - 0.8, floorY + 4.4, floorY + 6.8, dz0 - 0.03, dz0 + 0.33, "glass", "Glass",
 			{ collide = false, transparency = 0.3 }):SetAttribute("FollowDoor", leaf.Name)
 	end
 	return c, panelP
@@ -176,65 +187,76 @@ end
 local _, panelLow = cab("Cab_Lower", DECK, true)
 local _, panelTop = cab("Cab_Upper", TOP, false)
 -- cada painel leva quem está na própria cabine até a outra cabine do mesmo elevador
-local pl = prompt(panelLow, "Elevator", "Crew elevator", "Go up to the access arm", { dist = 5 })
+local pl = prompt(panelLow, "Elevator", "Crew elevator", "Go up to the access arm", { dist = 6 })
 pl:SetAttribute("FadeText", "Going up to the crew access arm…")
-local pt = prompt(panelTop, "Elevator", "Crew elevator", "Go down to the launcher", { dist = 5 })
+local pt = prompt(panelTop, "Elevator", "Crew elevator", "Go down to the launcher", { dist = 6 })
 pt:SetAttribute("FadeText", "Going down to the mobile launcher…")
-local tag = B.box(elev, "Sign_Cab_Upper", -21.5, -18.5, TOP + 5.6, TOP + 6.6, ZC0 + 0.01, ZC0 + 0.1, "space", "SmoothPlastic", DECOR)
+local tag = B.box(elev, "Sign_Cab_Upper", CXC - 2, CXC + 2, TOP + 6.4, TOP + 7.6, ZC0 + 0.01, ZC0 + 0.1, "space", "SmoothPlastic", DECOR)
 B.sign(tag, "CREW ACCESS ARM", nil, { face = Enum.NormalId.Back, titleColor = "safety" })
 
 -- poço: pilares de canto e cintas horizontais entre as cabines
 local shaft = B.group(elev, "Shaft")
-for _, px in { { -23, -22.5 }, { -17.5, -17 } } do
-	for _, pz in { { 255.2, 255.7 }, { 261.88, 261.98 } } do
-		B.box(shaft, "Post", px[1], px[2], DECK, TOP + 8, pz[1], pz[2], "darkGray", "Metal")
+local SH = TOP + 9                  -- topo do poço (acima do teto da cabine de cima)
+local PZ0, PZ1 = ZC0 - 0.9, ZC0 - 0.4 -- pilares da frente
+local QZ0, QZ1 = ZC1 + 0.42, ZC1 + 0.52 -- pilares do fundo (encostados na torre)
+for _, px in { { CX0 - 0.5, CX0 }, { CX1, CX1 + 0.5 } } do
+	for _, pz in { { PZ0, PZ1 }, { QZ0, QZ1 } } do
+		B.box(shaft, "Post", px[1], px[2], DECK, SH, pz[1], pz[2], "darkGray", "Metal")
 	end
 end
 for y = 22, 106, 12 do
 	-- cintas 0,02 mais largas que os pilares; as laterais começam atrás da cinta frontal
-	B.box(shaft, "Band", -23.02, -16.98, y - 0.25, y + 0.25, 255.18, 255.72, "metalGray", "Metal")
-	B.box(shaft, "Band", -23.02, -22.48, y - 0.25, y + 0.25, 255.72, 262.0, "metalGray", "Metal")
-	B.box(shaft, "Band", -17.52, -16.98, y - 0.25, y + 0.25, 255.72, 262.0, "metalGray", "Metal")
+	B.box(shaft, "Band", CX0 - 0.52, CX1 + 0.52, y - 0.25, y + 0.25, PZ0 - 0.02, PZ1 + 0.02, "metalGray", "Metal")
+	B.box(shaft, "Band", CX0 - 0.52, CX0 + 0.02, y - 0.25, y + 0.25, PZ1 + 0.02, QZ1 + 0.02, "metalGray", "Metal")
+	B.box(shaft, "Band", CX1 - 0.02, CX1 + 0.52, y - 0.25, y + 0.25, PZ1 + 0.02, QZ1 + 0.02, "metalGray", "Metal")
 end
-B.box(shaft, "Counterweight_Rail", -22.9, -22.6, DECK, TOP, 258.6, 258.9, "safety", "Metal", DECOR)
+B.box(shaft, "Counterweight_Rail", CX0 - 0.4, CX0 - 0.1, DECK, TOP, (ZC0 + ZC1) / 2 - 0.15, (ZC0 + ZC1) / 2 + 0.15, "safety", "Metal", DECOR)
 
 ---------------------------------------------------------------------------------
--- 3. Plataforma final: topo da torre esquerda + braço de acesso + White Room
+-- 3. Plataforma final: topo da torre esquerda + braço de acesso (passarela) + White Room
+--    Topo da torre com a largura da cabine (X −24..−15) e passarela de 6 de largura.
 ---------------------------------------------------------------------------------
 local arm = B.group(root, "Crew_Access_Arm")
+local AW = 3                        -- meia largura da passarela (Z RZ ± 3)
 -- prolongamento das colunas da torre esquerda (topo original em Y 105)
 for _, cx in { -22.6, -17.4 } do
 	for _, cz in { 262.4, 267.6 } do
-		B.box(arm, "Column_Ext", cx - 0.4, cx + 0.4, 105, TOP + 8, cz - 0.4, cz + 0.4, "darkGray", "Metal")
+		B.box(arm, "Column_Ext", cx - 0.4, cx + 0.4, 105, SH, cz - 0.4, cz + 0.4, "darkGray", "Metal")
 	end
 end
--- deck e guarda-corpos recuados 0,02 das faces externas das colunas (sem faces coplanares)
-B.box(arm, "Tower_Deck", -22.98, -16.98, TOP - 0.5, TOP, 262.02, 267.98, "darkGray", "DiamondPlate")
-B.box(arm, "Rail", -22.98, -22.78, TOP, TOP + 1.2, 262.02, 267.98, "safety", "Metal")
-B.box(arm, "Rail", -22.98, -17.02, TOP, TOP + 1.2, 267.78, 267.98, "safety", "Metal")
-B.box(arm, "Rail", -17.22, -17.02, TOP, TOP + 1.2, 262.02, 263.5, "safety", "Metal")
-B.box(arm, "Rail", -17.22, -17.02, TOP, TOP + 1.2, 266.5, 267.98, "safety", "Metal")
-B.box(arm, "Roof", -23.2, -16.8, TOP + 8, TOP + 8.4, 255.2, 268.2, "metalGray", "Metal")
--- braço
-B.box(arm, "Arm_Deck", -17, -3.2, TOP - 0.5, TOP, RZ - 1.5, RZ + 1.5, "darkGray", "DiamondPlate")
-for _, z in { RZ - 1.3, RZ + 1.3 } do
-	B.box(arm, "Arm_Beam", -17, -3.4, TOP - 1.2, TOP - 0.5, z - 0.2, z + 0.2, "metalGray", "Metal")
+-- deck do topo da torre (encosta na cabine de cima e na passarela) e guarda-corpos
+B.box(arm, "Tower_Deck", CX0, CX1, TOP - 0.5, TOP, 262.02, 267.98, "darkGray", "DiamondPlate")
+B.box(arm, "Rail", CX0, CX0 + 0.2, TOP, TOP + 1.2, 262.02, 267.98, "safety", "Metal")
+B.box(arm, "Rail", CX0 + 0.2, CX1, TOP, TOP + 1.2, 267.78, 267.98, "safety", "Metal")
+B.box(arm, "Roof", CX0 - 0.6, CX1 + 0.6, SH, SH + 0.4, PZ0 - 0.2, 268.2, "metalGray", "Metal")
+-- passarela (braço de acesso)
+B.box(arm, "Arm_Deck", CX1, -3.2, TOP - 0.5, TOP, RZ - AW, RZ + AW, "darkGray", "DiamondPlate")
+for _, z in { RZ - AW + 0.25, RZ + AW - 0.25 } do
+	B.box(arm, "Arm_Beam", CX1, -3.4, TOP - 1.2, TOP - 0.5, z - 0.2, z + 0.2, "metalGray", "Metal")
 	B.beam(arm, "Arm_Brace", Vector3.new(-17.4, 105.2, z), Vector3.new(-9, TOP - 1.2, z), 0.35, 0.35, "metalGray", "Metal", DECOR)
 end
-for _, z in { RZ - 1.5, RZ + 1.5 } do
-	B.box(arm, "Arm_Rail", -17, -6.5, TOP, TOP + 1.1, z - 0.1, z + 0.1, "safety", "Metal")
+for _, z in { RZ - AW, RZ + AW } do
+	B.box(arm, "Arm_Rail", CX1, -6.5, TOP, TOP + 1.1, z - 0.1, z + 0.1, "safety", "Metal")
+	-- corrimão intermediário e rodapé (detalhe; sem colisão)
+	B.box(arm, "Arm_Rail_Mid", CX1, -6.5, TOP + 0.55, TOP + 0.65, z - 0.08, z + 0.08, "safety", "Metal", DECOR)
 end
--- White Room (X −6.5..−3.2), aberta para o lado da cápsula
+for x = CX1 + 2, -7, 3 do
+	for _, z in { RZ - AW, RZ + AW } do
+		B.box(arm, "Arm_Rail_Post", x - 0.08, x + 0.08, TOP, TOP + 1.1, z - 0.12, z + 0.12, "safety", "Metal", DECOR)
+	end
+end
+-- White Room (X −6.5..−3.2), aberta para o lado da cápsula, com a largura da passarela
 local wr = B.group(arm, "White_Room")
-local WY1 = TOP + 6.5
-B.box(wr, "Wall", -6.5, -3.2, TOP, WY1, 263, 263.3, "white", "SmoothPlastic")
-B.box(wr, "Wall", -6.5, -3.2, TOP, WY1, 266.7, 267, "white", "SmoothPlastic")
-B.box(wr, "Wall_Door", -6.5, -6.2, TOP, WY1, 263.3, 263.8, "white", "SmoothPlastic")
-B.box(wr, "Wall_Door", -6.5, -6.2, TOP, WY1, 266.2, 266.7, "white", "SmoothPlastic")
-B.box(wr, "Lintel", -6.5, -6.2, TOP + 6, WY1, 263.8, 266.2, "white", "SmoothPlastic")
-local wroof = B.box(wr, "Roof", -6.7, -3.2, WY1, WY1 + 0.3, 262.8, 267.2, "white", "SmoothPlastic")
-B.light(wroof, "SurfaceLight", { Face = Enum.NormalId.Bottom, Brightness = 1.2, Range = 9, Shadows = false })
-local ws = B.box(wr, "Sign", -6, -3.6, TOP + 4.6, TOP + 5.8, 263.3, 263.4, "space", "SmoothPlastic", DECOR)
+local WY1 = TOP + 7
+local WD = AW - 1                   -- meia largura do vão da porta
+B.box(wr, "Wall", -6.5, -3.2, TOP, WY1, RZ - AW - 0.3, RZ - AW, "white", "SmoothPlastic")
+B.box(wr, "Wall", -6.5, -3.2, TOP, WY1, RZ + AW, RZ + AW + 0.3, "white", "SmoothPlastic")
+B.box(wr, "Wall_Door", -6.5, -6.2, TOP, WY1, RZ - AW, RZ - WD, "white", "SmoothPlastic")
+B.box(wr, "Wall_Door", -6.5, -6.2, TOP, WY1, RZ + WD, RZ + AW, "white", "SmoothPlastic")
+B.box(wr, "Lintel", -6.5, -6.2, TOP + 6.4, WY1, RZ - WD, RZ + WD, "white", "SmoothPlastic")
+local wroof = B.box(wr, "Roof", -6.7, -3.2, WY1, WY1 + 0.3, RZ - AW - 0.5, RZ + AW + 0.5, "white", "SmoothPlastic")
+B.light(wroof, "SurfaceLight", { Face = Enum.NormalId.Bottom, Brightness = 1.2, Range = 10, Shadows = false })
+local ws = B.box(wr, "Sign", -6, -3.6, TOP + 4.8, TOP + 6, RZ - AW, RZ - AW + 0.1, "space", "SmoothPlastic", DECOR)
 B.sign(ws, "ORION CREW HATCH", nil, { face = Enum.NormalId.Back, titleColor = "white", accent = "orange" })
 
 -- escotilha externa na cápsula (lado −X do módulo da tripulação)
