@@ -71,6 +71,16 @@ if baseplate then
 	-- Só o Y: a Fase 16 divide a Baseplate em peças (fosso do memorial) e cada uma guarda seu X/Z
 	baseplate.Position = Vector3.new(baseplate.Position.X, -1 - baseplate.Size.Y / 2, baseplate.Position.Z)
 end
+-- Chão de fora: grama (material Grass em peça; terreno com folhas 3D pesaria no celular).
+-- As peças em que a Fase 16 divide a Baseplate copiam material e cor dela.
+local GRASS = Color3.fromRGB(88, 128, 68)
+for _, n in { "Baseplate", "Baseplate_East", "Baseplate_South", "Baseplate_North", "Baseplate_Pit" } do
+	local g = workspace:FindFirstChild(n)
+	if g and g:IsA("BasePart") then
+		g.Material = Enum.Material.Grass
+		g.Color = GRASS
+	end
+end
 
 -- Hierarquia (spec-v3 §11; a variável continua chamada Map nos geradores) ----
 local Map = folder(workspace, "NASAComplex", "Model")

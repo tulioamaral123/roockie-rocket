@@ -35,9 +35,17 @@ Missoes.Lista = {
 		Chave = "Mercury",
 		Nave = "Mercury", -- NASAComplex.RookieRocket.Mercury
 		Nome = "Project Mercury (Friendship 7)",
+		Tagline = "America's first orbit around Earth",
+		Descricao = "In 1962, John Glenn became the first American to orbit Earth on Friendship 7. During the flight he steered the capsule by hand, flew through a radio blackout and faced a heat shield alarm.",
+		Guia = {
+			"Task 1 · Keep the + on the red markers until each circle fills.",
+			"Task 2 · Read the code on the clipboard and type it on the radio.",
+			"Task 3 · Hold the retropack button until the bar fills.",
+		},
 		Card = "Friendship7",
 		Equipamentos = {
 			Giroscopio = {
+				Icone = "gyroscope",
 				Nome = "Gyroscope",
 				Peso = 15,
 				TaskAlvo = 1,
@@ -45,6 +53,7 @@ Missoes.Lista = {
 				Efeito = "Task 1: hold time on each target 2.0 s → 1.2 s",
 			},
 			ManualBordo = {
+				Icone = "manual",
 				Nome = "Flight Manual",
 				Peso = 20,
 				TaskAlvo = 2,
@@ -52,6 +61,7 @@ Missoes.Lista = {
 				Efeito = "Task 2: highlights the code on the clipboard and adds +15 s (30 s → 45 s)",
 			},
 			EscudoReforcado = {
+				Icone = "shield",
 				Nome = "Reinforced Shield",
 				Peso = 25,
 				TaskAlvo = 3,
@@ -121,9 +131,17 @@ Missoes.Lista = {
 		Chave = "ISS",
 		Nave = "ISS", -- NASAComplex.RookieRocket.ISS
 		Nome = "International Space Station (ISS)",
+		Tagline = "Build and repair the space station",
+		Descricao = "In 1998 the first two ISS modules were joined with a robotic arm. Later, crews fixed slack solar array cables and sealed a tiny 2 mm leak.",
+		Guia = {
+			"Task 1 · Line up the 4 spheres and keep the pressure green.",
+			"Task 2 · Go outside and drag the cables to their pulleys.",
+			"Task 3 · Close the hatch, find the leak and seal it.",
+		},
 		Card = "UnityZarya",
 		Equipamentos = {
 			SensorPressao = {
+				Icone = "gauge",
 				Nome = "Pressure Sensor",
 				Peso = 15,
 				TaskAlvo = 1,
@@ -131,6 +149,7 @@ Missoes.Lista = {
 				Efeito = "Task 1: green zone of the pressure slider +50%",
 			},
 			LuvasAderentes = {
+				Icone = "gloves",
 				Nome = "Grip Gloves",
 				Peso = 20,
 				TaskAlvo = 2,
@@ -138,6 +157,7 @@ Missoes.Lista = {
 				Efeito = "Task 2: drag the loose cables 2x faster without slipping",
 			},
 			KitVedacao = {
+				Icone = "sealkit",
 				Nome = "Sealing Kit",
 				Peso = 25,
 				TaskAlvo = 3,
