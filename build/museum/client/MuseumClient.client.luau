@@ -31,6 +31,8 @@ end
 if progress then
 	State.set(progress)
 	UI.setTextLevel(progress.settings and progress.settings.textSize or 2)
+	-- preferência salva das setas de navegação (lida pelo GuideClient)
+	game:GetService("Players").LocalPlayer:SetAttribute("GuideArrows", not (progress.settings and progress.settings.arrows == false))
 	if progress.noSave then UI.toast(Text.get("save.failed"), 6) end
 end
 

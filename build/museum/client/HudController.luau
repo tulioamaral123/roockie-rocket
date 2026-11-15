@@ -125,6 +125,11 @@ local function settings()
 	local onOff = { { label = Text.get("settings.on"), value = true }, { label = Text.get("settings.off"), value = false } }
 	pick(row(Text.get("settings.captions"), 2), onOff, s.captions, function(v) s.captions = v end)
 	pick(row(Text.get("settings.reduceMotion"), 3), onOff, s.reduceMotion, function(v) s.reduceMotion = v end)
+	-- setas vermelhas dos guias e das missões (GuideClient lê o atributo local GuideArrows)
+	pick(row(Text.get("settings.arrows"), 4), onOff, s.arrows ~= false, function(v)
+		s.arrows = v
+		game:GetService("Players").LocalPlayer:SetAttribute("GuideArrows", v)
+	end)
 end
 
 Hud.closeWindow = closeWindow

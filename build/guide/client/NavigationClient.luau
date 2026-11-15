@@ -231,6 +231,12 @@ function NavigationClient.start()
 		local t = os.clock()
 		local route = state
 		if missionMode then route = missionRoute end
+		-- Settings → Navigation arrows: Off esconde as setas (o objetivo no HUD continua)
+		if player:GetAttribute("GuideArrows") == false then
+			arrow.visible(false)
+			beacon.visible(false)
+			return
+		end
 		if missionMode then hud.frame.Visible = false end
 		if not root or not route or not route.points or not route.target then
 			arrow.visible(false)

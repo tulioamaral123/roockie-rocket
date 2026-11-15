@@ -6,7 +6,7 @@
 local State = {
 	progress = {
 		exhibitsSeen = {}, cards = {}, showsSeen = {},
-		settings = { textSize = 2, captions = true, reduceMotion = false },
+		settings = { textSize = 2, captions = true, reduceMotion = false, arrows = true },
 		firstVisit = false, noSave = false,
 	},
 }

@@ -51,6 +51,7 @@ local enUS = {
 	["settings.large"] = "L",
 	["settings.captions"] = "Captions",
 	["settings.reduceMotion"] = "Reduce camera motion",
+	["settings.arrows"] = "Navigation arrows",
 	["settings.on"] = "On",
 	["settings.off"] = "Off",
 
