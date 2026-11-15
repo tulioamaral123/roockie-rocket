@@ -636,3 +636,4 @@ O gerador verifica ao final os 16 IDs, PrimaryParts/PromptAnchors, Attachments o
 
 - Scripts embutidos nas Fases 6 e 8 (AutomaticDoors, PlanetOrbits, CrewAccess, CrewClient) extraídos para `build/systems/`; instalados por `lib.installSystemScript` (pula se `Map_Systems.RojoManaged`). Clientes agora em `StarterPlayerScripts.MapClient`. `rojo sourcemap` OK; falta reconstruir no Studio e testar portas/elevador/traje.
 - Skill `llm-gratis` (.claude/skills/llm-gratis): delega tarefas de texto a LLM grátis sem chave (Kilo padrão, LLM7 reserva; Groq/Gemini opcionais com chave).
+- Fase 19 (15/11/2026): Mercury navegável 36×14×48 (251 peças), três estações/janelas, alvos e plasma, quiosque LCC pelo pivot (7 peças) e remoção da missão 15; contrato/idempotência/miras conferidos em simulação local; stylua/selene indisponíveis, execução/visual/playtest pendentes no Studio.
