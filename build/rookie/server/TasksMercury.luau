@@ -40,11 +40,29 @@ function Mira.new(sessao, n)
 	assert(#self.pontos >= self.cfg.TotalPontos, "[RookieRocket] AlignPoints insuficientes")
 	self.feitos = {}
 	self.mirando = {} -- [player] = { ponto = i, inicio = os.clock() }
+	self.noPainel = {} -- [player] = true enquanto usa o painel de atitude
 	self.segurar = sessao:temItem("Giroscopio") and sessao.missao.Equipamentos.Giroscopio.TempoSegurar
 		or self.cfg.TempoBaseSegurar
-	-- o raio da validação ignora vidro, pontos e personagens
-	self.params = RaycastParams.new()
-	self.params.FilterType = Enum.RaycastFilterType.Exclude
+	-- painel de atitude em frente aos assentos (Stations/FlightPanel): o prompt abre a tela no cliente
+	self.painel = Naves.peca(self.nave, "Stations/FlightPanel")
+	self.prompt = Naves.prompt(self.painel, "Take attitude control", "Attitude control", { painel = "Atitude", distancia = 9 })
+	self.prompt.Name = "RookieTaskPrompt"
+	self.prompt.Triggered:Connect(function(player)
+		if self.s:membro(player) and self.s:aBordo(player) and Naves.distancia(player, self.painel) <= 12 then
+			self.noPainel[player] = true
+		end
+	end)
+	-- clicar no próprio painel também abre a tela de atitude
+	self.clique = Instance.new("ClickDetector")
+	self.clique.Name = "RookieAtitudeClick"
+	self.clique.MaxActivationDistance = 12
+	self.clique.Parent = self.painel
+	self.clique.MouseClick:Connect(function(player)
+		if self.s:membro(player) and self.s:aBordo(player) and Naves.distancia(player, self.painel) <= 12 then
+			self.noPainel[player] = true
+			self.s.remotes.SincronizarEstado:FireClient(player, { tipo = "AbrirPainel", painel = "Atitude" })
+		end
+	end)
 	return self
 end
 
@@ -54,29 +72,16 @@ function Mira:limiteTempo()
 	return self.cfg.LimiteTempo
 end
 
--- o jogador enxerga o ponto? (linha livre da cabeça até ele, atravessando só vidro)
-function Mira:linhaLivre(player, ponto)
-	local char = player.Character
-	local head = char and char:FindFirstChild("Head")
-	if not head then return false end
-	local filtro = { Naves.peca(self.nave, "Windows"), Naves.peca(self.nave, "Exterior") }
-	for _, p in self.s.tripulacao do
-		if p.Character then table.insert(filtro, p.Character) end
-	end
-	self.params.FilterDescendantsInstances = filtro
-	-- o cliente mira pela câmera; aqui basta a cabeça OU o alto do tronco enxergar o ponto
-	local destino = ponto.Position
-	for _, origem in { head.Position, head.Position + Vector3.new(0, 1.5, 0) } do
-		if workspace:Raycast(origem, destino - origem, self.params) == nil then return true end
-	end
-	return false
+-- o jogador está no painel de atitude (acionou o prompt e continua perto dele)?
+function Mira:noControle(player)
+	return self.noPainel[player] == true and self.s:aBordo(player) and Naves.distancia(player, self.painel) <= 14
 end
 
 function Mira:acao(player, msg)
 	if msg.acao == "MiraInicio" then
 		local i = msg.ponto
 		if type(i) ~= "number" or not self.pontos[i] or i > self.cfg.TotalPontos or self.feitos[i] then return end
-		if not self.s:aBordo(player) or not self:linhaLivre(player, self.pontos[i]) then
+		if not self:noControle(player) then
 			self.mirando[player] = nil
 			return
 		end
@@ -88,6 +93,9 @@ function Mira:acao(player, msg)
 		end
 	elseif msg.acao == "MiraFim" then
 		self.mirando[player] = nil
+	elseif msg.acao == "PainelSair" then
+		self.noPainel[player] = nil
+		self.mirando[player] = nil
 	end
 end
 
@@ -97,7 +105,7 @@ function Mira:tick()
 		local valido = agora - m.visto <= 0.8
 		if valido and agora - (m.checado or 0) >= 0.25 then
 			m.checado = agora
-			valido = self.s:aBordo(player) and self:linhaLivre(player, self.pontos[m.ponto])
+			valido = self:noControle(player)
 		end
 		if self.feitos[m.ponto] or not valido then
 			self.mirando[player] = nil
@@ -119,6 +127,7 @@ end
 
 function Mira:jogadorSaiu(player)
 	self.mirando[player] = nil
+	self.noPainel[player] = nil
 end
 
 function Mira:estado()
@@ -130,6 +139,9 @@ end
 
 function Mira:limpar()
 	table.clear(self.mirando)
+	table.clear(self.noPainel)
+	if self.prompt then self.prompt:Destroy() end
+	if self.clique then self.clique:Destroy() end
 end
 
 ---------------------------------------------------------------------------------

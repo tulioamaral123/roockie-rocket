@@ -82,6 +82,8 @@ remotes.SincronizarEstado.OnClientEvent:Connect(function(msg)
 		Hud.aviso(msg.texto)
 	elseif msg.tipo == "Perfil" then
 		Modais.perfil(msg)
+	elseif msg.tipo == "AbrirPainel" and msg.painel == "Atitude" then
+		Mira.abrirPainel()
 	elseif msg.tipo == "Saiu" then
 		limparTudo()
 	end
@@ -92,6 +94,8 @@ ProximityPromptService.PromptTriggered:Connect(function(prompt)
 	local painel = prompt:GetAttribute("RookiePainel")
 	if painel == "Preparacao" then
 		Preparacao.abrir()
+	elseif painel == "Atitude" then
+		Mira.abrirPainel() -- Task 1: tela de atitude no painel em frente aos assentos
 	elseif painel then
 		Paineis.abrir(painel)
 	end

@@ -35,10 +35,8 @@ local function target(root)
 	local path
 	if state.missao == 1 then
 		if state.task == 1 then
-			local i = 1
-			for n = 1, 4 do if not (d.feitos and d.feitos[n]) then i = n break end end
-			-- Aponta à posição de observação, mantendo o alvo externo livre para a mira.
-			return model.Origin.Position + (i <= 2 and Vector3.new(0, 3, 7) or Vector3.new(i == 3 and -9 or 9, 3, 0))
+			-- painel de atitude em frente aos assentos
+			path = "Stations/FlightPanel"
 		elseif state.task == 2 then
 			local read = d.lidos and d.lidos[tostring(player.UserId)]
 			path = read and "Stations/Radio/Keypad" or "Stations/NavTable/Clipboard"

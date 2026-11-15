@@ -23,6 +23,7 @@ local MENUS = {
 	RookiePreparacao = true,
 	RookieRadio = true,
 	RookieCanadarm = true,
+	RookieAtitude = true,
 	RookieModais = true,
 	RookieAlbum = true,
 	RookieCreditos = true,
