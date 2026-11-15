@@ -636,3 +636,4 @@ O gerador verifica ao final os 16 IDs, PrimaryParts/PromptAnchors, Attachments o
 
 - Scripts embutidos nas Fases 6 e 8 (AutomaticDoors, PlanetOrbits, CrewAccess, CrewClient) extraídos para `build/systems/`; instalados por `lib.installSystemScript` (pula se `Map_Systems.RojoManaged`). Clientes agora em `StarterPlayerScripts.MapClient`. `rojo sourcemap` OK; falta reconstruir no Studio e testar portas/elevador/traje.
 - Skill `llm-gratis` (.claude/skills/llm-gratis): delega tarefas de texto a LLM grátis sem chave (Kilo padrão, LLM7 reserva; Groq/Gemini opcionais com chave).
+- Fase 20 Rookie ISS: `phase20_rookie_iss.luau`, 631 peças, Cupola/Unity/Zarya/EVA e âncoras do contrato; conferência local de hierarquia/geometria e idempotência OK; stylua/selene ausentes; falta executar Fases 20–21 e playtest no Studio.
