@@ -1,5 +1,5 @@
 --[[
-	NASA Space Adventure — Fase 19: Mercury ampliada e Mission Briefing no LCC.
+	NASA Space Adventure — Fase 19: Mercury ampliada e ponto de retorno no LCC.
 	Contrato: docs/rookie-contrato.md. Só geometria, placas fixas, luzes e plasma desligado.
 	Executar depois das Fases 12/14. Não depende da Orion nem instala sistemas.
 ]]
@@ -266,16 +266,9 @@ kiosk.ModelStreamingMode = Enum.ModelStreamingMode.Persistent
 local function kioskPart(name, x, y, z, sx, sy, sz, color, options)
 	return B.part(kiosk, name, kioskBase * CFrame.new(x, y, z), Vector3.new(sx, sy, sz), color, "Metal", options)
 end
--- Profundidade total de 1,4; borda leste ainda a 4,1 studs do eixo de passagem.
-kioskPart("Cabinet", 0, 3.4, 0, 9, 6.8, 0.9, "darkGray")
-kioskPart("ScreenFrame", 0, 4.8, -0.5, 8.5, 5, 0.2, "metalGray", DECOR)
-kioskPart("Screen", 0, 4.8, -0.64, 8, 4.5, 0.08, "black", DECOR)
-local heading = kioskPart("Heading", 0, 8, 0, 9, 1.1, 0.8, "nasaBlue")
-B.sign(heading, "MISSION BRIEFING", nil, { bg = "nasaBlue", titleColor = "white" })
-for _, entry in { { "BoardMercury", -2.3, "MERCURY" }, { "BoardISS", 2.3, "ISS" } } do
-	local board = kioskPart(entry[1], entry[2], 1.5, -0.6, 3.9, 1, 0.4, "nasaBlue")
-	B.sign(board, entry[3], nil, { bg = "nasaBlue", titleColor = "white" })
-end
+-- O painel "Mission Briefing" (gabinete, tela e pedestais BoardMercury/BoardISS) saiu após o
+-- playtest (docs/rookie-melhorias-playtest.md §6): a escolha da missão é com a Ana no topo do
+-- foguete. Fica só o ponto de retorno da equipe ao sair da nave (marcação invisível).
 kioskPart("ReturnPoint", 0, 3, -4.8, 1, 1, 1, "white", HIDDEN)
 
 local count = 0
@@ -286,4 +279,4 @@ local kioskCount = 0
 for _, instance in kiosk:GetDescendants() do
 	if instance:IsA("BasePart") then kioskCount += 1 end
 end
-return string.format("Fase 19: Mercury %d peças; quiosque %d peças em %s; missão antiga removida", count, kioskCount, tostring(kioskBase.Position))
+return string.format("Fase 19: Mercury %d peças; ponto de retorno %d peça(s) em %s; missão antiga removida", count, kioskCount, tostring(kioskBase.Position))

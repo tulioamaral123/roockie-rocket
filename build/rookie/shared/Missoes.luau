@@ -66,9 +66,24 @@ Missoes.Lista = {
 			Titulo = "CONGRATULATIONS, ROOKIE!",
 			Fala = "You completed your first mission! Every task you solved uses real science and engineering. Here is what you practiced today:",
 			Itens = {
-				{ Task = "Task 1 · The Autopilot Failure", Areas = { "Physics (Inertia / Mechanics)", "Automation and Control Engineering" } },
-				{ Task = "Task 2 · The Communication Blackout", Areas = { "Physics (Electromagnetic Waves)", "Telecommunications Engineering" } },
-				{ Task = "Task 3 · The Heat Shield Alarm", Areas = { "Physics (Thermodynamics)", "Materials Engineering" } },
+				{
+					Task = "Task 1 · The Autopilot Failure",
+					Areas = { "Physics (Inertia / Mechanics)", "Automation and Control Engineering" },
+					Ciencia = "In space nothing slows a spin: by inertia, a small drift keeps growing until a thruster pushes back. A control system closes the loop: sensor → decision → thruster.",
+					Real = "On Friendship 7, when the capsule drifted out of attitude, John Glenn steered it back by hand.",
+				},
+				{
+					Task = "Task 2 · The Communication Blackout",
+					Areas = { "Physics (Electromagnetic Waves)", "Telecommunications Engineering" },
+					Ciencia = "During reentry the air around the capsule turns into hot ionized gas (plasma), which blocks radio waves until the capsule slows down.",
+					Real = "Glenn's planned radio blackout lasted 4 minutes and 20 seconds.",
+				},
+				{
+					Task = "Task 3 · The Heat Shield Alarm",
+					Areas = { "Physics (Thermodynamics)", "Materials Engineering" },
+					Ciencia = "Air squeezed in front of the capsule gets extremely hot. The heat shield is made to absorb that heat and carry it away as its surface burns off slowly.",
+					Real = "A faulty signal suggested the heat shield was loose, so controllers kept the retropack strapped on during reentry. The signal was false.",
+				},
 			},
 		},
 		Tasks = {
@@ -132,6 +147,30 @@ Missoes.Lista = {
 			},
 		},
 		OrdemEquipamentos = { "SensorPressao", "LuvasAderentes", "KitVedacao" },
+		Aprendizado = {
+			Titulo = "CONGRATULATIONS, CREW!",
+			Fala = "You kept the space station safe! Each task was inspired by a real moment in the history of the ISS. Here is the science behind it:",
+			Itens = {
+				{
+					Task = "Task 1 · The Docking",
+					Areas = { "Physics (Forces / Action and Reaction)", "Robotics Engineering" },
+					Ciencia = "Every push the arm gives a module pushes back on the arm (Newton's third law). Gentle, steady force lines parts up without damaging them.",
+					Real = "On STS-88 (December 1998) the shuttle's robotic arm captured Zarya and joined it to Unity. The fittings did not line up at first, so the arm released Zarya and tried again.",
+				},
+				{
+					Task = "Task 2 · The Stuck Solar Panel",
+					Areas = { "Physics (Mass and Momentum)", "Mechanical Engineering" },
+					Ciencia = "In orbit a cable has no weight, but it still has mass: if you move it fast, its momentum makes it hard to stop and it slips away.",
+					Real = "On STS-97 (December 2000) a new P6 solar array blanket was slack. On the third spacewalk, Joe Tanner and Carlos Noriega pulled its tensioning cables back into their reels.",
+				},
+				{
+					Task = "Task 3 · The 2 mm Leak",
+					Areas = { "Physics (Pressure of Gases)", "Life Support Engineering" },
+					Ciencia = "Air always flows from high to low pressure. A tiny hole to the vacuum of space lets cabin air escape slowly, and closing hatches isolates the leaking module.",
+					Real = "In August 2018 the crew found a hole about 2 mm across in the Soyuz MS-09 orbital module. Commander Sergey Prokopyev plugged it with epoxy on a gauze wipe.",
+				},
+			},
+		},
 		Tasks = {
 			[1] = {
 				Tipo = "Acoplamento",
@@ -175,7 +214,7 @@ Missoes.Lista = {
 -- Falas do guia (fictícias, didáticas; aparecem com o aviso nos Créditos)
 Missoes.Guia = {
 	Nome = "Marcos Pontes",
-	Papel = "Mission guide",
+	Papel = "Mission guide · fictional lines",
 	Foto = "", -- rbxassetid de foto oficial da NASA, quando houver; vazio = monograma
 }
 
@@ -212,6 +251,8 @@ Missoes.Textos = {
 	FecheEscotilha = "Close the hatch to the next module first!",
 	PrecisaGaze = "Take the epoxy gauze from the toolbox first.",
 	Medalhas = { [3] = "Gold", [2] = "Silver", [1] = "Bronze", [0] = "Failed" },
+	MissaoReal = "The real mission",
+	ValoresJogo = "Game values: weights, times and equipment effects are simplified for the game, not historical data.",
 	Creditos = {
 		"All weights, times, speeds and equipment effects are simplified teaching values for gameplay and learning.",
 		"Marcos Pontes's lines are fictional, written for teaching.",
@@ -223,18 +264,35 @@ Missoes.Textos = {
 -- Cards do Álbum (fatos históricos; fotos oficiais da NASA, ver build/museum/shared/Content/Photos.luau)
 Missoes.Cards = {
 	Friendship7 = {
-		Titulo = "Friendship 7 (1962)",
+		Titulo = "Friendship 7",
+		Missao = "Mercury-Atlas 6",
+		Data = "February 20, 1962",
 		Foto = "rbxassetid://133540020610757",
 		Legenda = "John Glenn looks at Earth from Friendship 7.",
 		Credito = "NASA · images.nasa.gov/details/KSC-JohnGlenn-0008",
-		Texto = "On February 20, 1962, John Glenn became the first American to orbit Earth, circling it three times in just under five hours. When the automatic control system failed he flew the capsule by hand. A sensor wrongly warned that the heat shield was loose, so Mission Control told him to keep the retropack on during reentry. He splashed down safely in the Atlantic.",
+		Texto = "John Glenn became the first American to orbit Earth: three orbits in 4 hours and 55 minutes. When the capsule drifted out of attitude he steered it by hand. A signal suggested the heat shield was loose, so Mission Control had him keep the retropack strapped on during reentry; the signal was a faulty switch. During reentry the radio was silent for 4 minutes and 20 seconds, and Friendship 7 splashed down safely in the Atlantic.",
+		Relacao = "Your three tasks follow this flight: manual attitude control (Task 1), the reentry radio blackout (Task 2) and the heat shield alarm with the retropack kept on (Task 3).",
+		TradeOff = "Every kilogram launched needs more rocket fuel, so early capsules carried only what was essential. In the game, items help one task each but cost weight and lightness bonus.",
+		Fontes = {
+			"nasa.gov/mission/mercury-atlas-6-friendship-7",
+			"nasa.gov/history/60-years-ago-john-glenn-the-first-american-to-orbit-the-earth-aboard-friendship-7",
+		},
 	},
 	UnityZarya = {
-		Titulo = "Building the ISS (1998–2018)",
+		Titulo = "Building the ISS",
+		Missao = "STS-88 · STS-97 · Soyuz MS-09",
+		Data = "1998 · 2000 · 2018",
 		Foto = "rbxassetid://97971381370173",
 		Legenda = "The International Space Station's P4, P5 and P6 trusses.",
 		Credito = "NASA · images.nasa.gov/details/iss020e005813",
-		Texto = "In December 1998 the STS-88 crew used the shuttle's robotic arm to join the U.S. Unity node to the Russian Zarya module: the first two pieces of the ISS. In 2000, STS-97 spacewalkers installed and tensioned the P6 solar arrays. In 2018 a 2 mm hole on the Soyuz MS-09 caused a slow pressure leak; the crew found it and sealed it with gauze and epoxy.",
+		Texto = "In December 1998 the STS-88 crew used the shuttle's robotic arm to join the U.S. Unity node to the Russian Zarya module: the first two pieces of the ISS. In December 2000 the STS-97 crew installed the P6 truss with the station's first U.S. solar arrays, and spacewalkers re-tensioned a slack array blanket. In August 2018 a 2 mm hole in the Soyuz MS-09 caused a slow pressure leak; the crew found it and sealed it with epoxy on gauze.",
+		Relacao = "Task 1 is the Unity–Zarya docking, Task 2 the solar array cables of STS-97 and Task 3 the Soyuz MS-09 leak.",
+		TradeOff = "Everything on the station was launched from Earth, so each tool and spare part competes for mass with food, water and science. In the game, the 60 kg limit makes the crew choose only two items.",
+		Fontes = {
+			"nasa.gov/mission/sts-88",
+			"nasa.gov/mission/sts-97",
+			"nasa.gov/blogs/spacestation/2018/08/30/international-space-station-status-3",
+		},
 	},
 }
 

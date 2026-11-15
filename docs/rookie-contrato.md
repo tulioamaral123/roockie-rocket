@@ -62,17 +62,13 @@ Cápsula cônica de 16 lados inspirada na Orion da Fase 8: Ø32 no piso, Ø24 no
 
 Botões e teclados ficam a 3–4 de altura do piso, de frente para onde o jogador está.
 
-### Quiosque no LCC (também Fase 19)
+### Ponto de retorno no LCC (também Fase 19)
 
-`NASAComplex.RookieRocket.Kiosk` (Model) dentro do saguão do `NASAComplex.LaunchControlCenter`, posicionado a partir da posição real do LCC no place (a Fase 14 pode tê-lo movido: ler o pivot/bounding box do modelo, não usar coordenadas da Fase 12). Não pode bloquear o eixo de passagem do visitante (porta sul → porta norte) nem as validações do `CLAUDE.md`.
+O painel "Mission Briefing" (gabinete, `Screen`, pedestais `BoardMercury`/`BoardISS` e os prompts "Mission briefing") saiu após o playtest de 15/11/2026 (`docs/rookie-melhorias-playtest.md` §6): a escolha da missão é só com a Ana no topo do foguete. Fica `NASAComplex.RookieRocket.Kiosk` (Model) com uma única peça:
 
 | Caminho | Papel |
 |---|---|
-| `Kiosk/BoardMercury` | Part visível (pedestal/tela): prompt orienta até a Ana, sem embarcar |
-| `Kiosk/BoardISS` | Part visível: prompt orienta até a Ana, sem embarcar |
-| `Kiosk/Screen` | Part (tela ~8 × 4.5); o script desenha o status na face `Front` |
-| `Kiosk/ReturnPoint` | Part marcação no piso livre ao lado do quiosque: para onde a equipe volta |
-| placa fixa "MISSION BRIEFING" | texto do gerador |
+| `Kiosk/ReturnPoint` | Part marcação no saguão do LCC: para onde a equipe volta ao sair da nave; base do ponto `PainelPrincipal` dos guias |
 
 ### Limpeza da missão antiga (início da Fase 19)
 

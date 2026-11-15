@@ -6,7 +6,9 @@ local Missoes = require(RS:WaitForChild("RookieRocket"):WaitForChild("Config"):W
 local UI = require(script.Parent:WaitForChild("GuideUI"))
 local player = Players.LocalPlayer
 local MissionSelect = {}
-local panel, list, status, weight, suitButton, weightFill
+local panel, list, status, weight, suitButton, weightFill, ready
+local R = Missoes.RegrasGerais
+local MAX_ITEMS = 2 -- o servidor (Sessao) também recusa mais de dois
 local selected, items, locked = 1, {}, true
 local refresh
 
@@ -20,7 +22,8 @@ refresh = function()
 	end
 	for id = 1, 2 do
 		local b = UI.button(list, {
-			Text = (selected == id and "● " or "○ ") .. Missoes.Lista[id].Nome .. (id == 2 and locked and " · LOCKED" or ""),
+			Text = (selected == id and "● SELECTED · " or "○ ") .. Missoes.Lista[id].Nome
+				.. (id == 2 and locked and " · LOCKED (earn 1★ on Mercury)" or ""),
 			TextSize = 15, Color = selected == id and UI.C.accent or UI.C.panel2,
 			Size = UDim2.new(1, 0, 0, 46), LayoutOrder = id,
 		})
@@ -32,28 +35,60 @@ refresh = function()
 		end)
 	end
 	local mission = Missoes.Lista[selected]
+	-- resumo da missão escolhida: as três tasks, na ordem
+	local resumo = {}
+	for i, t in mission.Tasks do
+		resumo[i] = ("Task %d · %s"):format(i, t.Nome)
+	end
+	local info = UI.text(list, {
+		Text = table.concat(resumo, "\n"), TextSize = 14, Color = UI.C.muted,
+		Size = UDim2.new(1, 0, 0, 0), AutomaticSize = Enum.AutomaticSize.Y, LayoutOrder = 3,
+	})
+	info.Name = "Summary"
 	for index, key in mission.OrdemEquipamentos do
 		local eq = mission.Equipamentos[key]
 		local b = UI.button(list, {
 			Text = (items[key] and "✓ " or "+ ") .. eq.Nome .. " · " .. eq.Peso .. " kg\n" .. eq.Efeito,
 			TextSize = 14, Color = items[key] and UI.C.accent or UI.C.panel2,
-			Size = UDim2.new(1, 0, 0, 72), LayoutOrder = 2 + index,
+			Size = UDim2.new(1, 0, 0, 72), LayoutOrder = 3 + index,
 		})
 		b.TextWrapped = true
-		b.Activated:Connect(function() items[key] = not items[key] or nil refresh() end)
+		b.Activated:Connect(function()
+			if not items[key] then
+				local n = 0
+				for _ in items do n += 1 end
+				if n >= MAX_ITEMS then
+					status.Text = "You can take up to two items. Remove one to choose another."
+					return
+				end
+			end
+			items[key] = not items[key] or nil
+			refresh()
+		end)
 	end
 	local total = Missoes.pesoTotal(mission, items)
-	weight.Text = ("Weight %d / 60 kg · Free %d kg · Lightness bonus %d s"):format(total, 60 - total, Missoes.bonusLeveza(total))
-	weight.TextColor3 = total > 60 and UI.C.red or (total > 50 and Color3.fromHex("FFE14D") or Color3.fromHex("54E878"))
-	weightFill.Size = UDim2.fromScale(math.clamp(total / 60, 0, 1), 1)
+	local limit = R.LimiteFoguete
+	local over = total > limit
+	weight.Text = over
+		and ("OVER LIMIT · Weight %d / %d kg · remove %d kg"):format(total, limit, total - limit)
+		or ("Weight %d / %d kg (ship %d kg) · Free %d kg · Lightness bonus −%d s"):format(total, limit, R.PesoNave, limit - total, Missoes.bonusLeveza(total))
+	weight.TextColor3 = over and UI.C.red or (total > R.PesoVerdeAte and Color3.fromHex("FFE14D") or Color3.fromHex("54E878"))
+	weightFill.Size = UDim2.fromScale(math.clamp(total / limit, 0, 1), 1)
 	weightFill.BackgroundColor3 = weight.TextColor3
-	suitButton.Text = player:GetAttribute("SuitOn") and "✓ Space suit ready" or "Put on space suit"
+	local suit = player:GetAttribute("SuitOn") == true
+	suitButton.Text = suit and "✓ Space suit ready" or "Put on space suit"
+	-- o que falta para embarcar (texto, não só cor); o botão continua ativo e o servidor explica
+	local n = 0
+	for _ in items do n += 1 end
+	ready.Text = ("%s Suit   ·   ✓ Items %d / %d   ·   %s Weight %d / %d kg"):format(
+		suit and "✓" or "✗", n, MAX_ITEMS, over and "✗" or "✓", total, limit)
+	ready.TextColor3 = (suit and not over) and Color3.fromHex("54E878") or Color3.fromHex("FFE14D")
 end
 
 function MissionSelect.open(data)
 	locked = data.issLocked == true
 	selected, items = 1, {}
-	status.Text = "20 kg capsule + equipment. Put on your suit before boarding.\nCo-op: choose the same shared manifest and board during the 12 s countdown."
+	status.Text = ("Choose a mission and up to two items. The capsule weighs %d kg and the rocket lifts %d kg.\nCo-op: the first crew member to board sets the shared manifest; the others have 12 s to join."):format(R.PesoNave, R.LimiteFoguete)
 	refresh()
 	panel.Visible = true
 end
@@ -79,13 +114,15 @@ function MissionSelect.start()
 	UI.corner(track, 5)
 	weightFill = UI.new("Frame", { BorderSizePixel = 0, Size = UDim2.fromScale(0, 1), Parent = track })
 	UI.corner(weightFill, 5)
-	suitButton = UI.button(panel, { Text = "Put on space suit", Size = UDim2.new(1, 0, 0, 46), LayoutOrder = 5 })
+	ready = UI.text(panel, { TextSize = 15, Weight = Enum.FontWeight.Bold, Size = UDim2.new(1, 0, 0, 22), LayoutOrder = 5 })
+	ready.Name = "Checklist"
+	suitButton = UI.button(panel, { Text = "Put on space suit", Size = UDim2.new(1, 0, 0, 46), LayoutOrder = 6 })
 	suitButton.Activated:Connect(function() GS.Remotes.MissionSelect:FireServer({ action = "Suit" }) end)
-	local board = UI.button(panel, { Text = "Board and launch ›", Size = UDim2.new(1, 0, 0, 48), LayoutOrder = 6 })
+	local board = UI.button(panel, { Text = "Board and launch ›", Size = UDim2.new(1, 0, 0, 48), LayoutOrder = 7 })
 	board.Activated:Connect(function()
 		GS.Remotes.MissionSelect:FireServer({ action = "Board", id = selected, items = items })
 	end)
-	local cancel = UI.button(panel, { Text = "Cancel", Color = UI.C.panel2, Size = UDim2.new(1, 0, 0, 44), LayoutOrder = 7 })
+	local cancel = UI.button(panel, { Text = "Cancel", Color = UI.C.panel2, Size = UDim2.new(1, 0, 0, 44), LayoutOrder = 8 })
 	cancel.Activated:Connect(close)
 	GS:WaitForChild("Remotes"):WaitForChild("MissionSelect").OnClientEvent:Connect(function(data)
 		if type(data) ~= "table" then return end

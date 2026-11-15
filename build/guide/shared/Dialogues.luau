@@ -105,6 +105,36 @@ D.Objectives = {
 	ChooseMission = "Choose your mission and trade-off.",
 }
 
+-- Dica de controle mostrada sob o objetivo, no momento em que é necessária (por dispositivo).
+-- kb = teclado/mouse, touch = celular/tablet, pad = controle.
+D.Hints = {
+	MeetMarcos = {
+		kb = "Move with W A S D. Press E near Marcos to talk.",
+		touch = "Move with the thumbstick. Tap Talk near Marcos.",
+		pad = "Move with the left stick. Press the prompt button near Marcos.",
+	},
+	FollowMarcos = { all = "Stay close: Marcos waits for you at each stop." },
+	Museum = {
+		kb = "Walk to the white circle and press E on the exhibit.",
+		touch = "Walk to the white circle and tap the exhibit prompt.",
+		pad = "Walk to the white circle and press the prompt button.",
+	},
+	Rocket = { all = "Follow the floor arrows to the Launch Control Center." },
+	FollowAna = { all = "Follow Ana. She waits if you fall behind." },
+	SuitUp = {
+		kb = "Press E at a locker to put on your suit.",
+		touch = "Tap the prompt at a locker to put on your suit.",
+		pad = "Press the prompt button at a locker to put on your suit.",
+	},
+	Elevator = { all = "Step inside the elevator with Ana and use the panel." },
+	TalkAna = {
+		kb = "Press E near Ana to talk.",
+		touch = "Tap Talk near Ana.",
+		pad = "Press the prompt button near Ana.",
+	},
+	ChooseMission = { all = "Pick a mission, then up to 2 items (60 kg max), then Board." },
+}
+
 D.Prompts = {
 	TalkMarcos = { Action = "Talk", Object = "Marcos Pontes" },
 	TalkAna = { Action = "Talk", Object = "Ana" },

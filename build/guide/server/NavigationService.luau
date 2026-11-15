@@ -72,8 +72,8 @@ local function destination(player, rootPos)
 		local p = NPC.isEscorting("Marcos", player) and npcPos("Marcos") or World.point("Museum1End")
 		return p and { p }, true
 	elseif stage == "Museum" then
-		local p = World.nearestExhibit(rootPos)
-		return p and { p }, true
+		local ring = World.exhibitRing(rootPos)
+		return ring and { ring.target }, true, ring
 	elseif stage == "Rocket" then
 		local i = Progress.via(player)
 		-- avança os pontos já atingidos (ou pulados: o jogador está mais perto de um ponto adiante)
@@ -121,13 +121,29 @@ local function computePath(from: Vector3, to: Vector3)
 	return nil
 end
 
--- caminho por todos os pontos intermediários (só o primeiro trecho é calculado com pathfinding;
--- os seguintes são recalculados quando o jogador chega neles)
+-- caminho pelos pontos intermediários: cada trecho é calculado com pathfinding até ~80 studs à
+-- frente (as setas mostram 45); o resto segue em linha reta e é recalculado quando o jogador
+-- avança. `exact` = quantos pontos do início vêm do pathfinding: o cliente só desenha setas
+-- nesse trecho, para nunca apontar através de paredes (playtest: setas com direção errada).
+local AHEAD_PATH = 80
 local function build(rootPos, vias)
-	local first = computePath(rootPos, vias[1])
-	local pts = first or { rootPos, vias[1] }
-	for i = 2, #vias do table.insert(pts, vias[i]) end
-	return pts, first ~= nil
+	local pts, exact = { rootPos }, 1
+	local from, acc, broken = rootPos, 0, false
+	for i, via in vias do
+		local leg = (not broken and acc < AHEAD_PATH) and computePath(from, via) or nil
+		if leg then
+			for k = 2, #leg do
+				acc += (leg[k] - pts[#pts]).Magnitude
+				table.insert(pts, leg[k])
+			end
+			exact = #pts
+		else
+			broken = true
+			table.insert(pts, via)
+		end
+		from = via
+	end
+	return pts, exact
 end
 
 local function send(player, stage, data)
@@ -142,7 +158,7 @@ local function update(player, force)
 	local c = cache[player] or {}
 	cache[player] = c
 	if not root then return end
-	local vias, beacon = destination(player, root.Position)
+	local vias, beacon, ring = destination(player, root.Position)
 	if not vias then
 		if c.sentStage ~= stage or c.points then
 			c.points = nil
@@ -161,7 +177,7 @@ local function update(player, force)
 	end
 	if c.busy then return end
 	c.busy = true
-	local pts, ok = build(root.Position, vias)
+	local pts, exact = build(root.Position, vias)
 	c.busy = false
 	if Progress.get(player) ~= stage then return end -- mudou de etapa durante o cálculo
 	c.from, c.first, c.points, c.time = root.Position, first, pts, now
@@ -171,7 +187,8 @@ local function update(player, force)
 		points = pts,
 		target = target,
 		beacon = beacon == true,
-		exact = ok,
+		exact = exact,
+		ring = ring,
 	})
 end
 

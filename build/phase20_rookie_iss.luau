@@ -176,7 +176,7 @@ part(habitat, "PrepPedestal", CF(-8, 1.25, -10), V(3, 2.5, 2), "metalGray", "Met
 part(habitat, "PrepDisplay", CF(-8, 4.55, -10) * CFrame.Angles(RAD(-18), 0, 0), V(4.3, 0.14, 2.1), "darkBlue", nil, DECOR)
 B.sign(prep, "FLIGHT MANIFEST", nil, { bg = "nasaBlue", titleColor = "white" })
 local exit = part(stations, "Exit", CF(-10, 5, 51.5), V(7, 10, 0.7), "midGray", "Metal")
-B.sign(exit, "RETURN TO MISSION BRIEFING", nil, { titleColor = "white", bg = "nasaBlue" })
+B.sign(exit, "RETURN TO LAUNCH CONTROL", nil, { titleColor = "white", bg = "nasaBlue" })
 local toolbox = part(stations, "Toolbox", CF(10, 2, 14), V(4.5, 3, 2.5), "orange", "Metal")
 part(habitat, "ToolboxHandle", CF(10, 3.8, 14), V(2, 0.2, 0.35), "black", "Metal", DECOR)
 B.sign(toolbox, "EPOXY GAUZE", nil, { bg = "orangeDark", titleColor = "white" })

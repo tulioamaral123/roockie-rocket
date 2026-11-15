@@ -61,59 +61,16 @@ local ctx = {
 -- Quiosque
 ---------------------------------------------------------------------------------
 
+-- Só o ponto de retorno: o painel "Mission Briefing" saiu (docs/rookie-melhorias-playtest.md §6).
 local kiosk = mapa:WaitForChild("Kiosk", 10)
-local telaStatus = nil
 if kiosk then
 	local ret = kiosk:FindFirstChild("ReturnPoint")
 	if ret then ctx.retorno = ret.CFrame end
-	local tela = kiosk:FindFirstChild("Screen")
-	if tela then
-		local gui = Instance.new("SurfaceGui")
-		gui.Name = "RookieStatus"
-		gui.Face = Enum.NormalId.Front
-		gui.SizingMode = Enum.SurfaceGuiSizingMode.PixelsPerStud
-		gui.PixelsPerStud = 50
-		gui.LightInfluence = 0
-		gui.Brightness = 1.5
-		gui.Parent = tela
-		local fundo = Instance.new("Frame")
-		fundo.Size = UDim2.fromScale(1, 1)
-		fundo.BackgroundColor3 = Color3.fromHex("0E1A36")
-		fundo.Parent = gui
-		local t = Instance.new("TextLabel")
-		t.Size = UDim2.fromScale(0.9, 0.86)
-		t.Position = UDim2.fromScale(0.05, 0.07)
-		t.BackgroundTransparency = 1
-		t.TextColor3 = Color3.new(1, 1, 1)
-		t.TextScaled = true
-		t.RichText = true
-		t.TextXAlignment = Enum.TextXAlignment.Left
-		t.FontFace = Font.new("rbxasset://fonts/families/Montserrat.json", Enum.FontWeight.Bold)
-		t.Parent = fundo
-		telaStatus = t
-	end
 end
 
 local sessoes = {}
 
-local FASES = {
-	Livre = "ready to board",
-	Preparacao = "crew preparing",
-	Lancamento = "launching!",
-	Task = "in flight",
-	Falha = "in flight",
-	Resultado = "landed",
-}
-
-local function atualizarTela()
-	if not telaStatus then return end
-	local linhas = { '<font color="#E8892E">MISSION BRIEFING</font>' }
-	for _, s in sessoes do
-		table.insert(linhas, ("%s\n%d/%d crew · %s"):format(s.missao.Nome, #s.tripulacao, Missoes.RegrasGerais.MaxJogadoresPorNave, FASES[s.fase] or s.fase))
-	end
-	telaStatus.Text = table.concat(linhas, "\n\n")
-end
-ctx.aoMudar = atualizarTela
+ctx.aoMudar = function() end
 
 ---------------------------------------------------------------------------------
 -- Sessões
@@ -155,24 +112,6 @@ for _, m in Missoes.Lista do
 	end
 end
 
-if kiosk then
-	for id, nomePeca in { [1] = "BoardMercury", [2] = "BoardISS" } do
-		local peca = kiosk:FindFirstChild(nomePeca)
-		local s = sessoes[id]
-		if peca and s then
-			-- pedestais lado a lado: teclas diferentes para os dois prompts aparecerem juntos
-			local pr = Naves.prompt(peca, "Mission briefing", s.missao.Nome, {
-				distancia = 9,
-				tecla = id == 2 and Enum.KeyCode.F or Enum.KeyCode.E,
-			})
-			pr.Triggered:Connect(function(player)
-				if Naves.distancia(player, peca) > 11 then return end
-				s:aviso(player, "Meet Ana at the rocket access arm to choose your mission, suit and equipment.")
-			end)
-		end
-	end
-end
-atualizarTela()
 
 -- Ponte para outros sistemas do servidor (GuideSystem: a Ana embarca a equipe no topo do foguete)
 -- ServerStorage.RookieBridge.Embarcar:Invoke(player, missaoId, manifest) → ok, motivo

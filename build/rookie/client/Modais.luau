@@ -65,6 +65,27 @@ local function falaDoGuia(p, texto, y)
 	return balao
 end
 
+-- foto com estado de carregamento: enquanto não carrega (ou se falhar), mostra a legenda
+local function foto(parent, image, size, legenda)
+	local img = UI.new("ImageLabel", {
+		Image = image or "",
+		ScaleType = Enum.ScaleType.Fit,
+		Size = size,
+		BackgroundColor3 = Color3.fromHex("0A0F1C"),
+		Parent = parent,
+	})
+	UI.corner(img, 8)
+	local aviso = UI.texto(img, {
+		Text = legenda or "Photo loading…", tamanho = 13, cor = UI.C.muted,
+		alinhar = Enum.TextXAlignment.Center, alinharY = Enum.TextYAlignment.Center, Size = UDim2.fromScale(1, 1),
+	})
+	aviso.TextWrapped = true
+	local function atualizar() aviso.Visible = not img.IsLoaded end
+	img:GetPropertyChangedSignal("IsLoaded"):Connect(atualizar)
+	atualizar()
+	return img
+end
+
 local function rodape(p, botoes)
 	local r = UI.new("Frame", { Size = UDim2.new(1, 0, 0, 50), Position = UDim2.new(0, 0, 1, -50), BackgroundTransparency = 1, Parent = p })
 	UI.lista(r, 10, true, Enum.HorizontalAlignment.Right)
@@ -102,8 +123,60 @@ function M.aprendizado(ap, res, continuar)
 		for k, area in item.Areas do
 			UI.texto(card, { Text = "•  " .. area, tamanho = 16, ordem = 1 + k })
 		end
+		if item.Ciencia then
+			UI.texto(card, { Text = "Science: " .. item.Ciencia, tamanho = 15, ordem = 10, auto = Enum.AutomaticSize.Y, Size = UDim2.new(1, 0, 0, 0) })
+		end
+		if item.Real then
+			UI.texto(card, { Text = "Real mission: " .. item.Real, tamanho = 15, cor = UI.C.muted, ordem = 11, auto = Enum.AutomaticSize.Y, Size = UDim2.new(1, 0, 0, 0) })
+		end
 	end
 	rodape(p, { { "Continue  ›", continuar, UI.C.accent, 190 } })
+end
+
+-- Card da missão real (depois do resultado): título, missão e data, o que aconteceu, ligação com
+-- o desafio, trade-off de massa, fontes oficiais e o aviso de valores de jogo.
+function M.missaoReal(cardKey, voltar, desbloqueado)
+	local card = Missoes.Cards[cardKey]
+	if not card then return end
+	ultimoMostrado = "C" .. cardKey
+	local p = baseModal(640)
+	local lista = UI.new("ScrollingFrame", {
+		Size = UDim2.new(1, 0, 1, -60), BackgroundTransparency = 1, BorderSizePixel = 0,
+		CanvasSize = UDim2.new(), AutomaticCanvasSize = Enum.AutomaticSize.Y, ScrollBarThickness = 6, Parent = p,
+	})
+	UI.lista(lista, 8)
+	local function linha(texto, props)
+		props = props or {}
+		props.Text = texto
+		props.tamanho = props.tamanho or 16
+		props.auto = Enum.AutomaticSize.Y
+		props.Size = UDim2.new(1, -8, 0, 0)
+		return UI.texto(lista, props)
+	end
+	linha(string.upper(Missoes.Textos.MissaoReal), { tamanho = 14, peso = Enum.FontWeight.Bold, cor = UI.C.accent, ordem = 1 })
+	linha(card.Titulo, { tamanho = 24, peso = Enum.FontWeight.Heavy, ordem = 2 })
+	linha(("%s · %s"):format(card.Missao or "", card.Data or ""), { tamanho = 15, cor = UI.C.yellow, ordem = 3 })
+	local f = foto(lista, card.Foto, UDim2.new(1, -8, 0, 200), card.Legenda)
+	f.LayoutOrder = 4
+	linha(card.Legenda .. " Photo: " .. card.Credito, { tamanho = 12, cor = UI.C.muted, ordem = 5 })
+	linha(card.Texto, { ordem = 6 })
+	if card.Relacao then
+		linha("How it connects to your mission", { tamanho = 15, peso = Enum.FontWeight.Bold, cor = UI.C.accent, ordem = 7 })
+		linha(card.Relacao, { ordem = 8 })
+	end
+	if card.TradeOff then
+		linha("Mass trade-off", { tamanho = 15, peso = Enum.FontWeight.Bold, cor = UI.C.accent, ordem = 9 })
+		linha(card.TradeOff, { ordem = 10 })
+	end
+	linha(Missoes.Textos.ValoresJogo, { tamanho = 13, cor = UI.C.muted, ordem = 11 })
+	if card.Fontes then
+		linha("Sources: " .. table.concat(card.Fontes, " · "), { tamanho = 12, cor = UI.C.muted, ordem = 12 })
+	end
+	local botoes = { { "Back", voltar, UI.C.panel2, 130 } }
+	if desbloqueado then
+		table.insert(botoes, 1, { "Open album", function() M.album(cardKey) end, UI.C.panel2, 160 })
+	end
+	rodape(p, botoes)
 end
 
 function M.atualizar(estado)
@@ -153,8 +226,14 @@ function M.atualizar(estado)
 		eq.TextColor3 = ok and UI.C.yellow or UI.C.red
 		falaDoGuia(p, res.fala, 92)
 		local botoes = {}
-		if res.card then
-			table.insert(botoes, { "Open album", function() M.album(res.card) end, UI.C.panel2, 160 })
+		local cardKey = missao and missao.Card
+		if cardKey and Missoes.Cards[cardKey] then
+			table.insert(botoes, { Missoes.Textos.MissaoReal .. " ›", function()
+				M.missaoReal(cardKey, function()
+					ultimoMostrado = nil
+					M.atualizar(estado)
+				end, res.card ~= nil)
+			end, UI.C.panel2, 180 })
 		end
 		table.insert(botoes, { Missoes.Textos.VoarDeNovo, function() remotes.ReiniciarTaskOuMissao:FireServer("Missao") end, UI.C.panel2, 150 })
 		table.insert(botoes, { Missoes.Textos.VoltarLCC, function() remotes.ReiniciarTaskOuMissao:FireServer("Sair") end, UI.C.accent, 170 })
@@ -196,20 +275,14 @@ function M.album(destaque)
 		UI.corner(f, 10)
 		UI.stroke(f, destaque == missao.Card and UI.C.accent or UI.C.line, destaque == missao.Card and 3 or 1.5)
 		UI.pad(f, 12)
-		local img = UI.new("ImageLabel", {
-			Image = tem and card.Foto or "",
-			ScaleType = Enum.ScaleType.Crop,
-			Size = UDim2.fromOffset(180, 135),
-			BackgroundColor3 = Color3.fromHex("0A0F1C"),
-			Parent = f,
-		})
-		UI.corner(img, 8)
+		local img = foto(f, tem and card.Foto or "", UDim2.fromOffset(180, 135), tem and nil or "")
 		if not tem then
 			UI.texto(img, { Text = "🔒", tamanho = 40, alinhar = Enum.TextXAlignment.Center, Size = UDim2.fromScale(1, 1) })
 		end
 		local col = UI.new("Frame", { Size = UDim2.new(1, -196, 0, 0), Position = UDim2.fromOffset(196, 0), AutomaticSize = Enum.AutomaticSize.Y, BackgroundTransparency = 1, Parent = f })
 		UI.lista(col, 4)
 		UI.texto(col, { Text = card.Titulo, tamanho = 20, peso = Enum.FontWeight.Bold, ordem = 1 })
+		UI.texto(col, { Text = ("%s · %s"):format(card.Missao or "", card.Data or ""), tamanho = 14, cor = UI.C.muted, ordem = 1 })
 		UI.texto(col, { Text = ("Best: %s"):format(melhor > 0 and string.rep("⭐", melhor) or "not completed yet"), tamanho = 15, cor = UI.C.yellow, ordem = 2 })
 		UI.texto(col, {
 			Text = tem and card.Texto or ("Complete \"" .. missao.Nome .. "\" with at least 1 star to unlock this card."),
@@ -221,6 +294,9 @@ function M.album(destaque)
 		})
 		if tem then
 			UI.texto(col, { Text = card.Legenda .. " Photo: " .. card.Credito, tamanho = 12, cor = UI.C.muted, ordem = 4, auto = Enum.AutomaticSize.Y, Size = UDim2.new(1, 0, 0, 0) })
+			if card.Fontes then
+				UI.texto(col, { Text = "Sources: " .. table.concat(card.Fontes, " · "), tamanho = 12, cor = UI.C.muted, ordem = 5, auto = Enum.AutomaticSize.Y, Size = UDim2.new(1, 0, 0, 0) })
+			end
 		end
 	end
 	UI.botao(p, { Text = "Close", cor = UI.C.panel2, Size = UDim2.new(0, 140, 0, 44), Position = UDim2.new(1, -140, 1, -44), aoClicar = function() albumGui:Destroy() albumGui = nil end })

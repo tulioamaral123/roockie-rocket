@@ -152,34 +152,57 @@ end
 function World.exhibitParts()
 	local out = {}
 	-- só os modelos marcados como exposição (CollectionService "Exhibit", Fase 17)
-	local candidates = {}
 	for _, m in game:GetService("CollectionService"):GetTagged("Exhibit") do
-		for _, d in m:GetDescendants() do table.insert(candidates, d) end
-	end
-	for _, d in candidates do
-		if d:IsA("ProximityPrompt") and d:GetAttribute("ExhibitId") and d.Enabled then
-			local part = d.Parent
-			if part and part:IsA("Attachment") then part = part.Parent end
-			if part and part:IsA("BasePart") then table.insert(out, part) end
+		for _, d in m:GetDescendants() do
+			if d:IsA("ProximityPrompt") and d:GetAttribute("ExhibitId") and d.Enabled then
+				local part = d.Parent
+				if part and part:IsA("Attachment") then part = part.Parent end
+				if part and part:IsA("BasePart") then
+					table.insert(out, { part = part, model = m })
+				end
+			end
 		end
 	end
 	return out
 end
 
 local exhibitCache, exhibitTime = {}, -math.huge
-function World.nearestExhibit(pos: Vector3): Vector3?
+local function nearest(pos)
 	if os.clock() - exhibitTime > 10 then
 		exhibitCache = World.exhibitParts()
 		exhibitTime = os.clock()
 	end
 	local best, bd = nil, math.huge
-	for _, part in exhibitCache do
-		if part.Parent then
-			local d = (part.Position - pos).Magnitude
-			if d < bd then best, bd = part, d end
+	for _, e in exhibitCache do
+		if e.part.Parent then
+			local d = (e.part.Position - pos).Magnitude
+			if d < bd then best, bd = e, d end
 		end
 	end
-	return best and best.Position
+	return best
+end
+
+function World.nearestExhibit(pos: Vector3): Vector3?
+	local e = nearest(pos)
+	return e and e.part.Position
+end
+
+-- Círculo branco do museu: centro no chão e raio que envolve a exposição mais próxima
+-- (caixa do modelo marcado "Exhibit", limitada para não cobrir a sala inteira).
+function World.exhibitRing(pos: Vector3)
+	local e = nearest(pos)
+	if not e then return nil end
+	local ok, cf, size = pcall(function() return e.model:GetBoundingBox() end)
+	if not ok or not cf then cf, size = e.part.CFrame, e.part.Size end
+	local radius = math.max(size.X, size.Z) / 2 + 2.5
+	local center = Vector3.new(cf.Position.X, cf.Position.Y - size.Y / 2, cf.Position.Z)
+	if radius > 12 then
+		-- exposição grande (Atlantis, Saturn V): o círculo marca o ponto de interação (PromptAnchor)
+		local a = e.part.Position
+		center, radius = Vector3.new(a.X, cf.Position.Y - size.Y / 2, a.Z), 5
+	end
+	radius = math.max(radius, 4)
+	return { center = center, radius = radius, target = e.part.Position }
 end
 
 return World

@@ -194,6 +194,13 @@ local function gallery(d)
 	local pic = UI.new("ImageLabel", {
 		BackgroundTransparency = 1, Size = UDim2.fromScale(1, 1), ScaleType = Enum.ScaleType.Fit, Parent = frameImg,
 	})
+	-- estado de carregamento: a foto nova pode levar um instante; sem isto o quadro fica preto
+	local loading = UI.new("TextLabel", {
+		BackgroundTransparency = 1, Size = UDim2.fromScale(1, 1), Text = "Loading photo…",
+		TextColor3 = UI.C.muted, FontFace = UI.font(Enum.FontWeight.Medium), TextSize = 14, Parent = frameImg,
+	})
+	local function syncLoading() loading.Visible = not pic.IsLoaded end
+	pic:GetPropertyChangedSignal("IsLoaded"):Connect(syncLoading)
 	local caption = UI.label(holder, "", 14, Enum.FontWeight.Medium, UI.C.text, 2)
 	local credit = UI.label(holder, "", 12, Enum.FontWeight.Medium, UI.C.muted, 3)
 	local index = 1
@@ -202,6 +209,7 @@ local function gallery(d)
 		local item = photos[index]
 		local ph = item.Photo
 		pic.Image = ph.AssetId
+		syncLoading()
 		caption.Text = ph.Caption or ""
 		local kind = ph.Illustration and "Illustration" or "Photo"
 		credit.Text = string.format("%s: %s%s  ·  NASA ID %s", kind, ph.Credit, ph.Date ~= "" and ("  ·  " .. ph.Date) or "", item.Id)
