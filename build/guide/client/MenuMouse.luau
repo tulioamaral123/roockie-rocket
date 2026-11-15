@@ -1,7 +1,8 @@
 --[[
 	MenuMouse — libera o mouse quando há um menu aberto, mesmo em primeira pessoa.
 
-	Em primeira pessoa (ou com shift-lock) o Roblox prende o cursor no centro. Um GuiButton
+	Em primeira pessoa (ou com shift-lock) o Roblox prende o cursor no centro. Com o botão direito
+	apertado, a câmera volta a girar (dá para olhar em volta durante o diálogo). Um GuiButton
 	visível com Modal = true solta o cursor; este módulo mantém um botão invisível assim e só o
 	deixa visível enquanto algum menu da lista estiver aberto. "Aberto" = ScreenGui ligado com
 	algum botão ou caixa de texto realmente visível (todos os ancestrais visíveis).
@@ -81,13 +82,20 @@ function MenuMouse.start()
 				modal.Visible = open
 				if open then
 					UIS.MouseIconEnabled = true
-					-- a câmera em primeira pessoa prende o mouse a cada quadro: solta depois dela
+					-- a câmera em primeira pessoa prende o mouse a cada quadro: solta depois dela.
+					-- A tela continua mexendo: com o botão direito apertado a câmera gira (em
+					-- primeira pessoa ou terceira), e em terceira pessoa nada é forçado.
 					RunService:BindToRenderStep("MenuMouseFree", Enum.RenderPriority.Last.Value, function()
-						UIS.MouseBehavior = Enum.MouseBehavior.Default
+						local looking = UIS:IsMouseButtonPressed(Enum.UserInputType.MouseButton2)
+						modal.Modal = not looking
+						if not looking and UIS.MouseBehavior == Enum.MouseBehavior.LockCenter then
+							UIS.MouseBehavior = Enum.MouseBehavior.Default
+						end
 						UIS.MouseIconEnabled = true
 					end)
 				else
 					pcall(function() RunService:UnbindFromRenderStep("MenuMouseFree") end)
+					modal.Modal = true
 				end
 			end
 			task.wait(0.2)
