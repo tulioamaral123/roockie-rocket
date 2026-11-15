@@ -75,6 +75,10 @@ function Acoplamento:acao(player, msg)
 	elseif msg.acao == "Esfera" and type(msg.i) == "number" then
 		local i = msg.i
 		if i ~= math.floor(i) or i < 1 or i > self.cfg.TotalEsferas or self.esferas[i] then return end
+		-- arrastar uma esfera leva tempo: no máximo uma trava a cada 0,6 s
+		local agora = os.clock()
+		if agora - (self.ultimaEsfera or 0) < 0.6 then return end
+		self.ultimaEsfera = agora
 		if not self:naZonaVerde() then
 			self.s:aviso(player, Missoes.Textos.ForaZonaVerde)
 			self.s:efeito("EsferaEscorregou", { i = i })
@@ -368,7 +372,18 @@ function Vazamento:iniciar()
 
 	local pf = Naves.prompt(furo, "Seal leak", "2 mm hole", { segurar = self.segurar, distancia = 8 })
 	table.insert(self.prompts, pf)
+	-- o servidor mede o próprio hold (o cliente poderia encurtar o HoldDuration)
+	self.inicioHold = {}
+	table.insert(self.conexoes, pf.PromptButtonHoldBegan:Connect(function(p)
+		self.inicioHold[p] = os.clock()
+	end))
+	table.insert(self.conexoes, pf.PromptButtonHoldEnded:Connect(function(p)
+		self.inicioHold[p] = nil
+	end))
 	table.insert(self.conexoes, pf.Triggered:Connect(function(p)
+		local inicio = self.inicioHold[p]
+		self.inicioHold[p] = nil
+		if not inicio or os.clock() - inicio < self.segurar - 0.2 then return end
 		if not self.s:perto(p, furo) then return end
 		if not self.fechada then
 			self.s:aviso(p, Missoes.Textos.FecheEscotilha)

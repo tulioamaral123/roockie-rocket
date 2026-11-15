@@ -321,7 +321,7 @@ local leakData = {
 	{ V(-17.95, 5, -11), V(-1, 0, 0) },
 	{ V(17.95, 5, 13), V(1, 0, 0) },
 	{ V(-10, 5, 23.55), V(0, 0, 1) },
-	{ V(10, 5, 51.95), V(0, 0, 1) },
+	{ V(17.95, 5, -18), V(1, 0, 0) }, -- no habitat (o furo fica do lado de quem fecha a escotilha)
 }
 for i, data in leakData do
 	local spot = marker(leaks, "Spot" .. i, CFrame.lookAt(data[1], data[1] + data[2]), V(0.15, 0.15, 0.15))

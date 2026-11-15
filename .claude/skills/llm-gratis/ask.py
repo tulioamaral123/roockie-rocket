@@ -69,8 +69,13 @@ def main():
         try:
             with urllib.request.urlopen(req, timeout=180) as r:
                 out = json.load(r)
-            print(out["choices"][0]["message"]["content"].strip())
-            return
+            text = ((out.get("choices") or [{}])[0].get("message") or {}).get("content") or ""
+            if text.strip():
+                print(text.strip())
+                return
+            if attempt < 2:
+                continue  # resposta vazia (modelo gastou tudo raciocinando): tenta de novo
+            sys.exit(f"Resposta vazia ({a.provider}, {a.model or default_model}); tente -p llm7 ou outro -m")
         except urllib.error.HTTPError as e:
             msg = e.read().decode(errors="replace")[:500]
             if e.code == 429 and attempt < 2:

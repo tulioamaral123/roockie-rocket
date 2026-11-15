@@ -79,8 +79,9 @@ end
 local function salvar(player)
 	local dados = perfis[player]
 	if not dados or not carregado[player] or not okStore or not store then return end
-	pendente[player] = nil
-	tentar(function()
+	local versao = (pendente[player] == true) and os.clock() or pendente[player]
+	pendente[player] = versao
+	local ok = tentar(function()
 		store:UpdateAsync("u_" .. player.UserId, function(antigo)
 			-- nunca perde progresso: mescla com o que já está salvo
 			local d = validar(antigo)
@@ -89,6 +90,8 @@ local function salvar(player)
 			return d
 		end)
 	end)
+	-- se nada mudou durante o salvamento, não há mais pendência
+	if ok and pendente[player] == versao then pendente[player] = nil end
 end
 
 function M.iniciar(callback)
@@ -131,7 +134,7 @@ function M.registrar(player, missaoId, estrelas, card)
 	local k = tostring(missaoId)
 	d.estrelas[k] = math.max(d.estrelas[k] or 0, estrelas)
 	if card then d.cards[card] = true end
-	pendente[player] = true
+	pendente[player] = true -- true = mudou depois do último salvamento iniciado
 	if aoAtualizar then aoAtualizar(player, d) end
 	if carregado[player] then task.spawn(salvar, player) end
 end

@@ -85,8 +85,16 @@ function M.atualizar(estado)
 		if ultimoMostrado == chave and modal then return end
 		ultimoMostrado = chave
 		local p = baseModal(460)
-		UI.texto(p, { Text = estado.falha.task and estado.falha.task > 0 and ("MISSION FAILED · TASK %d"):format(estado.falha.task) or "LAUNCH FAILED", tamanho = 14, peso = Enum.FontWeight.Bold, cor = UI.C.red })
-		falaDoGuia(p, estado.falha.texto, 28)
+		UI.texto(p, { Text = (estado.falha.chave == "DemorouDemais" and "MISSION FAILED · " .. string.upper(Missoes.Textos.DemorouDemais))
+			or (estado.falha.task and estado.falha.task > 0 and ("MISSION FAILED · TASK %d"):format(estado.falha.task))
+			or "LAUNCH FAILED", tamanho = 14, peso = Enum.FontWeight.Bold, cor = UI.C.red })
+		local y = 28
+		if estado.falha.equacao then
+			local eq = UI.texto(p, { Text = estado.falha.equacao, tamanho = 20, peso = Enum.FontWeight.Bold, cor = UI.C.red, Position = UDim2.fromOffset(0, 26), Size = UDim2.new(1, 0, 0, 0), auto = Enum.AutomaticSize.Y })
+			eq.TextWrapped = true
+			y = 92
+		end
+		falaDoGuia(p, estado.falha.texto, y)
 		local botoes = {}
 		if estado.falha.podeRepetir then
 			table.insert(botoes, { Missoes.Textos.TentarTask, function() remotes.ReiniciarTaskOuMissao:FireServer("Task") end })

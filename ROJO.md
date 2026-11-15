@@ -4,7 +4,7 @@
 
 | O quê | Onde fica | Como chega ao Studio |
 |---|---|---|
-| Scripts da missão Friendship 7 | `build/mission/*.luau` | **Rojo**, em tempo real (`default.project.json`) |
+| Scripts das missões Rookie Rocket | `build/rookie/**/*.luau` | **Rojo**, em tempo real (`default.project.json`) |
 | Scripts do museu | `build/museum/{server,client,shared}` | **Rojo** |
 | Scripts do mapa: portas (AutomaticDoors), tripulação (CrewAccess) | `build/systems/server/` → `ServerScriptService.Map_Systems` | **Rojo** |
 | Scripts do mapa no cliente: planetas (PlanetOrbits), tela do elevador (CrewClient) | `build/systems/client/` → `StarterPlayerScripts.MapClient` | **Rojo** |
@@ -51,12 +51,12 @@ No VS Code:
    - VS Code: Cmd+Shift+P → "Rojo: Open menu" → `default.project.json` → Start.
    - Terminal: `cd ~/Documents/nasa && rojo serve`
 3. No Studio, abrir a aba Plugins → Rojo → **Connect** (localhost:34872).
-4. Editar qualquer arquivo em `build/mission/`, `build/museum/` ou `build/systems/` e salvar: o script muda no Studio na hora.
+4. Editar qualquer arquivo em `build/rookie/`, `build/museum/` ou `build/systems/` e salvar: o script muda no Studio na hora.
 5. Ao terminar, fazer commit e push pela aba Source Control (ou `git`), e salvar o place no Studio (Ctrl+S).
 
 ## Problemas comuns
 
-- **O Rojo pede para substituir instâncias ao conectar.** É normal na primeira conexão: os scripts já existiam, criados pela Fase 15. Aceite.
+- **O Rojo pede para substituir instâncias ao conectar.** É normal na primeira conexão: os scripts já existiam, criados pelas Fases 18 e 21. Aceite.
 - **`rojo: command not found`.** Abra um Terminal novo depois do `rokit self-install`; ele adiciona `~/.rokit/bin` ao PATH.
 - **O plugin não aparece.** Feche o Studio por completo e abra de novo depois do `rojo plugin install`.
 

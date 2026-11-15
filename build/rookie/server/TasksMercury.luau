@@ -74,8 +74,16 @@ function Mira:acao(player, msg)
 	if msg.acao == "MiraInicio" then
 		local i = msg.ponto
 		if type(i) ~= "number" or not self.pontos[i] or i > self.cfg.TotalPontos or self.feitos[i] then return end
-		if not self.s:aBordo(player) or not self:linhaLivre(player, self.pontos[i]) then return end
-		self.mirando[player] = { ponto = i, inicio = os.clock() }
+		if not self.s:aBordo(player) or not self:linhaLivre(player, self.pontos[i]) then
+			self.mirando[player] = nil
+			return
+		end
+		local m = self.mirando[player]
+		if m and m.ponto == i then
+			m.visto = os.clock() -- o cliente repete MiraInicio enquanto mira (mantém o hold)
+		else
+			self.mirando[player] = { ponto = i, inicio = os.clock(), visto = os.clock() }
+		end
 	elseif msg.acao == "MiraFim" then
 		self.mirando[player] = nil
 	end
@@ -84,7 +92,12 @@ end
 function Mira:tick()
 	local agora = os.clock()
 	for player, m in self.mirando do
-		if self.feitos[m.ponto] then
+		local valido = agora - m.visto <= 0.8
+		if valido and agora - (m.checado or 0) >= 0.25 then
+			m.checado = agora
+			valido = self.s:aBordo(player) and self:linhaLivre(player, self.pontos[m.ponto])
+		end
+		if self.feitos[m.ponto] or not valido then
 			self.mirando[player] = nil
 		elseif agora - m.inicio >= self.segurar then
 			self.feitos[m.ponto] = true
@@ -283,8 +296,8 @@ function Retropack:acao() end
 
 function Retropack:segurandoAgora()
 	local n = 0
-	for p in self.segurando do
-		if self.s:membro(p) and Naves.vivo(p) then n += 1 else self.segurando[p] = nil end
+	for p, pr in self.segurando do
+		if self.s:perto(p, pr.Parent, pr.MaxActivationDistance + 2) then n += 1 else self.segurando[p] = nil end
 	end
 	return n
 end

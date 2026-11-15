@@ -5,6 +5,7 @@ Mapa no Roblox Studio inspirado no Kennedy Space Center. Percurso: recepção (m
 ## Referências
 
 - **Spec atual:** `spec-v3.md` (construção do mapa, §1–§15) + §16 (o que fica para depois). `spec.md` vale para o que a v3 não altera (coordenadas da recepção, corredores, museu). `spec-ultimate.md` é histórico.
+- **Missões (Rookie Rocket):** `docs/rookie-rocket-spec.md` (missões Mercury e ISS, co-op 1–4, peso, estrelas, DataStore, Álbum) e `docs/rookie-contrato.md` (nomes das peças × scripts). Textos em inglês. Substitui a missão sentada da antiga Fase 15.
 - **Escopo (spec-v3 §16.10):** só construção física, validação dimensional, circulação e qualidade visual. Não implementar transporte, sincronização, zona de exclusão dinâmica, sala funcional, decolagem, DataStore nem emblemas até haver uma spec da próxima fase.
 - **Notas de implementação:** `IMPLEMENTATION.md` (estado de cada etapa, validações, pendências). Atualizar a cada mudança.
 
@@ -24,16 +25,18 @@ O place (`Place1.rbxl`) é gerado por scripts Luau em `build/`. Não editar peç
 | 12 | `phase12_control_center.luau` | Launch Control Center e caminhos de pedestres |
 | 13 | `phase13_finishing.luau` | SafetyZones, sinalização, passe de otimização |
 | 14 | `phase14_relocation.luau` | Museu na ala leste da recepção (giro + translação) e ligações do LCC |
-| 15 | `phase15_friendship7.luau` | Missão Friendship 7 na cápsula (missaoUm.md): botões, papel, luzes + scripts de `build/mission/` |
 | 16 | `phase16_museum_hall.luau` | Salão do museu a leste do planetário, átrio, memorial rebaixado (divide a Baseplate), Parede de missões (`museuspec.md`, `docs/museu-contrato.md`) |
 | 17 | `phase17_museum_exhibits.luau` | Exposições do museu: Saturn V, Atlantis, Mercury, jardim de foguetes, diorama e console do show |
 | 18 | `phase18_museum_systems.luau` | Instala os sistemas do museu de `build/museum/` (painel, show, cards, progresso) quando o Rojo não está conectado |
+| 19 | `phase19_rookie_mercury.luau` | Rookie Rocket: cápsula Mercury navegável (−3000, 1200, 0), quiosque Mission Briefing no LCC; apaga a antiga Fase 15 |
+| 20 | `phase20_rookie_iss.luau` | Rookie Rocket: módulo da ISS, Cupola, Airlock/EVA, Unity/Zarya, Terra (3000, 1200, 0) |
+| 21 | `phase21_rookie_systems.luau` | Instala os scripts de `build/rookie/` quando o Rojo não está conectado |
 
 Reconstruir:
 
 1. Servir `build/` em segundo plano: `python3 -m http.server 8765 --bind 127.0.0.1` (parar ao terminar).
 2. Fases 1 e 2 (autônomas): carregar e executar no Edit (`loadstring(HttpService:GetAsync(...))()`).
-3. `build/run_in_studio.luau`: executa as Fases 3–6 e 8–15 em ordem, passando `lib.luau`.
+3. `build/run_in_studio.luau`: executa as Fases 3–6, 8–14 e 16–21 em ordem, passando `lib.luau`.
 
 Regras dos geradores:
 
@@ -46,8 +49,8 @@ Regras dos geradores:
 
 ## Rojo, VS Code e GitHub
 
-- **Rojo** (fixado em `rokit.toml`) sincroniza **todos os scripts** (`default.project.json`): `build/mission/` (missão), `build/museum/` (museu), `build/systems/server` → `ServerScriptService.Map_Systems` (AutomaticDoors, CrewAccess) e `build/systems/client` → `StarterPlayerScripts.MapClient` (PlanetOrbits, CrewClient).
-- Com o Rojo conectado, as pastas têm o atributo `RojoManaged` e as fases (6, 8, 15, 18) não reinstalam os scripts; sem Rojo, `lib.installSystemScript` baixa de `build/systems/` pelo HTTP.
+- **Rojo** (fixado em `rokit.toml`) sincroniza **todos os scripts** (`default.project.json`): `build/rookie/` (missões Rookie Rocket), `build/museum/` (museu), `build/systems/server` → `ServerScriptService.Map_Systems` (AutomaticDoors, CrewAccess) e `build/systems/client` → `StarterPlayerScripts.MapClient` (PlanetOrbits, CrewClient).
+- Com o Rojo conectado, as pastas têm o atributo `RojoManaged` e as fases (6, 8, 18, 21) não reinstalam os scripts; sem Rojo, `lib.installSystemScript` baixa de `build/systems/` pelo HTTP.
 - Scripts novos vão em arquivos nessas pastas, nunca como texto embutido em gerador.
 - Só o mapa (peças) continua pelo servidor HTTP. Não usar `rojo build` (o mapa não está no projeto).
 - Guia de instalação e uso: `ROJO.md`. Remote: `git@github.com:tulioamaral123/roockie-rocket.git`.
@@ -73,7 +76,7 @@ Regras dos geradores:
 - **Varredura do trajeto** (peça a peça, caixas transladadas): chegada do conjunto de Z 265 a Z 700, recuo do crawler de 700 a 620 e lateral até (90, 0, 620) — 0 interseções, exceto as folhas do portão dos fundos.
 - **Visão do SLS** a partir do portão frontal (olho em (0, 4,5, 211)): nada fixo entre o visitante e o foguete.
 - Playtest do percurso: recepção → museu (ala leste) → Corredor 1 → LCC → Corredor 2 → VAB → vestiário → escada → elevador → Orion → saída de pedestres → área de observação. Console sem erros.
-- Missão Friendship 7: sentar no CDR → "Start mission" → Tarefas 1–3 → resumo; levantar no meio aborta e restaura a câmera.
+- Rookie Rocket: quiosque no LCC → Board → Preparação (80 kg falha na plataforma) → Tasks 1–3 → resultado com a equação e estrelas → Álbum; Retry task / Restart mission; o mesmo na ISS (EVA na Task 2).
 
 ## Studio via MCP
 

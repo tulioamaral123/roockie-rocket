@@ -248,7 +248,9 @@ end
 
 function Sessao:finalizar()
 	local t = {}
-	for i = 1, 3 do t[i] = math.floor((self.tempos[i] or 0) + 0.5) end
+	-- segundos inteiros arredondados para cima: a equação na tela bate com a conta e nunca
+	-- dá mais estrelas do que o tempo real merece
+	for i = 1, 3 do t[i] = math.ceil((self.tempos[i] or 0) - 0.001) end
 	local total, estrelas = Missoes.resultado(t[1], t[2], t[3], self.bonus or 0)
 	local fala
 	if estrelas > 0 then
@@ -266,6 +268,21 @@ function Sessao:finalizar()
 		card = estrelas > 0 and self.missao.Card or nil,
 		medalha = Missoes.Textos.Medalhas[estrelas],
 	}
+	if estrelas == 0 then
+		-- "Took too long" é falha: modal do guia com Retry task (Task 3) e Restart mission
+		self.falha = {
+			chave = "DemorouDemais",
+			texto = fala,
+			podeRepetir = true,
+			task = #self.missao.Tasks,
+			equacao = self.resultado.equacao,
+		}
+		self.resultado = nil
+		self.fase = "Falha"
+		self:efeito("Falha", { chave = "DemorouDemais" })
+		self:sync()
+		return
+	end
 	self.fase = "Resultado"
 	self.taskAtual = 0
 	for _, p in self.tripulacao do
@@ -345,7 +362,7 @@ function Sessao:estado()
 		if v then itens[k] = true end
 	end
 	local tempos = {}
-	for i, t in self.tempos do tempos[i] = math.floor(t + 0.5) end
+	for i, t in self.tempos do tempos[i] = math.ceil(t - 0.001) end
 	local limite = nil
 	if self.handler and self.handler.limiteTempo then limite = self.handler:limiteTempo() end
 	return {

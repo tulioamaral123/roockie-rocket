@@ -11,5 +11,6 @@ Responsáveis: `claude` (Claude Code no Linux), `codex` (Codex no Linux), `mac` 
 | 3 | Museu: salão (Fase 16) | codex | `codex/museu-salao` | `build/phase16_museum_hall.luau` | aguardando teste no Mac (visual) |
 | 4 | Museu: exposições (Fase 17) | codex | `codex/museu-exposicoes` | `build/phase17_museum_exhibits.luau` | aguardando teste no Mac (visual) |
 | 5 | Museu: sistemas e conteúdo (Fase 18, Rojo) | claude | `setup/linux-colaboracao` | `build/museum/**`, `build/phase18_museum_systems.luau`, `default.project.json`, `build/run_in_studio.luau`, `docs/museu-contrato.md` | aguardando teste no Mac (visual) |
+| 6 | Rookie Rocket: missões Mercury e ISS (docs/rookie-rocket-spec.md) | claude + codex | `claude/rookie-rocket` (+ `codex/rookie-mercury`, `codex/rookie-iss`) | `build/rookie/**`, `build/phase19_rookie_mercury.luau`, `build/phase20_rookie_iss.luau`, `build/phase21_rookie_systems.luau`, `default.project.json`, `build/run_in_studio.luau` | aguardando teste no Studio |
 
 Estados: `a fazer`, `em andamento`, `PR aberto`, `aguardando teste no Mac`, `feito`.

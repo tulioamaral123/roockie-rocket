@@ -20,6 +20,7 @@ local feitos = {}
 local segurar = 2
 local angulo = 3.5
 local alvo, inicioAlvo = nil, 0
+local ultimoRepique = 0
 local params = RaycastParams.new()
 params.FilterType = Enum.RaycastFilterType.Exclude
 
@@ -91,6 +92,10 @@ local function quadro()
 		end
 	end
 	mudarAlvo(melhor)
+	if alvo and os.clock() - (ultimoRepique or 0) >= 0.4 then
+		ultimoRepique = os.clock()
+		remotes.AcaoTask:FireServer({ acao = "MiraInicio", ponto = alvo })
+	end
 	if alvo then
 		setAnel(math.clamp((os.clock() - inicioAlvo) / segurar, 0, 1))
 		cruz.TextColor3 = UI.C.green
