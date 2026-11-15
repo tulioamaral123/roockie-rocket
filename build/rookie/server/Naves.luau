@@ -95,6 +95,13 @@ function Naves.teleportar(player, cf, stillValid)
 		player:RequestStreamAroundAsync(cf.Position, 5)
 	end)
 	if player.Parent ~= Players or player.Character ~= char or (stillValid and not stillValid()) then return false end
+	-- sentado: solta do assento antes (a solda arrastaria o assento junto)
+	local hum = char:FindFirstChildOfClass("Humanoid")
+	if hum and hum.SeatPart then
+		local weld = hum.SeatPart:FindFirstChild("SeatWeld")
+		if weld then weld:Destroy() end
+		hum.Sit = false
+	end
 	char:PivotTo(cf + Vector3.new(0, 3, 0))
 	local root = char:FindFirstChild("HumanoidRootPart")
 	if root then

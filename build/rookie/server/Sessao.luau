@@ -131,15 +131,47 @@ function Sessao:embarcar(player, manifest)
 		self.preflight = manifest ~= nil
 	end
 	local spawn = self.spawns[#self.tripulacao] or self.spawns[1]
+	local lugar = #self.tripulacao
 	task.spawn(function()
 		if not Naves.teleportar(player, spawn.CFrame, function() return self.ctx.emMissao[player] == self end) then
 			self:sair(player, false)
-		elseif self.preflight and self.fase == "Preparacao" then
+			return
+		end
+		-- entra já sentado num assento livre da cápsula (o da sua vez na tripulação, se livre)
+		self:sentar(player, lugar)
+		if self.preflight and self.fase == "Preparacao" then
 			self:lancar(player)
 		end
 	end)
 	self:sync()
 	return true
+end
+
+-- senta o jogador num assento livre da nave (Seats/Seat_N/Seat, Fase 19); naves sem assentos: nada
+function Sessao:sentar(player, preferido)
+	local pasta = self.nave:FindFirstChild("Seats")
+	if not pasta then return end
+	local lista = {}
+	for _, g in pasta:GetChildren() do
+		local seat = g:FindFirstChild("Seat")
+		if seat and seat:IsA("Seat") then table.insert(lista, seat) end
+	end
+	table.sort(lista, function(a, b) return (a:GetAttribute("SeatNumber") or 0) < (b:GetAttribute("SeatNumber") or 0) end)
+	local escolhido
+	local p = lista[preferido or 1]
+	if p and not p.Occupant then escolhido = p end
+	if not escolhido then
+		for _, seat in lista do
+			if not seat.Occupant then escolhido = seat break end
+		end
+	end
+	if not escolhido then return end
+	task.wait(0.15) -- deixa o personagem assentar depois do teleporte
+	local char = player.Character
+	local hum = char and char:FindFirstChildOfClass("Humanoid")
+	if hum and hum.Health > 0 and self.ctx.emMissao[player] == self and not escolhido.Occupant then
+		escolhido:Sit(hum)
+	end
 end
 
 -- sai da sessão; teleporta de volta ao LCC se pedido
