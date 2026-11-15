@@ -140,6 +140,26 @@ place("Ana_Route4", -31.5, 240)
 place("Ana_Route5", -27, 232)
 
 ---------------------------------------------------------------------------------
+-- Espelho no Crew Suit-Up Room (parede do fundo, Z 258, entre os armários e o banco).
+-- A reflexão é desenhada pelo cliente (GuideClient/Mirror) num SurfaceGui do vidro.
+---------------------------------------------------------------------------------
+local hangar = Map:FindFirstChild("VABHangar")
+local suitRoom = hangar and hangar:FindFirstChild("CrewSuitUpRoom")
+if suitRoom then
+	local mirror = B.group(suitRoom, "Mirror")
+	local MX0, MX1, MY0, MY1, MZ = -55, -47, 0.6, 8.6, 258
+	B.box(mirror, "Mirror_Glass", MX0, MX1, MY0, MY1, MZ - 0.12, MZ, "#C9D6DF", "SmoothPlastic", { reflectance = 0.1 })
+	for _, f in {
+		{ MX0 - 0.35, MX1 + 0.35, MY1, MY1 + 0.35 }, { MX0 - 0.35, MX1 + 0.35, MY0 - 0.35, MY0 },
+		{ MX0 - 0.35, MX0, MY0, MY1 }, { MX1, MX1 + 0.35, MY0, MY1 },
+	} do
+		B.box(mirror, "Mirror_Frame", f[1], f[2], f[3], f[4], MZ - 0.25, MZ, "metalGray", "Metal")
+	end
+	local tag = B.box(mirror, "Mirror_Sign", -53.5, -48.5, MY1 + 0.6, MY1 + 1.6, MZ - 0.1, MZ, "space", "SmoothPlastic", { collide = false })
+	B.sign(tag, "CHECK YOUR SUIT", nil, { face = Enum.NormalId.Front, titleColor = "white", accent = "orange" })
+end
+
+---------------------------------------------------------------------------------
 -- Scripts (sem Rojo)
 ---------------------------------------------------------------------------------
 

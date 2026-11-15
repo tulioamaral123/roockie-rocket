@@ -10,7 +10,7 @@ local pg = game:GetService("Players").LocalPlayer:WaitForChild("PlayerGui")
 pg.ScreenOrientation = Enum.ScreenOrientation.LandscapeSensor
 RS:WaitForChild("GuideSystem"):WaitForChild("Remotes")
 
-for _, name in { "DialogueGui", "NavigationClient", "MissionSelect", "MenuMouse" } do
+for _, name in { "DialogueGui", "NavigationClient", "MissionSelect", "MenuMouse", "Mirror" } do
 	local ok, err = pcall(function() require(script.Parent:WaitForChild(name)).start() end)
 	if not ok then warn("[GuideSystem] " .. name .. ":", err) end
 end
