@@ -64,6 +64,12 @@
       },
       "MuseumSystem": {
         "$path": "build/museum/server"
+      },
+      "Map_Systems": {
+        "$path": "build/systems/server",
+        "$attributes": {
+          "RojoManaged": true
+        }
       }
     },
     "StarterPlayer": {
@@ -94,6 +100,9 @@
         },
         "MuseumClient": {
           "$path": "build/museum/client"
+        },
+        "MapClient": {
+          "$path": "build/systems/client"
         }
       }
     }

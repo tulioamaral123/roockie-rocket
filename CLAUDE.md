@@ -46,12 +46,19 @@ Regras dos geradores:
 
 ## Rojo, VS Code e GitHub
 
-- **Rojo** (fixado em `rokit.toml`) sincroniza só os scripts da missão (`build/mission/`), conforme `default.project.json`.
-- Com o Rojo conectado, `ReplicatedStorage.MissionSystem` tem o atributo `RojoManaged`, e a Fase 15 não reinstala os scripts.
-- Mapa e scripts embutidos nos geradores continuam pelo servidor HTTP.
-- Não usar `rojo build` (o mapa não está no projeto).
-- Guia de instalação e uso: `ROJO.md`.
-- Remote: `git@github.com:tulioamaral123/roockie-rocket.git`.
+- **Rojo** (fixado em `rokit.toml`) sincroniza **todos os scripts** (`default.project.json`): `build/mission/` (missão), `build/museum/` (museu), `build/systems/server` → `ServerScriptService.Map_Systems` (AutomaticDoors, CrewAccess) e `build/systems/client` → `StarterPlayerScripts.MapClient` (PlanetOrbits, CrewClient).
+- Com o Rojo conectado, as pastas têm o atributo `RojoManaged` e as fases (6, 8, 15, 18) não reinstalam os scripts; sem Rojo, `lib.installSystemScript` baixa de `build/systems/` pelo HTTP.
+- Scripts novos vão em arquivos nessas pastas, nunca como texto embutido em gerador.
+- Só o mapa (peças) continua pelo servidor HTTP. Não usar `rojo build` (o mapa não está no projeto).
+- Guia de instalação e uso: `ROJO.md`. Remote: `git@github.com:tulioamaral123/roockie-rocket.git`.
+
+## Economia de tokens (padrão de trabalho)
+
+- Mudança em script: editar só o arquivo `.luau`; o Rojo leva ao Studio. Não abrir o Studio pelo MCP para isso.
+- Não usar MCP do Studio (screenshot, `execute_luau`, `inspect_instance`, playtest) sem o usuário pedir. Ele testa e cola o erro do Output.
+- Ler só o trecho necessário (`grep -n` e depois `sed -n` / `Read` com offset), nunca arquivos inteiros grandes (specs, geradores).
+- Não reler arquivo que acabou de editar; respostas curtas; não repetir o plano no texto.
+- `IMPLEMENTATION.md`: só uma linha curta por mudança, no fim do arquivo.
 
 ## Trabalho em paralelo (Linux + Mac)
 

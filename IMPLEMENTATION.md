@@ -631,3 +631,8 @@ O gerador verifica ao final os 16 IDs, PrimaryParts/PromptAnchors, Attachments o
 - Playtest a pé do percurso completo e da missão.
 - UI em Play nos dispositivos de teste: no PC, a lista de jogadores do Roblox pode cobrir a barra Diary/Settings.
 - Itens de desenho não tratados: exterior do salão sem paisagismo; portão dos fundos liso por fora; sobreposição entre sinos vizinhos do F-1 e do SSME.
+
+## VS Code + Rojo para todos os scripts — 15/11/2026
+
+- Scripts embutidos nas Fases 6 e 8 (AutomaticDoors, PlanetOrbits, CrewAccess, CrewClient) extraídos para `build/systems/`; instalados por `lib.installSystemScript` (pula se `Map_Systems.RojoManaged`). Clientes agora em `StarterPlayerScripts.MapClient`. `rojo sourcemap` OK; falta reconstruir no Studio e testar portas/elevador/traje.
+- Skill `llm-gratis` (.claude/skills/llm-gratis): delega tarefas de texto a LLM grátis sem chave (Kilo padrão, LLM7 reserva; Groq/Gemini opcionais com chave).

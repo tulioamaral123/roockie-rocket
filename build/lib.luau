@@ -199,4 +199,41 @@ function lib.builder(phase)
 	return B
 end
 
+-- Scripts do mapa (build/systems/): portas, planetas, tripulação.
+-- Com o Rojo conectado, ServerScriptService.Map_Systems tem o atributo RojoManaged e os
+-- scripts vêm do Rojo: esta função não faz nada. Sem Rojo, baixa o arquivo pelo servidor HTTP.
+-- side = "server" (Map_Systems) ou "client" (StarterPlayerScripts.MapClient).
+function lib.installSystemScript(side, name)
+	local SSS = game:GetService("ServerScriptService")
+	local systems = SSS:FindFirstChild("Map_Systems")
+	if systems and systems:GetAttribute("RojoManaged") then return "rojo" end
+	if not systems then
+		systems = Instance.new("Folder")
+		systems.Name = "Map_Systems"
+		systems.Parent = SSS
+	end
+	local parent = systems
+	local sps = game:GetService("StarterPlayer"):WaitForChild("StarterPlayerScripts")
+	if side == "client" then
+		local old = sps:FindFirstChild(name) -- versões antigas ficavam direto em StarterPlayerScripts
+		if old then old:Destroy() end
+		parent = sps:FindFirstChild("MapClient")
+		if not parent then
+			parent = Instance.new("Folder")
+			parent.Name = "MapClient"
+			parent.Parent = sps
+		end
+	end
+	local file = name .. (side == "client" and ".client.luau" or ".server.luau")
+	local url = "http://127.0.0.1:8765/systems/" .. side .. "/" .. file .. "?t=" .. os.clock()
+	local source = game:GetService("HttpService"):GetAsync(url, true)
+	local old = parent:FindFirstChild(name)
+	if old then old:Destroy() end
+	local s = Instance.new(side == "client" and "LocalScript" or "Script")
+	s.Name = name
+	s.Source = source
+	s.Parent = parent
+	return "http"
+end
+
 return lib
