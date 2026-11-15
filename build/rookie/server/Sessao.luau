@@ -261,6 +261,11 @@ function Sessao:lancar(player)
 	self.fimLancamento = os.clock() + math.max(12, REGRAS.SegundosLancamento)
 	self.fimLancamentoServidor = workspace:GetServerTimeNow() + math.max(12, REGRAS.SegundosLancamento)
 	self:efeito("Lancamento", { duracao = math.max(12, REGRAS.SegundosLancamento) })
+	-- cutscene da decolagem (cliente, Decolagem.luau): a plataforma 39B fica longe da nave; pede o
+	-- streaming em volta dela para cada tripulante
+	for _, crew in self.tripulacao do
+		task.spawn(pcall, function() crew:RequestStreamAroundAsync(Vector3.new(0, 20, 700), 3) end)
+	end
 	self:sync()
 end
 

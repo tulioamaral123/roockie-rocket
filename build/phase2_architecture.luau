@@ -118,7 +118,11 @@ end
 -- 1. Base NASA: fachada de vidro na entrada + moldura da saída --------------------
 local facade = group(Base.Walls, "Front_Facade")
 wallWithOpening(facade, "Front_Wall", -1, 0, -35.5, 35.5, 25, -20, 20, 16, C.white, "SmoothPlastic")
-box(facade, "Glass", -20, 20, -1, 16, -0.7, -0.3, C.glass, "Glass", GLASS)
+-- vidro com o vão da porta de entrada entre os montantes centrais (X −4..4, abaixo da travessa);
+-- as folhas automáticas ficam na Fase 6 (Entrance_AutoDoor)
+box(facade, "Glass", -20, -4, -1, 16, -0.7, -0.3, C.glass, "Glass", GLASS)
+box(facade, "Glass", 4, 20, -1, 16, -0.7, -0.3, C.glass, "Glass", GLASS)
+box(facade, "Glass", -4, 4, 10.6, 16, -0.7, -0.3, C.glass, "Glass", GLASS)
 for _, x in { -12, -4, 4, 12 } do
 	cylinder(facade, "Mullion", x, -0.5, -1, 16, 0.6, C.midGray, "Metal")
 end

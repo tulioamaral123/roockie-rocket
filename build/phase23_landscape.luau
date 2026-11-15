@@ -17,7 +17,13 @@ local B = lib.builder(23)
 local Map = workspace:WaitForChild("NASAComplex")
 B.clear(Map)
 
-local Landscape = Map:FindFirstChild("Landscape") or B.group(Map, "Landscape", "Folder")
+-- Pasta compartilhada com a Fase 24 (sem BuildPhase: a limpeza de uma fase não apaga a outra)
+local Landscape = Map:FindFirstChild("Landscape")
+if not Landscape then
+	Landscape = Instance.new("Folder")
+	Landscape.Name = "Landscape"
+	Landscape.Parent = Map
+end
 local Trees = B.group(Landscape, "Trees", "Folder")
 
 local rng = Random.new(2323)
@@ -87,6 +93,13 @@ local RESERVED = {
 	{ -100, 145, 300, 900 }, -- complexo de lançamento, crawlerway, estacionamento do crawler, 39B
 	{ -160, 145, 600, 900 }, -- visão da área de observação para a plataforma
 	{ -30, 30, -200, 0 }, -- eixo de chegada da recepção (spawn e entrada)
+	-- áreas da Fase 24 (docs/paisagismo-spec.md): sem árvores sorteadas por cima
+	{ -520, 520, -132, -88 }, -- estrada de acesso e ponto de desembarque
+	{ -168, -32, -108, -22 }, -- estacionamento de visitantes
+	{ -62, 36, -150, 0 }, -- praça da entrada, calçadas e faixa de pedestres
+	{ -292, -168, -48, 78 }, -- lago e margem
+	{ -198, -138, -78, 38 }, -- caminho do estacionamento ao mirante do lago
+	{ 40, 140, -42, -10 }, -- jardins do planetário
 }
 local function reserved(x, z)
 	for _, r in RESERVED do

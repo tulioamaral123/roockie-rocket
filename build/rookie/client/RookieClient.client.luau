@@ -20,11 +20,13 @@ local Modais = require(pasta:WaitForChild("Modais"))
 local Paineis = require(pasta:WaitForChild("Paineis"))
 local Mira = require(pasta:WaitForChild("Mira"))
 local Capsule = require(pasta:WaitForChild("Capsule"))
+local Decolagem = require(pasta:WaitForChild("Decolagem"))
 Capsule.start()
 
 Efeitos.iniciar(Missoes.Audio)
 EVA.iniciar()
 Modais.iniciar()
+Decolagem.iniciar()
 
 local mapa = nil
 local function nave(id)
@@ -34,6 +36,7 @@ local function nave(id)
 end
 
 local function limparTudo()
+	Decolagem.parar()
 	Capsule.clear()
 	Mira.desligar()
 	Paineis.fecharTodos()
@@ -56,6 +59,8 @@ local function aoEstado(e)
 	if not e.preflight then Preparacao.atualizar(e) else Preparacao.fechar() end
 	Hud.atualizar(e)
 	Modais.atualizar(e)
+	-- cutscene da saída do foguete durante a contagem de lançamento
+	if e.fase == "Lancamento" then Decolagem.tocar(e.fimLancamento) else Decolagem.parar() end
 	Paineis.fecharSeNaoFor(e)
 
 	local naTask = e.fase == "Task"

@@ -33,12 +33,13 @@ O place (`Place1.rbxl`) é gerado por scripts Luau em `build/`. Não editar peç
 | 21 | `phase21_rookie_systems.luau` | Instala os scripts de `build/rookie/` quando o Rojo não está conectado |
 | 22 | `phase22_guides.luau` | Guias Marcos Pontes e Ana: `NASAComplex.Guides` (NPCs, NavigationPoints) + scripts de `build/guide/` sem Rojo (`docs/guias-spec.md`, `docs/guias-contrato.md`) |
 | 23 | `phase23_landscape.luau` | Paisagismo: palmeiras sabal e carvalhos na grama (`NASAComplex.Landscape.Trees`), sorteio com semente fixa, fora do complexo de lançamento, da visão da área de observação e do eixo da recepção |
+| 24 | `phase24_outdoor.luau` | Ambientação externa (`docs/paisagismo-spec.md`): estrada, praça da entrada, estacionamento de visitantes, jardins do planetário, lago com mirante, arbustos e nuvens, em `NASAComplex.Landscape` (pasta compartilhada com a 23, sem `BuildPhase`) |
 
 Reconstruir:
 
 1. Servir `build/` em segundo plano: `python3 -m http.server 8765 --bind 127.0.0.1` (parar ao terminar).
 2. Fases 1 e 2 (autônomas): carregar e executar no Edit (`loadstring(HttpService:GetAsync(...))()`).
-3. `build/run_in_studio.luau`: executa as Fases 3–6, 8–14 e 16–23 em ordem, passando `lib.luau`.
+3. `build/run_in_studio.luau`: executa as Fases 3–6, 8–14 e 16–24 em ordem, passando `lib.luau`.
 
 Regras dos geradores:
 

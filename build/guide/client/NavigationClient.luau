@@ -422,6 +422,7 @@ function NavigationClient.start()
 		for _, p in ringParts do p.Transparency = v and 0.15 or 1 end
 	end
 	local losAt, losOk = 0, false
+	local hiddenByCutscene = false
 	local function ringNear(pos, ring)
 		local flatD = (Vector3.new(ring.center.X, 0, ring.center.Z) - Vector3.new(pos.X, 0, pos.Z)).Magnitude
 		if flatD > ring.radius + 28 or math.abs(pos.Y - ring.center.Y) > 10 then return false end
@@ -440,6 +441,18 @@ function NavigationClient.start()
 		local root = char and char:FindFirstChild("HumanoidRootPart")
 		local route = state
 		if missionMode then route = missionRoute end
+		-- cutscene (chegada, museu, decolagem): sem setas, círculo nem objetivo; voltam ao terminar
+		if player:GetAttribute("InCutscene") then
+			if hud.frame.Visible then
+				hud.frame.Visible = false
+				hiddenByCutscene = true
+			end
+			showRing(false)
+			return hideFrom(1)
+		elseif hiddenByCutscene then
+			hiddenByCutscene = false
+			if state.objective and not missionMode then hud.frame.Visible = true end
+		end
 		-- Settings → Navigation arrows: Off esconde as setas (o objetivo no HUD continua)
 		if player:GetAttribute("GuideArrows") == false then return hideFrom(1) end
 		if missionMode then hud.frame.Visible = false end

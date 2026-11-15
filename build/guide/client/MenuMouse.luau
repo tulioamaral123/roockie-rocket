@@ -28,6 +28,8 @@ local MENUS = {
 	RookieAlbum = true,
 	RookieCreditos = true,
 	MuseumPanel = true,
+	MuseumCutscene = true, -- botão Skip da cutscene do salão
+	ArrivalCutscene = true, -- botão Skip da cutscene de chegada
 }
 
 local function shown(o, gui)
