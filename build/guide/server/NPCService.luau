@@ -408,73 +408,132 @@ local function nearestFollower(n)
 end
 
 -- um passo de MoveTo com tempo-limite; teleporta se ficar preso (nunca trava a apresentação)
-local function step(n, pos, token)
-	local hum = n.humanoid
-	hum:MoveTo(pos)
-	local t0, last, lastT = os.clock(), n.root.Position, os.clock()
-	while n.token == token do
-		local d = n.root.Position - pos
-		if Vector2.new(d.X, d.Z).Magnitude < 2.2 and math.abs(d.Y) < 4.5 then return true end
-		if os.clock() - lastT > 1.5 then
-			if (n.root.Position - last).Magnitude < 1 then
-				hum.Jump = true
-				if os.clock() - t0 > 4 then
-					n.model:PivotTo(CFrame.new(pos) * n.root.CFrame.Rotation)
-					return true
-				end
-			end
-			last, lastT = n.root.Position, os.clock()
-			hum:MoveTo(pos) -- MoveTo expira sozinho depois de 8 s
-		end
-		task.wait(0.1)
-	end
-	return false
+local castParams = RaycastParams.new()
+castParams.FilterType = Enum.RaycastFilterType.Exclude
+castParams.RespectCanCollide = true
+
+-- linha livre entre dois pontos na altura do quadril, com a largura do corpo (sem bater em quinas)
+local function clearLine(a, b)
+	local dir = b - a
+	if dir.Magnitude < 0.5 then return true end
+	if workspace:Spherecast(a, 1.5, dir, castParams) then return false end
+	-- bases e pedestais baixos (abaixo da esfera do quadril): segunda checagem na altura do joelho
+	local low = Vector3.new(0, -1.9, 0)
+	return workspace:Spherecast(a + low, 0.9, dir, castParams) == nil
 end
 
--- anda até `goal`; com leash, para e espera quem acompanha (o grupo)
-local function walkTo(n, goal, leash)
-	n.token += 1
-	local token = n.token
-	local path = PathfindingService:CreatePath(Settings.Agent)
-	local ok = pcall(function() path:ComputeAsync(n.root.Position, goal) end)
-	local pts = {}
+local function plan(goal, from)
+	local path
+	local ok = false
+	for _, agent in { Settings.NPCAgent or Settings.Agent, Settings.NPCAgentJump } do
+		path = PathfindingService:CreatePath(agent)
+		ok = pcall(function() path:ComputeAsync(from, goal) end)
+		if ok and path.Status == Enum.PathStatus.Success then break end
+	end
 	if ok and path.Status == Enum.PathStatus.Success then
+		local pts = {}
 		for _, w in path:GetWaypoints() do
 			table.insert(pts, { pos = w.Position + Vector3.new(0, 3, 0), jump = w.Action == Enum.PathWaypointAction.Jump })
 		end
-	else
-		pts = { { pos = goal } }
+		return pts, path
 	end
-	local lastWait = 0
-	local waitBudget = 45 -- s de espera pelo grupo neste trajeto; depois segue sem esperar
-	for _, w in pts do
-		if n.token ~= token then return false end
-		-- espera o grupo (no máximo 45 s seguidos; quem saiu do jogo deixa o grupo)
+	return { { pos = goal } }, nil
+end
+
+-- anda até `goal` sem parar a cada ponto: mira sempre o ponto mais distante com linha livre
+-- (suaviza curvas), recalcula se o caminho for bloqueado ou se ficar preso, e só teleporta
+-- para o próximo ponto como último recurso. Com leash, espera quem acompanha (o grupo).
+local function walkTo(n, goal, leash)
+	n.token += 1
+	local token = n.token
+	local hum, root = n.humanoid, n.root
+	local filter = { n.model }
+	for _, pl in Players:GetPlayers() do
+		if pl.Character then table.insert(filter, pl.Character) end
+	end
+	local guides = World.guides and World.guides:FindFirstChild("NPCs")
+	if guides then table.insert(filter, guides) end
+	castParams.FilterDescendantsInstances = filter
+
+	local pts, path = plan(goal, root.Position)
+	local i, replans, stuck = 1, 0, 0
+	local blocked = false
+	local conn
+	local function watch(pa)
+		if conn then conn:Disconnect() end
+		conn = pa and pa.Blocked:Connect(function(b) if b >= i then blocked = true end end)
+	end
+	watch(path)
+	local lastPos, lastT = root.Position, os.clock()
+	local lastWait, waitBudget = 0, 45 -- s de espera pelo grupo neste trajeto
+	local done = false
+	while n.token == token do
+		-- espera o grupo (quem saiu do jogo deixa o grupo)
 		for p in n.group do
 			if not p.Parent then n.group[p] = nil end
 		end
-		local waitStart = os.clock()
-		while leash and next(n.group) and nearestFollower(n) > Settings.Radius.FollowLeash and n.token == token
-			and waitBudget - (os.clock() - waitStart) > 0 do
-			n.humanoid:MoveTo(n.root.Position)
+		if leash and next(n.group) and waitBudget > 0 and nearestFollower(n) > Settings.Radius.FollowLeash then
+			local t0 = os.clock()
+			hum:MoveTo(root.Position)
 			local players = listOf(n.group)
 			if os.clock() - lastWait > 12 then
 				lastWait = os.clock()
-				if n.name == "Marcos" then
-					bubble(players, "Marcos", "This way! Follow me.")
-				else
-					bubble(players, "Ana", "Over here! Keep up, rookie!")
-				end
+				bubble(players, n.name, n.name == "Marcos" and "This way! Follow me." or "Over here! Keep up, rookie!")
 			end
 			local r = players[1] and World.rootOf(players[1])
 			if r then face(n, r.Position) end
 			task.wait(0.4)
+			waitBudget -= os.clock() - t0
+			lastPos, lastT = root.Position, os.clock()
+			continue
 		end
-		waitBudget -= os.clock() - waitStart
-		if w.jump then n.humanoid.Jump = true end
-		if not step(n, w.pos, token) then return false end
+		local pos = root.Position
+		-- pontos já alcançados
+		while i <= #pts do
+			local d = pts[i].pos - pos
+			if Vector2.new(d.X, d.Z).Magnitude < 2.6 and math.abs(d.Y) < 4.5 then i += 1 else break end
+		end
+		if i > #pts then
+			done = true
+			break
+		end
+		-- olha à frente: o ponto mais distante no mesmo nível com linha livre
+		local j = i
+		for k = i + 1, math.min(#pts, i + 6) do
+			if pts[k - 1].jump or math.abs(pts[k].pos.Y - pos.Y) > 1.5 or not clearLine(pos, pts[k].pos) then break end
+			j = k
+		end
+		if pts[i].jump and (pts[i].pos - pos).Magnitude < 5 then hum.Jump = true end
+		hum:MoveTo(pts[j].pos)
+		-- preso: pula, depois recalcula o caminho
+		if os.clock() - lastT > 1.2 then
+			if (pos - lastPos).Magnitude < 0.8 then
+				stuck += 1
+				if stuck >= 2 then blocked = true end
+			else
+				stuck = 0
+			end
+			lastPos, lastT = pos, os.clock()
+		end
+		if blocked then
+			blocked, stuck = false, 0
+			replans += 1
+			if replans <= 3 then
+				pts, path = plan(goal, root.Position)
+				i = 1
+				watch(path)
+			else
+				-- último recurso (a apresentação nunca trava): salta para o ponto seguinte
+				local nxt = pts[math.min(i + 1, #pts)].pos
+				n.model:PivotTo(CFrame.new(nxt) * root.CFrame.Rotation)
+				i = math.min(i + 2, #pts + 1)
+				replans = 0
+			end
+		end
+		task.wait(0.15)
 	end
-	return n.token == token
+	if conn then conn:Disconnect() end
+	return done and n.token == token
 end
 
 local function walkRoute(n, route, leash)

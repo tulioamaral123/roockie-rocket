@@ -47,6 +47,14 @@ S.Repath = {
 
 S.Agent = { AgentRadius = 2, AgentHeight = 5, AgentCanJump = true, AgentCanClimb = false, WaypointSpacing = 5 }
 
+-- NPCs: mais folga das paredes e móveis e pontos mais densos (curvas suaves)
+-- raio 2,4: mais folga que o do jogador sem fechar as passagens do saguão do LCC (2,6 já desvia
+-- 370 studs pelo museu). Sem pulo no caminho (o pulo deixava subir em bases de exposição); só a
+-- escada do lançador precisa de pulo no navmesh, então o NPC tenta sem pulo e, se não houver
+-- caminho, tenta de novo com pulo (NPCAgentJump).
+S.NPCAgent = { AgentRadius = 2.4, AgentHeight = 6, AgentCanJump = false, AgentCanClimb = false, WaypointSpacing = 3 }
+S.NPCAgentJump = { AgentRadius = 2.4, AgentHeight = 6, AgentCanJump = true, AgentCanClimb = false, WaypointSpacing = 3 }
+
 S.Sounds = {
 	Siren = { Id = "rbxassetid://9113084658", Volume = 0.8, Duration = 4 }, -- mesmo alarme do Rookie Rocket
 	Blip = { Id = "rbxassetid://9119717523", Volume = 0.35 },
