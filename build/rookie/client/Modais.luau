@@ -78,6 +78,33 @@ end
 ---------------------------------------------------------------------------------
 
 local ultimoMostrado = nil
+local aprendizadoVisto = {}
+
+-- Parabéns + o que o jogador aprendeu em cada task (Missoes.Lista[n].Aprendizado)
+function M.aprendizado(ap, res, continuar)
+	local p = baseModal(600)
+	-- rolagem para caber em telas pequenas (celular)
+	local lista = UI.new("ScrollingFrame", {
+		Size = UDim2.new(1, 0, 1, -60), BackgroundTransparency = 1, BorderSizePixel = 0,
+		CanvasSize = UDim2.new(), AutomaticCanvasSize = Enum.AutomaticSize.Y, ScrollBarThickness = 6, Parent = p,
+	})
+	UI.lista(lista, 10)
+	UI.texto(lista, { Text = ap.Titulo, tamanho = 26, peso = Enum.FontWeight.Heavy, cor = UI.C.yellow, ordem = 1 })
+	UI.texto(lista, { Text = ("MISSION COMPLETE · %s · %d★"):format(string.upper(res.medalha or ""), res.estrelas or 0), tamanho = 14, peso = Enum.FontWeight.Bold, cor = UI.C.green, ordem = 2 })
+	local fala = UI.texto(lista, { Text = ap.Fala, tamanho = 17, Size = UDim2.new(1, 0, 0, 0), auto = Enum.AutomaticSize.Y, ordem = 3 })
+	fala.TextColor3 = UI.C.text
+	for i, item in ap.Itens do
+		local card = UI.new("Frame", { Size = UDim2.new(1, 0, 0, 0), AutomaticSize = Enum.AutomaticSize.Y, BackgroundColor3 = UI.C.panel2, LayoutOrder = 3 + i, Parent = lista })
+		UI.corner(card, 10)
+		UI.pad(card, 12)
+		UI.lista(card, 4)
+		UI.texto(card, { Text = item.Task, tamanho = 18, peso = Enum.FontWeight.Bold, cor = UI.C.accent, ordem = 1 })
+		for k, area in item.Areas do
+			UI.texto(card, { Text = "•  " .. area, tamanho = 16, ordem = 1 + k })
+		end
+	end
+	rodape(p, { { "Continue  ›", continuar, UI.C.accent, 190 } })
+end
 
 function M.atualizar(estado)
 	if estado.fase == "Falha" and estado.falha then
@@ -105,6 +132,19 @@ function M.atualizar(estado)
 		local res = estado.resultado
 		local chave = "R" .. res.equacao
 		if ultimoMostrado == chave and modal then return end
+		-- missão concluída: primeiro a tela de parabéns e do que foi aprendido (uma vez por resultado)
+		local missao = Missoes.Lista[estado.missao]
+		local ap = missao and missao.Aprendizado
+		if res.estrelas > 0 and ap and not aprendizadoVisto[chave] then
+			if ultimoMostrado == "A" .. chave and modal then return end
+			ultimoMostrado = "A" .. chave
+			M.aprendizado(ap, res, function()
+				aprendizadoVisto[chave] = true
+				ultimoMostrado = nil
+				M.atualizar(estado)
+			end)
+			return
+		end
 		ultimoMostrado = chave
 		local p = baseModal(560)
 		local ok = res.estrelas > 0

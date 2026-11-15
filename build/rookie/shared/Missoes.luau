@@ -61,6 +61,16 @@ Missoes.Lista = {
 			},
 		},
 		OrdemEquipamentos = { "Giroscopio", "ManualBordo", "EscudoReforcado" },
+		-- tela de parabéns + "o que você aprendeu" ao concluir a missão (antes do resultado)
+		Aprendizado = {
+			Titulo = "CONGRATULATIONS, ROOKIE!",
+			Fala = "You completed your first mission! Every task you solved uses real science and engineering. Here is what you practiced today:",
+			Itens = {
+				{ Task = "Task 1 · The Autopilot Failure", Areas = { "Physics (Inertia / Mechanics)", "Automation and Control Engineering" } },
+				{ Task = "Task 2 · The Communication Blackout", Areas = { "Physics (Electromagnetic Waves)", "Telecommunications Engineering" } },
+				{ Task = "Task 3 · The Heat Shield Alarm", Areas = { "Physics (Thermodynamics)", "Materials Engineering" } },
+			},
+		},
 		Tasks = {
 			[1] = {
 				Tipo = "Mira",
