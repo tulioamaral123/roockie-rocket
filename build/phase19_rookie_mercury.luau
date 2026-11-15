@@ -178,6 +178,43 @@ end
 label(reentry, "03  /  RETROPACK", reentryCF * CFrame.new(0, 4.7, -1), 11, 0.65)
 
 ---------------------------------------------------------------------------------
+-- 3b. Quatro assentos da tripulação (2 × 2) no centro, voltados para o painel frontal (+Z).
+--     Ficam entre os pontos de nascimento, com corredores livres dos dois lados até as
+--     estações. Seat com CanTouch = false (ninguém senta só de encostar); o prompt
+--     "Take seat" é criado pelo script (GerenciadorMissao). Pular levanta.
+---------------------------------------------------------------------------------
+local seatFolder = B.group(mercury, "Seats", "Folder")
+for i, p in { { -2.6, 5.5 }, { 2.6, 5.5 }, { -2.6, -0.6 }, { 2.6, -0.6 } } do
+	local g = B.group(seatFolder, "Seat_" .. i)
+	local scf = BASE * CFrame.new(p[1], 1.6, p[2]) * CFrame.Angles(0, math.pi, 0) * CFrame.Angles(math.rad(-10), 0, 0)
+	local seat = Instance.new("Seat")
+	seat.Name = "Seat"
+	seat.Anchored = true
+	seat.CanTouch = false
+	seat.Size = Vector3.new(2.3, 0.6, 2.3)
+	seat.CFrame = scf
+	seat.Color = Color3.fromHex("#2A3550")
+	seat.Material = Enum.Material.Fabric
+	seat.TopSurface = Enum.SurfaceType.Smooth
+	seat:SetAttribute("BuildPhase", 19)
+	seat:SetAttribute("SeatNumber", i)
+	seat.Parent = g
+	-- encosto reclinado (para trás = +Z local do assento, que olha para −Z local)
+	local back = B.part(g, "SeatBack", scf * CFrame.new(0, 1.7, 1.2) * CFrame.Angles(math.rad(14), 0, 0),
+		Vector3.new(2.3, 3.2, 0.4), "#2A3550", "Fabric")
+	B.sign(back, tostring(i), nil, { face = N.Back, bg = "nasaBlue", titleColor = "white", ppu = 60 })
+	B.part(g, "Headrest", scf * CFrame.new(0, 3.55, 1.7) * CFrame.Angles(math.rad(14), 0, 0),
+		Vector3.new(1.4, 0.8, 0.45), "#1C2438", "Fabric", DECOR)
+	for _, ax in { -1.3, 1.3 } do
+		B.part(g, "Armrest", scf * CFrame.new(ax, 0.55, 0.1), Vector3.new(0.28, 0.28, 2.1), "metalGray", "Metal", DECOR)
+		-- cintos do arnês (detalhe)
+		B.part(g, "Harness", scf * CFrame.new(ax * 0.35, 1.5, 0.98) * CFrame.Angles(math.rad(14), 0, 0),
+			Vector3.new(0.18, 2.2, 0.05), "#E8892E", "Fabric", DECOR)
+	end
+	part(g, "Pedestal", p[1], 0.6, p[2], 1, 1.2, 1, "metalGray", "Metal")
+end
+
+---------------------------------------------------------------------------------
 -- 4. Luzes de cabine e alvos externos: linhas de mira a partir do piso + 5
 ---------------------------------------------------------------------------------
 local lights = B.group(mercury, "Lights", "Folder")

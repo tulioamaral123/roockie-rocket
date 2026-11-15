@@ -57,6 +57,7 @@ Cápsula cônica de 16 lados inspirada na Orion da Fase 8: Ø32 no piso, Ø24 no
 | `Stations/Reentry` | Model | Estação 3b: console do retropack, longe o bastante da NavTable para exigir caminhada (≥ 20 studs) |
 | `Stations/Reentry/EjectButton` | Part vermelha | Task 3: "EJECT CAPSULE" |
 | `Stations/Reentry/RetainButtonA`, `RetainButtonB` | Parts verdes, 6 a 10 studs uma da outra | Task 3: "HOLD RETROPACK" (redundantes, para o co-op); separados por 7 studs |
+| `Seats/Seat_1..4/Seat` | Seat (CanTouch = false), atributo `SeatNumber` | 4 assentos da tripulação (2 × 2, voltados para +Z); o GerenciadorMissao cria o prompt "Take seat" |
 | `Lights/CabinLight*` | Parts com luz | o cliente pulsa em vermelho (Task 1) e em laranja (Task 3) |
 
 Botões e teclados ficam a 3–4 de altura do piso, de frente para onde o jogador está.

@@ -133,6 +133,28 @@ for id, m in Missoes.Lista do
 	end
 end
 
+-- Assentos da tripulação (NASAComplex.RookieRocket.<Nave>.Seats/Seat_N/Seat, Fase 19):
+-- prompt "Take seat" senta quem acionou; pular levanta. Só para quem está naquela nave.
+for _, m in Missoes.Lista do
+	local nave = mapa:FindFirstChild(m.Nave)
+	local pasta = nave and nave:FindFirstChild("Seats")
+	for _, g in (pasta and pasta:GetChildren() or {}) do
+		local seat = g:FindFirstChild("Seat")
+		if seat and seat:IsA("Seat") then
+			local pr = Naves.prompt(seat, "Take seat", "Crew seat " .. tostring(seat:GetAttribute("SeatNumber") or ""), { distancia = 5 })
+			pr.Triggered:Connect(function(player)
+				local char = player.Character
+				local hum = char and char:FindFirstChildOfClass("Humanoid")
+				if not hum or hum.Health <= 0 or seat.Occupant then return end
+				if Naves.distancia and Naves.distancia(player, seat) > 8 then return end
+				seat:Sit(hum)
+			end)
+			-- prompt some enquanto o assento está ocupado
+			seat:GetPropertyChangedSignal("Occupant"):Connect(function() pr.Enabled = seat.Occupant == nil end)
+		end
+	end
+end
+
 if kiosk then
 	for id, nomePeca in { [1] = "BoardMercury", [2] = "BoardISS" } do
 		local peca = kiosk:FindFirstChild(nomePeca)
