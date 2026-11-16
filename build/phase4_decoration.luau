@@ -108,15 +108,16 @@ end
 ---------------------------------------------------------------------------------
 local rec, furn = Base.Front_Desk, Base.Furniture
 
--- Painel institucional suspenso (0, 8, 3), voltado para o spawn
-local inst = B.box(rec, "Institutional_Panel", -12, 12, 4.5, 11.5, 2.7, 3.3, "nasaBlue", "SmoothPlastic")
+-- Painel institucional suspenso (0, 17,5, 3), voltado para o spawn; acima da porta de entrada
+-- (vão de 10 de altura na fachada) e da travessa do vidro, para não ficar na frente de quem entra
+local inst = B.box(rec, "Institutional_Panel", -12, 12, 14, 21, 2.7, 3.3, "nasaBlue", "SmoothPlastic")
 B.sign(inst, "NASA SPACE ADVENTURE", "Explore  •  Discover  •  Inspire",
 	{ face = N.Back, bg = "nasaBlue", accent = "red", titleColor = "white", bodyColor = "lightGray", titleScale = 0.45, maxBody = 70, ppu = 40 })
 -- mesma identidade na face −Z, visível da rua pela fachada de vidro
 B.sign(inst, "NASA SPACE ADVENTURE", "Explore  •  Discover  •  Inspire",
 	{ face = N.Front, bg = "nasaBlue", accent = "red", titleColor = "white", bodyColor = "lightGray", titleScale = 0.45, maxBody = 70, ppu = 40 })
 for _, x in { -10, 10 } do
-	B.cyl(rec, "Hanger_Cable", x, 3, 11.5, 24, 0.12, "midGray", "Metal", DECOR)
+	B.cyl(rec, "Hanger_Cable", x, 3, 21, 24, 0.12, "midGray", "Metal", DECOR)
 end
 
 -- Balcão de recepção (-20, 0, 15), atendimento voltado para o centro do saguão
