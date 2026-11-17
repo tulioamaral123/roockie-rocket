@@ -20,4 +20,6 @@ Responsáveis: `claude` (Claude Code), `codex` (Codex), `mac` (teste no Studio),
 | 11 | Mission Flight Manifest em duas abas (missão → itens com ícones) | codex + claude | `codex/manifest-abas` | `build/guide/client/MissionSelect.luau`, `build/guide/client/ItemIcons.luau` (novo), `build/rookie/shared/Missoes.luau` (só campos de texto novos) | aplicado no place; testado em Play no PC |
 | 12 | Paisagismo e ambientação externa (docs/paisagismo-spec.md) | claude | `claude/rookie-rocket` | `build/phase23_landscape.luau`, `build/phase24_outdoor.luau` (novo), `build/run_in_studio.luau`, `CLAUDE.md`, `docs/paisagismo-spec.md` | aplicado no place; visual a conferir |
 
+| 13 | Ala de treinamento: gravidade, reparos e operação solo/co-op | codex | `codex/treinamento` | `build/phase25_training.luau`, `build/systems/server/AstronautTraining.server.luau`, `build/systems/client/AstronautTraining.client.luau`, `build/tests/verificar_treinamento.luau`, `docs/treinamento-spec.md`, `TASKS.md`, `IMPLEMENTATION.md` | aguardando teste no Mac |
+
 Estados: `a fazer`, `em andamento`, `PR aberto`, `aguardando teste no Mac`, `feito`, `cancelada`.
